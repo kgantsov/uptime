@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"os/signal"
@@ -31,8 +31,8 @@ type Config struct {
 
 type Monitor struct {
 	client  http.Client
-	service Service
 	done    chan struct{}
+	service Service
 }
 
 func NewMonitor(service Service) *Monitor {
@@ -59,24 +59,32 @@ func (m *Monitor) NotifyTg(message string) {
 	request, err := http.NewRequest(
 		"POST", m.service.Callback, bytes.NewBuffer(jsonBody),
 	)
+	if err != nil {
+		fmt.Printf("Failed to notify telegram %s\n", err)
+		return
+	}
 
 	request.Header.Set("Content-Type", "application/json; charset=UTF-8")
 
 	response, err := m.client.Do(request)
 	if err != nil {
 		fmt.Printf("Failed to notify telegram %s\n", err)
+		return
 	}
-	defer response.Body.Close()
+
+	response.Body.Close()
 }
 
 func (m *Monitor) CheckHealth() int {
 	resp, err := m.client.Get(m.service.URL)
 
 	if err != nil {
-		fmt.Printf("Error %s\n", err)
+		fmt.Printf("Error checking '%s' %s %s\n", m.service.Name, m.service.URL, err)
 		return -1
 	}
+
 	defer resp.Body.Close()
+
 	return resp.StatusCode
 }
 
@@ -87,6 +95,7 @@ func (m *Monitor) Start() {
 	startedFailingAt := time.Time{}
 
 	ticker := time.NewTicker(time.Duration(m.service.CheckInterval) * time.Second)
+
 	for {
 		select {
 		case <-m.done:
@@ -94,16 +103,18 @@ func (m *Monitor) Start() {
 			return
 		case t := <-ticker.C:
 			status := m.CheckHealth()
-			if status != 200 {
+			if status != http.StatusOK {
 				if !failing {
 					m.NotifyTg(
 						emoji.Sprintf(
 							":exclamation: Service '%s' %s is DOWN", m.service.Name, m.service.URL,
 						),
 					)
+
 					failing = true
 					startedFailingAt = time.Now()
 				}
+
 				fmt.Printf("Failed to get %s url. Got status code: %d\n", m.service.URL, status)
 			} else {
 				if failing {
@@ -112,7 +123,7 @@ func (m *Monitor) Start() {
 							":check_mark_button: Service '%s' %s is UP again. Downtime: %s",
 							m.service.Name,
 							m.service.URL,
-							time.Now().Sub(startedFailingAt),
+							time.Since(startedFailingAt),
 						),
 					)
 					failing = false
@@ -123,6 +134,7 @@ func (m *Monitor) Start() {
 		}
 	}
 }
+
 func (m *Monitor) Stop() {
 	m.done <- struct{}{}
 	fmt.Printf("Stopping '%s'\n", m.service.Name)
@@ -138,12 +150,24 @@ func main() {
 		fmt.Println(err)
 		return
 	}
+
 	fmt.Println("Successfully Opened jsonFile")
+
 	defer configFile.Close()
 
-	configBytes, _ := ioutil.ReadAll(configFile)
+	configBytes, err := io.ReadAll(configFile)
+	if err != nil {
+		fmt.Printf("Error reading %s %s \n", *configPathPtr, err)
+		return
+	}
+
 	var config Config
-	json.Unmarshal(configBytes, &config)
+
+	err = json.Unmarshal(configBytes, &config)
+	if err != nil {
+		fmt.Printf("Error unmarshaling %s %s \n", *configPathPtr, err)
+		return
+	}
 
 	fmt.Printf("Found %d services to monitor\n", len(config.Services))
 
@@ -152,6 +176,7 @@ func main() {
 	for _, service := range config.Services {
 		m := NewMonitor(service)
 		monitors = append(monitors, m)
+
 		go m.Start()
 	}
 
@@ -168,6 +193,7 @@ func main() {
 		for _, monitor := range monitors {
 			monitor.Stop()
 		}
+
 		time.Sleep(100 * time.Millisecond)
 
 		done <- struct{}{}
