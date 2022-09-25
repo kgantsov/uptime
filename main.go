@@ -11,6 +11,8 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/kyokomi/emoji"
 )
 
 type Service struct {
@@ -95,7 +97,7 @@ func (m *Monitor) Start() {
 			if status != 200 {
 				if !failing {
 					m.NotifyTg(
-						fmt.Sprintf("Service '%s' %s is DOWN", m.service.Name, m.service.URL),
+						emoji.Sprintf(":exclamation: Service '%s' %s is DOWN", m.service.Name, m.service.URL),
 					)
 					failing = true
 					startedFailingAt = time.Now()
@@ -104,8 +106,8 @@ func (m *Monitor) Start() {
 			} else {
 				if failing {
 					m.NotifyTg(
-						fmt.Sprintf(
-							"Service '%s' %s is UP again. Downtime: %s",
+						emoji.Sprintf(
+							":check_mark_button: Service '%s' %s is UP again. Downtime: %s",
 							m.service.Name,
 							m.service.URL,
 							time.Now().Sub(startedFailingAt),
@@ -169,7 +171,7 @@ func main() {
 		done <- struct{}{}
 	}()
 
-	fmt.Printf("Started uptime monitor\n")
+	emoji.Printf("Started uptime monitor\n")
 
 	<-done
 
