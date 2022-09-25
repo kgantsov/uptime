@@ -82,6 +82,7 @@ func (m *Monitor) Start() {
 	fmt.Printf("Starting '%s' %s service monitoring\n", m.service.Name, m.service.URL)
 
 	failing := false
+	startedFailingAt := time.Time{}
 
 	ticker := time.NewTicker(time.Duration(m.service.CheckInterval) * time.Second)
 	for {
@@ -97,14 +98,21 @@ func (m *Monitor) Start() {
 						fmt.Sprintf("Service '%s' %s is DOWN", m.service.Name, m.service.URL),
 					)
 					failing = true
+					startedFailingAt = time.Now()
 				}
 				fmt.Printf("Failed to get %s url. Got status code: %d\n", m.service.URL, status)
 			} else {
 				if failing {
 					m.NotifyTg(
-						fmt.Sprintf("Service '%s' %s is UP again", m.service.Name, m.service.URL),
+						fmt.Sprintf(
+							"Service '%s' %s is UP again. Downtime: %s",
+							m.service.Name,
+							m.service.URL,
+							time.Now().Sub(startedFailingAt),
+						),
 					)
 					failing = false
+					startedFailingAt = time.Time{}
 				}
 				fmt.Printf("Service %s %s is up and running: %d\n", t, m.service.URL, status)
 			}
