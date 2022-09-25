@@ -97,7 +97,9 @@ func (m *Monitor) Start() {
 			if status != 200 {
 				if !failing {
 					m.NotifyTg(
-						emoji.Sprintf(":exclamation: Service '%s' %s is DOWN", m.service.Name, m.service.URL),
+						emoji.Sprintf(
+							":exclamation: Service '%s' %s is DOWN", m.service.Name, m.service.URL,
+						),
 					)
 					failing = true
 					startedFailingAt = time.Now()
