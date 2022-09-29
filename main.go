@@ -15,14 +15,18 @@ import (
 	"github.com/kyokomi/emoji"
 )
 
-type Service struct {
-	Name           string `json:"name"`
-	URL            string `json:"url"`
-	Timeout        int    `json:"timeout"`
-	CheckInterval  int    `json:"check_interval"`
+type Notification struct {
 	CallbackType   string `json:"callback_type"`
 	CallbackChatID string `json:"callback_chat_id"`
 	Callback       string `json:"callback"`
+}
+
+type Service struct {
+	Name          string         `json:"name"`
+	URL           string         `json:"url"`
+	Timeout       int            `json:"timeout"`
+	CheckInterval int            `json:"check_interval"`
+	Notifications []Notification `json:"notifications"`
 }
 
 type Config struct {
@@ -47,9 +51,11 @@ func NewMonitor(service Service) *Monitor {
 	return m
 }
 
-func (m *Monitor) NotifyTg(message string) {
+func (m *Monitor) NotifyTg(notification Notification, message string) {
+	fmt.Printf("Sending telegram message: %s to %s\n", message, notification.CallbackChatID)
+
 	bodyParams := map[string]interface{}{
-		"chat_id":              m.service.CallbackChatID,
+		"chat_id":              notification.CallbackChatID,
 		"text":                 message,
 		"disable_notification": true,
 	}
@@ -57,7 +63,7 @@ func (m *Monitor) NotifyTg(message string) {
 	jsonBody, _ := json.Marshal(bodyParams)
 
 	request, err := http.NewRequest(
-		"POST", m.service.Callback, bytes.NewBuffer(jsonBody),
+		"POST", notification.Callback, bytes.NewBuffer(jsonBody),
 	)
 	if err != nil {
 		fmt.Printf("Failed to notify telegram %s\n", err)
@@ -105,11 +111,16 @@ func (m *Monitor) Start() {
 			status := m.CheckHealth()
 			if status != http.StatusOK {
 				if !failing {
-					m.NotifyTg(
-						emoji.Sprintf(
-							":exclamation: Service '%s' %s is DOWN", m.service.Name, m.service.URL,
-						),
-					)
+					for _, notification := range m.service.Notifications {
+						m.NotifyTg(
+							notification,
+							emoji.Sprintf(
+								":exclamation: Service '%s' %s is DOWN",
+								m.service.Name,
+								m.service.URL,
+							),
+						)
+					}
 
 					failing = true
 					startedFailingAt = time.Now()
@@ -118,14 +129,17 @@ func (m *Monitor) Start() {
 				fmt.Printf("Failed to get %s url. Got status code: %d\n", m.service.URL, status)
 			} else {
 				if failing {
-					m.NotifyTg(
-						emoji.Sprintf(
-							":check_mark_button: Service '%s' %s is UP again. Downtime: %s",
-							m.service.Name,
-							m.service.URL,
-							time.Since(startedFailingAt),
-						),
-					)
+					for _, notification := range m.service.Notifications {
+						m.NotifyTg(
+							notification,
+							emoji.Sprintf(
+								":check_mark_button: Service '%s' %s is UP again. Downtime: %s",
+								m.service.Name,
+								m.service.URL,
+								time.Since(startedFailingAt),
+							),
+						)
+					}
 					failing = false
 					startedFailingAt = time.Time{}
 				}

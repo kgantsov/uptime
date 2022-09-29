@@ -16,9 +16,13 @@ Simple uptime monitoring for http services
             "url": "http://example.com",
             "timeout": 1,
             "check_interval": 5,
-            "callback_type": "TELEGRAM",
-            "callback_chat_id": "1232131",
-            "callback": "https://api.telegram.org/botTELEGRAM_TOKEN_HERE/sendMessage"
+            "notifications": [
+                {
+                    "callback_type": "TELEGRAM",
+                    "callback_chat_id": "1232131",
+                    "callback": "https://api.telegram.org/botTELEGRAM_TOKEN_HERE/sendMessage"
+                }
+            ]
         }
     ]
 }
