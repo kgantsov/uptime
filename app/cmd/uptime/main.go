@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"os"
 	"os/signal"
@@ -9,21 +8,46 @@ import (
 	"time"
 
 	"github.com/kyokomi/emoji"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
+	"github.com/labstack/gommon/log"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 
+	"github.com/kgantsov/uptime/app/handler"
+	"github.com/kgantsov/uptime/app/model"
 	"github.com/kgantsov/uptime/app/monitor"
+
+	echoSwagger "github.com/swaggo/echo-swagger"
+
+	_ "github.com/kgantsov/uptime/app/cmd/uptime/docs"
 )
 
+// @title Swagger Example API
+// @version 1.0
+// @description This is a sample server Petstore server.
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name API Support
+// @contact.url http://www.swagger.io/support
+// @contact.email support@swagger.io
+
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @BasePath /
 func main() {
-	configPathPtr := flag.String("config", "./config.json", "A path to a config.json file")
 
-	flag.Parse()
-
-	config, err := monitor.ReadConfig(*configPathPtr)
+	db, err := gorm.Open(sqlite.Open("test.db"), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Info),
+	})
 	if err != nil {
-		fmt.Printf("Got an error parsing config %s", err)
+		fmt.Print("failed to connect database\n")
+		return
 	}
 
-	dispatcher := monitor.NewDispatcher(config.Services)
+	dispatcher := monitor.NewDispatcher(db)
 	dispatcher.Start()
 
 	done := make(chan struct{})
@@ -41,6 +65,43 @@ func main() {
 		time.Sleep(100 * time.Millisecond)
 
 		done <- struct{}{}
+	}()
+
+	// Migrate the schema
+	db.AutoMigrate(
+		&model.Heartbeat{}, &model.Service{}, &model.Notification{}, &model.ServiceNotification{},
+	)
+	db.SetupJoinTable(&model.Service{}, "Notifications", &model.ServiceNotification{})
+
+	e := echo.New()
+	e.Logger.SetLevel(log.ERROR)
+	e.Use(middleware.Logger())
+
+	h := &handler.Handler{DB: db, Dispatcher: dispatcher}
+
+	v1 := e.Group("/API/v1")
+
+	v1.GET("/heartbeats/latencies", h.GetHeartbeatsLatencies)
+	v1.GET("/heartbeats/stats", h.GetHeartbeatStats)
+
+	v1.GET("/services", h.GetServices)
+	v1.POST("/services", h.CreateService)
+	v1.GET("/services/:service_id", h.GetService)
+	v1.PATCH("/services/:service_id", h.UpdateService)
+	v1.DELETE("/services/:service_id", h.DeleteService)
+	v1.POST("/services/:service_id/notifications/:notification_name", h.ServiceAddNotification)
+	v1.DELETE("/services/:service_id/notifications/:notification_name", h.ServiceDeleteNotification)
+
+	v1.GET("/notifications", h.GetNotifications)
+	v1.POST("/notifications", h.CreateNotification)
+	v1.GET("/notifications/:notification_name", h.GetNotification)
+	v1.PATCH("/notifications/:notification_name", h.UpdateNotification)
+	v1.DELETE("/notifications/:notification_name", h.DeleteNotification)
+
+	e.GET("/swagger/*", echoSwagger.WrapHandler)
+
+	go func() {
+		e.Logger.Fatal(e.Start(":1323"))
 	}()
 
 	emoji.Printf("Started uptime monitor\n")

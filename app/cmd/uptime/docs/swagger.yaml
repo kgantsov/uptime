@@ -1,0 +1,567 @@
+basePath: /
+definitions:
+  echo.HTTPError:
+    properties:
+      message: {}
+    type: object
+  model.AddNotification:
+    properties:
+      callback:
+        type: string
+      callback_chat_id:
+        type: string
+      callback_type:
+        type: string
+      name:
+        type: string
+    type: object
+  model.AddService:
+    properties:
+      check_interval:
+        type: integer
+      name:
+        type: string
+      notifications:
+        items:
+          $ref: '#/definitions/model.AddNotification'
+        type: array
+      timeout:
+        type: integer
+      url:
+        type: string
+    type: object
+  model.Heartbeat:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      is_success:
+        type: boolean
+      response_time:
+        type: integer
+      service_id:
+        type: integer
+      status_code:
+        type: integer
+    type: object
+  model.HeartbeatPoint:
+    properties:
+      date:
+        type: string
+      latency:
+        type: integer
+      service_id:
+        type: integer
+    type: object
+  model.Notification:
+    properties:
+      callback:
+        type: string
+      callback_chat_id:
+        type: string
+      callback_type:
+        type: string
+      created_at:
+        type: string
+      deleted_at:
+        $ref: '#/definitions/sql.NullTime'
+      name:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  model.Service:
+    properties:
+      check_interval:
+        type: integer
+      created_at:
+        type: string
+      deleted_at:
+        $ref: '#/definitions/sql.NullTime'
+      id:
+        type: integer
+      name:
+        description: ID            uint           `json:"id"`
+        type: string
+      notifications:
+        items:
+          $ref: '#/definitions/model.Notification'
+        type: array
+      timeout:
+        type: integer
+      updated_at:
+        type: string
+      url:
+        type: string
+    type: object
+  model.ServiceNotification:
+    properties:
+      notificationName:
+        type: string
+      serviceID:
+        type: integer
+    type: object
+  model.UpdateNotification:
+    properties:
+      callback:
+        type: string
+      callback_chat_id:
+        type: string
+      callback_type:
+        type: string
+    type: object
+  model.UpdateService:
+    properties:
+      check_interval:
+        type: integer
+      name:
+        type: string
+      notifications:
+        items:
+          $ref: '#/definitions/model.Notification'
+        type: array
+      timeout:
+        type: integer
+      url:
+        type: string
+    type: object
+  sql.NullTime:
+    properties:
+      time:
+        type: string
+      valid:
+        description: Valid is true if Time is not NULL
+        type: boolean
+    type: object
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: This is a sample server Petstore server.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Swagger Example API
+  version: "1.0"
+paths:
+  /API/v1/heartbeats/latencies:
+    get:
+      consumes:
+      - application/json
+      description: Returns all heartbeats
+      parameters:
+      - description: Filtering by service_id
+        in: query
+        name: service_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.Heartbeat'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      summary: Get all heartbeats
+      tags:
+      - heartbeats
+  /API/v1/heartbeats/stats:
+    get:
+      consumes:
+      - application/json
+      description: Returns heartbeats stats
+      parameters:
+      - description: Size
+        in: query
+        name: size
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.HeartbeatPoint'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      summary: Getheartbeats stats
+      tags:
+      - heartbeats
+  /API/v1/notifications:
+    get:
+      consumes:
+      - application/json
+      description: Returns all notifications
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.Notification'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      summary: Get notifications
+      tags:
+      - notifications
+    post:
+      consumes:
+      - application/json
+      description: Creates notifications
+      parameters:
+      - description: Add notification
+        in: body
+        name: account
+        required: true
+        schema:
+          $ref: '#/definitions/model.AddNotification'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Notification'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      summary: Create a new notification
+      tags:
+      - notifications
+  /API/v1/notifications/{notification_name}:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes notifications
+      parameters:
+      - description: Delete by notification_name
+        in: path
+        name: notification_name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Notification'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      summary: Delete a notification
+      tags:
+      - notifications
+    get:
+      consumes:
+      - application/json
+      description: Returns a notification
+      parameters:
+      - description: Get a notification by notification_name
+        in: path
+        name: notification_name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Notification'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      summary: Get a notification
+      tags:
+      - notifications
+    patch:
+      consumes:
+      - application/json
+      description: Updates a notification
+      parameters:
+      - description: Updates a notification by notification_name
+        in: path
+        name: notification_name
+        required: true
+        type: string
+      - description: Update notification
+        in: body
+        name: account
+        required: true
+        schema:
+          $ref: '#/definitions/model.UpdateNotification'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Notification'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      summary: Update a notification
+      tags:
+      - notifications
+  /API/v1/services:
+    get:
+      consumes:
+      - application/json
+      description: Returns all services
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.Service'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      summary: Get all services
+      tags:
+      - services
+    post:
+      consumes:
+      - application/json
+      description: Creates a new service and starts monitor it
+      parameters:
+      - description: Add service
+        in: body
+        name: account
+        required: true
+        schema:
+          $ref: '#/definitions/model.AddService'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Service'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      summary: Create a new service
+      tags:
+      - services
+  /API/v1/services/{service_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Stops a service monitoring and deletes it
+      parameters:
+      - description: Delete by service_id
+        in: path
+        name: service_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+          schema:
+            $ref: '#/definitions/model.Service'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      summary: Delete a service
+      tags:
+      - services
+    get:
+      consumes:
+      - application/json
+      description: Gets a service by its ID
+      parameters:
+      - description: Gets service by service_id
+        in: path
+        name: service_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Service'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      summary: Get a service
+      tags:
+      - services
+    patch:
+      consumes:
+      - application/json
+      description: Updates an existing service and restarts monitoring for it
+      parameters:
+      - description: Updates by service_id
+        in: path
+        name: service_id
+        required: true
+        type: string
+      - description: Update service
+        in: body
+        name: account
+        required: true
+        schema:
+          $ref: '#/definitions/model.UpdateService'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Service'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      summary: Update a service
+      tags:
+      - services
+  /API/v1/services/{service_id}/notifications/{notification_name}:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes a notification to a service
+      parameters:
+      - description: service_id
+        in: path
+        name: service_id
+        required: true
+        type: string
+      - description: notification_name
+        in: path
+        name: notification_name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+          schema:
+            $ref: '#/definitions/model.ServiceNotification'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      summary: Delete a notification to a service
+      tags:
+      - services
+    post:
+      consumes:
+      - application/json
+      description: Adds a notification to a service
+      parameters:
+      - description: service_id
+        in: path
+        name: service_id
+        required: true
+        type: string
+      - description: notification_name
+        in: path
+        name: notification_name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.ServiceNotification'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      summary: Add a notification to a service
+      tags:
+      - services
+swagger: "2.0"

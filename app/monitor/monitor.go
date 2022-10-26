@@ -7,33 +7,23 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/kgantsov/uptime/app/model"
 	"github.com/kyokomi/emoji"
+	"gorm.io/gorm"
 )
 
-type Notification struct {
-	CallbackType   string `json:"callback_type"`
-	CallbackChatID string `json:"callback_chat_id"`
-	Callback       string `json:"callback"`
-}
-
-type Service struct {
-	Name          string         `json:"name"`
-	URL           string         `json:"url"`
-	Notifications []Notification `json:"notifications"`
-	Timeout       int            `json:"timeout"`
-	CheckInterval int            `json:"check_interval"`
-}
-
 type Monitor struct {
+	DB      *gorm.DB
 	client  http.Client
 	done    chan struct{}
-	service Service
+	service model.Service
 }
 
-func NewMonitor(service Service) *Monitor {
+func NewMonitor(db *gorm.DB, service model.Service) *Monitor {
 	client := http.Client{Timeout: time.Duration(service.Timeout) * time.Second}
 
 	m := &Monitor{
+		DB:      db,
 		service: service,
 		client:  client,
 		done:    make(chan struct{}),
@@ -42,7 +32,7 @@ func NewMonitor(service Service) *Monitor {
 	return m
 }
 
-func (m *Monitor) NotifyTg(notification Notification, message string) {
+func (m *Monitor) NotifyTg(notification model.Notification, message string) {
 	fmt.Printf("Sending telegram message: %s to %s\n", message, notification.CallbackChatID)
 
 	bodyParams := map[string]interface{}{
@@ -99,8 +89,24 @@ func (m *Monitor) Start() {
 			fmt.Printf("Stop monitoring for '%s' %s\n", m.service.Name, m.service.URL)
 			return
 		case t := <-ticker.C:
+			start := time.Now()
+
 			status := m.CheckHealth()
-			if status != http.StatusOK {
+
+			success := status == http.StatusOK
+
+			elapsed := time.Since(start)
+
+			m.DB.Create(
+				&model.Heartbeat{
+					ServiceID:    m.service.ID,
+					IsSuccess:    success,
+					StatusCode:   status,
+					ResponseTime: elapsed.Milliseconds(),
+				},
+			)
+
+			if success {
 				if !failing {
 					for _, notification := range m.service.Notifications {
 						m.NotifyTg(

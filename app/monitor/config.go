@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"io"
 	"os"
+
+	"github.com/kgantsov/uptime/app/model"
 )
 
 type Config struct {
-	Services []Service `json:"services"`
+	Services []model.Service `json:"services"`
 }
 
 func ReadConfig(configFilePath string) (*Config, error) {
