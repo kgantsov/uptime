@@ -1,0 +1,82 @@
+header {
+  padding: 1.7rem;
+  background-color: #161b22;
+}
+
+main {
+  padding: 1rem 1.7rem;
+  display: flex;
+}
+
+.sidebar {
+  width: 400px;
+}
+
+.monitorHeader {
+  background-color: #161b22;
+  padding: 1rem;
+  border-radius: 10px 10px 0 0;
+}
+
+.monitorList {
+  background-color: #0d1117;
+  border-radius: 0 0 10px 10px;
+}
+
+.monitorList .monitorItem {
+  width: 100%;
+  display: inherit;
+}
+
+.monitorItem {
+  padding: 1rem;
+}
+
+.active {
+  background-color: #070a10;
+}
+
+.main {
+  width: 100%;
+  padding: 0 1rem;
+}
+
+.main h1 {
+  margin-top: 0;
+}
+
+.successRate {
+  background-color: #5cdd8b;
+  color: #161b22;
+  font-weight: 700;
+  margin: 5px;
+  padding: 5px;
+  border-radius: 44px;
+  font-size: 0.8rem;
+}
+
+.monitorItemWrap {
+  display: flex;
+  justify-content: space-between;
+}
+
+.heartbeats {
+  display: flex;
+  justify-content: end;
+  gap: 3px;
+}
+
+.heartbeat {
+  height: 20px;
+  width: 5px;
+  border-radius: 5px;
+  
+}
+
+.heartbeat.success {
+  background-color: #5cdd8b;
+}
+
+.heartbeat.fail {
+  background-color: #dc3545;
+}
