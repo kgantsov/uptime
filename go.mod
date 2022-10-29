@@ -6,6 +6,7 @@ require (
 	github.com/kyokomi/emoji v2.2.4+incompatible
 	github.com/labstack/echo/v4 v4.9.0
 	github.com/labstack/gommon v0.3.1
+	github.com/sirupsen/logrus v1.9.0
 	github.com/swaggo/echo-swagger v1.3.4
 	github.com/swaggo/swag v1.8.1
 	gorm.io/driver/sqlite v1.3.6

@@ -7,10 +7,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/kyokomi/emoji"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"github.com/labstack/gommon/log"
+	"github.com/sirupsen/logrus"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -40,7 +39,7 @@ import (
 func main() {
 
 	db, err := gorm.Open(sqlite.Open("test.db"), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Info),
+		Logger: logger.Default.LogMode(logger.Error),
 	})
 	if err != nil {
 		fmt.Print("failed to connect database\n")
@@ -74,8 +73,22 @@ func main() {
 	db.SetupJoinTable(&model.Service{}, "Notifications", &model.ServiceNotification{})
 
 	e := echo.New()
-	e.Logger.SetLevel(log.ERROR)
-	e.Use(middleware.Logger())
+	log := logrus.New()
+	// level, _ := logrus.ParseLevel("INFO")
+	// e.Logger.SetLevel(level)
+	// e.Use(middleware.Logger())
+	e.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
+		LogURI:    true,
+		LogStatus: true,
+		LogValuesFunc: func(c echo.Context, values middleware.RequestLoggerValues) error {
+			log.WithFields(logrus.Fields{
+				"URI":    values.URI,
+				"status": values.Status,
+			}).Info("request")
+
+			return nil
+		},
+	}))
 
 	h := &handler.Handler{DB: db, Dispatcher: dispatcher}
 
@@ -104,7 +117,7 @@ func main() {
 		e.Logger.Fatal(e.Start(":1323"))
 	}()
 
-	emoji.Printf("Started uptime monitor\n")
+	log.Infof("Started uptime monitor\n")
 
 	<-done
 

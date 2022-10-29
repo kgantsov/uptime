@@ -3,9 +3,10 @@ package monitor
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/kgantsov/uptime/app/model"
 	"github.com/kyokomi/emoji"
@@ -33,7 +34,7 @@ func NewMonitor(db *gorm.DB, service model.Service) *Monitor {
 }
 
 func (m *Monitor) NotifyTg(notification model.Notification, message string) {
-	fmt.Printf("Sending telegram message: %s to %s\n", message, notification.CallbackChatID)
+	log.Infof("Sending telegram message: %s to %s\n", message, notification.CallbackChatID)
 
 	bodyParams := map[string]interface{}{
 		"chat_id":              notification.CallbackChatID,
@@ -47,7 +48,7 @@ func (m *Monitor) NotifyTg(notification model.Notification, message string) {
 		"POST", notification.Callback, bytes.NewBuffer(jsonBody),
 	)
 	if err != nil {
-		fmt.Printf("Failed to notify telegram %s\n", err)
+		log.Infof("Failed to notify telegram %s\n", err)
 		return
 	}
 
@@ -55,7 +56,7 @@ func (m *Monitor) NotifyTg(notification model.Notification, message string) {
 
 	response, err := m.client.Do(request)
 	if err != nil {
-		fmt.Printf("Failed to notify telegram %s\n", err)
+		log.Infof("Failed to notify telegram %s\n", err)
 		return
 	}
 
@@ -66,7 +67,7 @@ func (m *Monitor) CheckHealth() int {
 	resp, err := m.client.Get(m.service.URL)
 
 	if err != nil {
-		fmt.Printf("Error checking '%s' %s %s\n", m.service.Name, m.service.URL, err)
+		log.Infof("Error checking '%s' %s %s\n", m.service.Name, m.service.URL, err)
 		return -1
 	}
 
@@ -76,7 +77,7 @@ func (m *Monitor) CheckHealth() int {
 }
 
 func (m *Monitor) Start() {
-	fmt.Printf("Starting '%s' %s service monitoring\n", m.service.Name, m.service.URL)
+	log.Infof("Starting '%s' %s service monitoring\n", m.service.Name, m.service.URL)
 
 	failing := false
 	startedFailingAt := time.Time{}
@@ -86,7 +87,7 @@ func (m *Monitor) Start() {
 	for {
 		select {
 		case <-m.done:
-			fmt.Printf("Stop monitoring for '%s' %s\n", m.service.Name, m.service.URL)
+			log.Infof("Stop monitoring for '%s' %s\n", m.service.Name, m.service.URL)
 			return
 		case t := <-ticker.C:
 			start := time.Now()
@@ -94,6 +95,8 @@ func (m *Monitor) Start() {
 			status := m.CheckHealth()
 
 			success := status == http.StatusOK
+
+			log.Infof("=====> %d %t", status, success)
 
 			elapsed := time.Since(start)
 
@@ -123,7 +126,7 @@ func (m *Monitor) Start() {
 					startedFailingAt = time.Now()
 				}
 
-				fmt.Printf("Failed to get %s url. Got status code: %d\n", m.service.URL, status)
+				log.Infof("Service %s %s is up and running: %d\n", t, m.service.URL, status)
 			} else {
 				if failing {
 					for _, notification := range m.service.Notifications {
@@ -140,7 +143,7 @@ func (m *Monitor) Start() {
 					failing = false
 					startedFailingAt = time.Time{}
 				}
-				fmt.Printf("Service %s %s is up and running: %d\n", t, m.service.URL, status)
+				log.Infof("Failed to get %s url. Got status code: %d\n", m.service.URL, status)
 			}
 		}
 	}
@@ -148,5 +151,5 @@ func (m *Monitor) Start() {
 
 func (m *Monitor) Stop() {
 	m.done <- struct{}{}
-	fmt.Printf("Stopping '%s'\n", m.service.Name)
+	log.Infof("Stopping '%s'\n", m.service.Name)
 }
