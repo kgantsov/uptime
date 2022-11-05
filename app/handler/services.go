@@ -75,7 +75,7 @@ func (h *Handler) CreateService(c echo.Context) error {
 	service := new(model.Service)
 
 	if err := c.Bind(service); err != nil {
-		return c.String(http.StatusBadRequest, "bad request")
+		return c.JSON(http.StatusBadRequest, err)
 	}
 
 	h.DB.Create(service)
@@ -109,7 +109,7 @@ func (h *Handler) UpdateService(c echo.Context) error {
 	updateService := &model.UpdateService{}
 
 	if err = c.Bind(updateService); err != nil {
-		return c.String(http.StatusBadRequest, "bad request")
+		return c.JSON(http.StatusBadRequest, err)
 	}
 
 	err = h.DB.Model(&model.Service{}).Preload("Notifications").First(&service, serviceID).Error

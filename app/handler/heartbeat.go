@@ -66,7 +66,7 @@ func (h *Handler) GetHeartbeatStats(c echo.Context) error {
 		`
 		SELECT * FROM
 		(
-			SELECT id, service_id, is_success, created_at, response_time, status_code,
+			SELECT id, service_id, status, created_at, response_time, status_code,
 			ROW_NUMBER() OVER (PARTITION BY service_id Order by created_at DESC) AS size
 			FROM heartbeats
 		) RNK

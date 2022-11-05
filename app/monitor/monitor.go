@@ -3,6 +3,7 @@ package monitor
 import (
 	"bytes"
 	"encoding/json"
+	"net"
 	"net/http"
 	"time"
 
@@ -63,17 +64,26 @@ func (m *Monitor) NotifyTg(notification model.Notification, message string) {
 	response.Body.Close()
 }
 
-func (m *Monitor) CheckHealth() int {
+func (m *Monitor) CheckHealth() (int, string) {
 	resp, err := m.client.Get(m.service.URL)
 
 	if err != nil {
 		log.Infof("Error checking '%s' %s %s\n", m.service.Name, m.service.URL, err)
-		return -1
+	}
+
+	if err, ok := err.(net.Error); ok && err.Timeout() {
+		return 0, "TIMEOUT"
+	} else if err != nil {
+		return 0, "DOWN"
 	}
 
 	defer resp.Body.Close()
 
-	return resp.StatusCode
+	if resp.StatusCode == http.StatusOK {
+		return resp.StatusCode, "UP"
+	}
+
+	return resp.StatusCode, "FAILED"
 }
 
 func (m *Monitor) Start() {
@@ -92,24 +102,22 @@ func (m *Monitor) Start() {
 		case t := <-ticker.C:
 			start := time.Now()
 
-			status := m.CheckHealth()
+			statusCode, status := m.CheckHealth()
 
-			success := status == http.StatusOK
-
-			log.Infof("=====> %d %t", status, success)
+			log.Infof("=====> %s", status)
 
 			elapsed := time.Since(start)
 
 			m.DB.Create(
 				&model.Heartbeat{
 					ServiceID:    m.service.ID,
-					IsSuccess:    success,
-					StatusCode:   status,
+					Status:       status,
+					StatusCode:   statusCode,
 					ResponseTime: elapsed.Milliseconds(),
 				},
 			)
 
-			if success {
+			if status == "UP" {
 				if !failing {
 					for _, notification := range m.service.Notifications {
 						m.NotifyTg(

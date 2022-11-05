@@ -7,7 +7,7 @@ type (
 		ID           uint      `json:"id" gorm:"primarykey"`
 		ServiceID    uint      `json:"service_id"`
 		ResponseTime int64     `json:"response_time"`
-		IsSuccess    bool      `json:"is_success"`
+		Status       string    `json:"status"`
 		StatusCode   int       `json:"status_code"`
 		CreatedAt    time.Time `json:"created_at"`
 	}
