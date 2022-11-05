@@ -4,6 +4,7 @@ import './App.css';
 import { HomePage } from './pages/HomePage/HomePage';
 import { Layout } from './pages/Layout/Layout';
 import { MonitorPage } from './pages/MonitorPage/MonitorPage';
+import { NewMonitorPage } from './pages/NewMonitorPage/NewMonitorPage';
 import '@tremor/react/dist/esm/tremor.css';
 
 function App() {
@@ -13,6 +14,7 @@ function App() {
         <Route element={<Layout />}>
           <Route path="/" element={<HomePage />} />
           <Route path="/monitors/:monitorId" element={<MonitorPage />} />
+          <Route path="/monitors/new" element={<NewMonitorPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

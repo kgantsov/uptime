@@ -16,6 +16,9 @@ main {
   background-color: #161b22;
   padding: 1rem;
   border-radius: 10px 10px 0 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .monitorList {

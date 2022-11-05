@@ -7,16 +7,19 @@ import {
   Flex,
   Text,
  } from "@tremor/react";
-import { Outlet, NavLink } from 'react-router-dom';
+import { Outlet, NavLink, Link } from 'react-router-dom';
+import { PlusIcon } from '@heroicons/react/24/solid'
+import { Icon } from "@tremor/react";
 
 import styles from './Layout.module.css';
 import { Service } from '../../types/services';
-import { Heartbeat } from '../../types/heartbeats';
+import { Heartbeat, STATUS_COLORS_MAP } from '../../types/heartbeats';
 
 
 export function Layout() {
     const [services, setServices] = useState<Service[]>([]);
     const [stats, setStats] = useState<Heartbeat[]>([]);
+    const size = 20;
 
     async function fetchServices() {
         try {
@@ -30,7 +33,7 @@ export function Layout() {
 
     async function fetchStats() {
         try {
-            const response = await fetch('/API/v1/heartbeats/stats?size=25');
+            const response = await fetch(`/API/v1/heartbeats/stats?size=${size}`);
             const data = await response.json();
             setStats(data)
         } catch (e) {
@@ -59,13 +62,40 @@ export function Layout() {
             <div className={styles.sidebar}>
                 <div className={styles.monitors}>
                 <div className={styles.monitorHeader}>
-                    <h3>Monotors</h3>
+                    <div>
+                        <h3>Monotors</h3>
+                    </div>
+                    <div>
+                        <Link to='/monitors/new'>
+                            <Icon
+                                icon={ PlusIcon }
+                                variant="simple"
+                                tooltip=""
+                                size="sm"
+                                color="blue"
+                                marginTop="mt-0"
+                            />
+                        </Link>
+                    </div>
                 </div>
                 <ul className={styles.monitorList}>
                     {services.map(service => {
-                        const heartbeats = stats.filter(i => i.service_id === service.id).reverse()
+                        let _heartbeats = stats.filter(i => i.service_id === service.id);
+
+                        let heartbeats = [...new Array(size)].map((_, i) => {
+                            return _heartbeats[i] || {
+                                created_at: "2022-11-05T18:19:14.843001+01:00",
+                                id: -size + i,
+                                response_time: 0,
+                                service_id: service.id,
+                                status: "UNKNOWN",
+                                status_code: 0
+                            }
+                        });
+                        heartbeats = heartbeats.reverse()
+
                         const success = heartbeats.reduce(
-                            (prev, cur) => (cur.is_success === true) ? prev + 1 : prev, 0
+                            (prev, cur) => (cur.status === "UP" || cur.status === "UNKNOWN") ? prev + 1 : prev, 0
                         )
                         return (
                             <li key={service.id}>
@@ -77,14 +107,14 @@ export function Layout() {
                                 >
                                     {service.name}
                                     <Flex justifyContent="justify-end" marginTop="mt-4">
-                                        <Text>Uptime {success * 100 / heartbeats.length}%</Text>
+                                        <Text>Uptime {(success * 100 / heartbeats.length) || 0}%</Text>
                                     </Flex>
                                     <Tracking marginTop="mt-2">
                                         {heartbeats.map(heartbeat => {
                                                 return (
                                                     <TrackingBlock
                                                         key={heartbeat.id}
-                                                        color={(heartbeat.is_success === true) ? "emerald" : "rose"}
+                                                        color={STATUS_COLORS_MAP[heartbeat.status]}
                                                         tooltip={`Response time: ${heartbeat.response_time} ms`}
                                                     />
                                                 );

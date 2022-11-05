@@ -10,3 +10,62 @@
 body {
   background-color: #090c10;
 }
+
+.block {
+  border-radius: 10px;
+  background-color: #0d1117;
+  padding: 1rem;
+}
+
+.form-element {
+  display: block;
+  /* margin-bottom: 1.5rem; */
+}
+
+.form-element label {
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.form-element input[type=password],
+.form-element input[type=text],
+.form-element input[type=number],
+.form-element textarea {
+  border: 1px solid #ced4da;
+  font-size: 1.3rem;
+  height: 3rem;
+  padding: 0.5rem;
+  width: 100%;
+  margin: 0.5rem 0rem 1.5rem 0;
+  background-color: #070a10;
+  border-radius: 4px;
+}
+
+input[type=submit] {
+  background: #3d6edc;
+  background: var(--active);
+  border: 1px solid;
+  border-radius: 4px;
+  color: #fffffe;
+  color: var(--secondary-color);
+  cursor: pointer;
+  font-size: 1rem;
+  outline: none;
+}
+
+.form-element input[type=submit] {
+  background: #3d6edc;
+  background: var(--active);
+  color: #fffffe;
+  color: var(--secondary-color);
+  font-size: 1rem;
+  padding: 12px 24px;
+}
+
+.form-element .submit-wrapper {
+
+}
+
+.form-element .submit {
+
+}
