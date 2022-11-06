@@ -4,12 +4,11 @@ import { useState, useEffect } from 'react';
 import {
   Tracking,
   TrackingBlock,
-  Flex,
-  Text,
- } from "@tremor/react";
+} from "@tremor/react";
 import { Outlet, NavLink, Link } from 'react-router-dom';
-import { PlusIcon } from '@heroicons/react/24/solid'
+import { PlusIcon, HeartIcon } from '@heroicons/react/24/solid'
 import { Icon } from "@tremor/react";
+import { Badge } from "@tremor/react";
 
 import styles from './Layout.module.css';
 import { Service } from '../../types/services';
@@ -25,7 +24,7 @@ export function Layout() {
         try {
             const response = await fetch('/API/v1/services');
             const data = await response.json();
-            setServices(data)
+            return data
         } catch(e) {
             console.log(e);
         }
@@ -35,16 +34,23 @@ export function Layout() {
         try {
             const response = await fetch(`/API/v1/heartbeats/stats?size=${size}`);
             const data = await response.json();
-            setStats(data)
+            return data
         } catch (e) {
             console.log(e);
         }
     }
 
     async function fetchData() {
-        await fetchServices()
+        const servicesData = await fetchServices()
 
-        await fetchStats()
+        const statsData = await fetchStats()
+
+        if (statsData) {
+            setStats(statsData)
+        }
+        if (servicesData) {
+            setServices(servicesData)
+        }
     }
 
     useEffect(() => {
@@ -57,7 +63,9 @@ export function Layout() {
 
   return (
     <>
-        <header>Uptime</header>
+        <header>
+            <Link to="/">Uptime</Link>
+        </header>
         <main>
             <div className={styles.sidebar}>
                 <div className={styles.monitors}>
@@ -105,21 +113,29 @@ export function Layout() {
                                     )}
                                     to={`/monitors/${service.id}`}
                                 >
-                                    {service.name}
-                                    <Flex justifyContent="justify-end" marginTop="mt-4">
-                                        <Text>Uptime {(success * 100 / heartbeats.length) || 0}%</Text>
-                                    </Flex>
-                                    <Tracking marginTop="mt-2">
-                                        {heartbeats.map(heartbeat => {
+                                    <div className={styles.monitorItemHeader}>
+                                        <div>{service.name}</div>
+                                        <Badge
+                                            text={`${(success * 100 / heartbeats.length) || 0}%`}
+                                            color={heartbeats[heartbeats.length - 1].status === 'UP' ? "green" : "rose"}
+                                            size="sm"
+                                            icon={HeartIcon}
+                                            tooltip=""
+                                            marginTop="mt-0" />
+                                    </div>
+                                    <div>
+                                        <Tracking marginTop="mt-2">
+                                            {heartbeats.map(heartbeat => {
                                                 return (
                                                     <TrackingBlock
-                                                        key={heartbeat.id}
-                                                        color={STATUS_COLORS_MAP[heartbeat.status]}
-                                                        tooltip={`Response time: ${heartbeat.response_time} ms`}
+                                                    key={heartbeat.id}
+                                                    color={STATUS_COLORS_MAP[heartbeat.status]}
+                                                    tooltip={`Response time: ${heartbeat.response_time} ms`}
                                                     />
-                                                );
-                                            })}
-                                    </Tracking>
+                                                    );
+                                                })}
+                                        </Tracking>
+                                    </div>
                                 </NavLink>
                             </li>
                         )

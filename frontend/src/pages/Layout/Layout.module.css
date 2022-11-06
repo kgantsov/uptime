@@ -31,6 +31,12 @@ main {
   display: inherit;
 }
 
+.monitorItemHeader {
+  display: flex;
+  justify-content: space-between;
+}
+
+
 .monitorItem {
   padding: 1rem;
 }

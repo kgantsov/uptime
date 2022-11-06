@@ -1,11 +1,11 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import './App.css';
 import { HomePage } from './pages/HomePage/HomePage';
 import { Layout } from './pages/Layout/Layout';
 import { MonitorPage } from './pages/MonitorPage/MonitorPage';
 import { NewMonitorPage } from './pages/NewMonitorPage/NewMonitorPage';
 import '@tremor/react/dist/esm/tremor.css';
+import './App.css';
 
 function App() {
   return (

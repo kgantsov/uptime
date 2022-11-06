@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { AreaChart } from "@tremor/react";
 import { format } from 'date-fns';
 import { Service } from '../../types/services';
 import { Heartbeat } from '../../types/heartbeats';
 
 import styles from './MonitorPage.module.css';
+import { API } from '../../API';
 
 export function MonitorPage() {
+    let navigate = useNavigate();
     const { monitorId } = useParams();
     const [service, setService] = useState<Service | null>(null);
     const [latencies, setLatencies] = useState<Heartbeat[]>([]);
@@ -32,6 +34,17 @@ export function MonitorPage() {
       }
     }
 
+    async function handleServiceDelete() {
+      try {
+        const response = await fetch(`/API/v1/services/${monitorId}`, {method: "DELETE"});
+        if (response.status === 204) {
+          navigate(`/`);
+        }
+      } catch(e) {
+        console.log(e);
+      }
+    }
+
     useEffect(() => {
       fetchData(Number(monitorId));
       fetchLatencies(Number(monitorId));
@@ -49,8 +62,14 @@ export function MonitorPage() {
     return (
       <>
         <div className={styles.header}>
-          <h1 className={styles.title}>{service.name}</h1>
-          <h4><a href={service.url} target='_blank' rel="noreferrer">{service.url}</a></h4>
+          <div>
+            <h1 className={styles.title}>{service.name}</h1>
+            <h4><a href={service.url} target='_blank' rel="noreferrer">{service.url}</a></h4>
+          </div>
+          <div className={styles.controls}>
+            {/* <button>Edit</button> */}
+            <button onClick={handleServiceDelete}>Delete</button>
+          </div>
         </div>
 
         <AreaChart

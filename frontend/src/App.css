@@ -41,7 +41,7 @@ body {
   border-radius: 4px;
 }
 
-input[type=submit] {
+input[type=submit], button {
   background: #3d6edc;
   background: var(--active);
   border: 1px solid;
@@ -51,9 +51,10 @@ input[type=submit] {
   cursor: pointer;
   font-size: 1rem;
   outline: none;
+  padding: 6px 12px;
 }
 
-.form-element input[type=submit] {
+.form-element input[type=submit], .form-element button {
   background: #3d6edc;
   background: var(--active);
   color: #fffffe;
@@ -68,4 +69,12 @@ input[type=submit] {
 
 .form-element .submit {
 
+}
+
+.tr-text-green-500 {
+  background-color: rgb(16 185 129 / var(--tw-bg-opacity));
+}
+
+.tr-text-rose-500 {
+  background-color: rgb(244 63 94 / var(--tw-bg-opacity));
 }
