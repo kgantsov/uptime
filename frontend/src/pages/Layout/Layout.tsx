@@ -117,7 +117,7 @@ export function Layout() {
                                         <div>{service.name}</div>
                                         <Badge
                                             text={`${(success * 100 / heartbeats.length) || 0}%`}
-                                            color={heartbeats[heartbeats.length - 1].status === 'UP' ? "green" : "rose"}
+                                            color={(heartbeats[heartbeats.length - 1].status === 'UP' || heartbeats[heartbeats.length - 1].status === 'UNKNOWN') ? "green" : "rose"}
                                             size="sm"
                                             icon={HeartIcon}
                                             tooltip=""

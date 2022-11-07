@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { AreaChart } from "@tremor/react";
+import { AreaChart, Tracking, TrackingBlock } from "@tremor/react";
 import { format } from 'date-fns';
 import { Service } from '../../types/services';
-import { Heartbeat } from '../../types/heartbeats';
+import { Heartbeat, STATUS_COLORS_MAP } from '../../types/heartbeats';
 
 import styles from './MonitorPage.module.css';
 import { API } from '../../API';
@@ -71,7 +71,17 @@ export function MonitorPage() {
             <button onClick={handleServiceDelete}>Delete</button>
           </div>
         </div>
-
+        <Tracking marginTop="mt-2">
+            {latencies.map(heartbeat => {
+                return (
+                    <TrackingBlock
+                    key={heartbeat.id}
+                    color={STATUS_COLORS_MAP[heartbeat.status]}
+                    tooltip={`Response time: ${heartbeat.response_time} ms`}
+                    />
+                    );
+                })}
+        </Tracking>
         <AreaChart
           data={latencies.map(item => {
             const createdAt = new Date(item.created_at)
