@@ -1,0 +1,67 @@
+
+.monitorList {
+    background-color: #0d1117;
+    border-radius: 10px;
+    /* width: 100%; */
+    padding: 1rem;
+    display: block;
+}
+
+.monitorList .monitorItem {
+    width: 100%;
+    display: inherit;
+}
+
+
+.monitorHeader {
+    background-color: #161b22;
+    padding: 1rem;
+    border-radius: 10px 10px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+  
+.monitorItemHeader {
+    display: flex;
+    justify-content: space-between;
+}
+
+.active {
+    background-color: #070a10;
+}
+
+.monitorList tr {
+
+}
+
+.monitorList td {
+    padding: 1rem;
+}
+
+
+.monitorList thead td {
+    font-weight: 600;
+}
+
+.monitorList .title {
+    width: 100%;
+}
+
+.name {
+    font-size: 1.3rem;
+}
+.url {
+    font-size: 0.9rem;
+}
+
+.monitorList .heartbeats {
+    min-width: 250px;
+}
+
+.controls {
+    display: flex;
+    margin-bottom: 1rem;
+    justify-content: end;
+}
+

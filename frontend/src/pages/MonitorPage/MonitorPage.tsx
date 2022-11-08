@@ -23,10 +23,12 @@ export function MonitorPage() {
           console.log(e);
       }
     }
+    
+    const size = 100
 
     async function fetchLatencies(monitorId: number) {
       try {
-        const response = await fetch(`/API/v1/heartbeats/latencies?service_id=${monitorId}&size=10`);
+        const response = await fetch(`/API/v1/heartbeats/latencies?service_id=${monitorId}&size=${size}`);
         const data = await response.json();
         setLatencies(data.reverse())
       } catch (e) {
@@ -59,6 +61,19 @@ export function MonitorPage() {
       return <></>
     }
 
+    let heartbeats : Heartbeat[] = [...new Array(size)].map((_, i) => ({
+      created_at: new Date("2022-11-05T18:19:14.843001+01:00"),
+      id: -size + i,
+      response_time: 0,
+      service_id: service.id,
+      status: "UNKNOWN",
+      status_code: 0
+    }))
+
+    for (let i = 0; i < latencies.length; i++) {
+      heartbeats[(size - latencies.length) + i] = latencies[i]
+    }
+
     return (
       <>
         <div className={styles.header}>
@@ -72,7 +87,7 @@ export function MonitorPage() {
           </div>
         </div>
         <Tracking marginTop="mt-2">
-            {latencies.map(heartbeat => {
+            {heartbeats.map(heartbeat => {
                 return (
                     <TrackingBlock
                     key={heartbeat.id}

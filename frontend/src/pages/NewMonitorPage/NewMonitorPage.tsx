@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { API } from '../../API';
+import { Button } from "@tremor/react";
 
 import styles from './MonitorPage.module.css';
 
@@ -21,10 +22,10 @@ export function NewMonitorPage() {
     }));
   };
 
-  const handleSubmit = (e: { preventDefault: () => void; }) => {
-    e.preventDefault();
-
-    console.log('=====>', values)
+  const handleSubmit = (e?: { preventDefault: () => void; }) => {
+    if (e !== undefined) {
+      e.preventDefault();
+    }
 
     API.fetch('POST', `/API/v1/services`, null, {
       name: values.name,
