@@ -36,12 +36,12 @@ definitions:
         type: string
       id:
         type: integer
-      is_success:
-        type: boolean
       response_time:
         type: integer
       service_id:
         type: integer
+      status:
+        type: string
       status_code:
         type: integer
     type: object
@@ -156,6 +156,10 @@ paths:
       - description: Filtering by service_id
         in: query
         name: service_id
+        type: string
+      - description: Size
+        in: query
+        name: size
         type: string
       produces:
       - application/json

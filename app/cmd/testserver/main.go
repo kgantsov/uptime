@@ -61,6 +61,11 @@ func main() {
 			Status: "OK",
 		}
 
+		smin := 0
+		smax := 1000
+		snum := rand.Intn(smax-smin+1) + smin
+		time.Sleep(time.Millisecond * time.Duration(snum))
+
 		return c.JSON(http.StatusOK, h)
 	})
 	e.Logger.Fatal(e.Start(fmt.Sprintf(":%s", *portPtr)))

@@ -104,8 +104,6 @@ func (m *Monitor) Start() {
 
 			statusCode, status := m.CheckHealth()
 
-			log.Infof("=====> %s", status)
-
 			elapsed := time.Since(start)
 
 			m.DB.Create(

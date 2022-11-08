@@ -44,6 +44,12 @@ const docTemplate = `{
                         "description": "Filtering by service_id",
                         "name": "service_id",
                         "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Size",
+                        "name": "size",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -712,14 +718,14 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
-                "is_success": {
-                    "type": "boolean"
-                },
                 "response_time": {
                     "type": "integer"
                 },
                 "service_id": {
                     "type": "integer"
+                },
+                "status": {
+                    "type": "string"
                 },
                 "status_code": {
                     "type": "integer"

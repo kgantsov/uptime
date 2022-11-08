@@ -15,20 +15,32 @@ import (
 // @Accept       json
 // @Produce      json
 // @Param        service_id    query     string  false  "Filtering by service_id"
+// @Param        size    query     string  false  "Size"
 // @Success      200  {object}  []model.Heartbeat
 // @Failure      404  {object}  echo.HTTPError
 // @Failure      500  {object}  echo.HTTPError
 // @Router       /API/v1/heartbeats/latencies [get]
 func (h *Handler) GetHeartbeatsLatencies(c echo.Context) error {
+	var err error
+
 	serviceID := c.QueryParam("service_id")
+	sizeStr := c.QueryParam("size")
+
+	if sizeStr == "" {
+		sizeStr = "100"
+	}
+
+	size, err := strconv.Atoi(sizeStr)
+
+	if err != nil {
+		return &echo.HTTPError{Code: http.StatusBadRequest, Message: err}
+	}
 
 	var heartbeats []model.Heartbeat
-
-	var err error
 	if serviceID != "" {
-		err = h.DB.Order("id desc").Where("service_id = ?", serviceID).Limit(100).Find(&heartbeats).Error
+		err = h.DB.Order("id desc").Where("service_id = ?", serviceID).Limit(size).Find(&heartbeats).Error
 	} else {
-		err = h.DB.Order("id desc").Limit(100).Find(&heartbeats).Error
+		err = h.DB.Order("id desc").Limit(size).Find(&heartbeats).Error
 	}
 
 	if err != nil {
