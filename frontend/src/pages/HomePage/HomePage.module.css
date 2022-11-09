@@ -1,38 +1,9 @@
 
 .monitorList {
-    background-color: #0d1117;
+    background-color: var(--primary-color);
     border-radius: 10px;
-    /* width: 100%; */
     padding: 1rem;
     display: block;
-}
-
-.monitorList .monitorItem {
-    width: 100%;
-    display: inherit;
-}
-
-
-.monitorHeader {
-    background-color: #161b22;
-    padding: 1rem;
-    border-radius: 10px 10px 0 0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-  
-.monitorItemHeader {
-    display: flex;
-    justify-content: space-between;
-}
-
-.active {
-    background-color: #070a10;
-}
-
-.monitorList tr {
-
 }
 
 .monitorList td {

@@ -1,5 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Poppins:wght@300;400;500;600;700&display=swap');
+
 * {
-  color: #f0f6fc;
+  font-family: 'Poppins', sans-serif;
+  color: var(--text-color);
   box-sizing: border-box;
   list-style-type: none;
   margin: 0;
@@ -7,14 +10,54 @@
   text-decoration: none;
 }
 
+:root {
+  --body-color: #E4E9F7;
+  --sidebar-color: #FFF;
+  --primary-color: #695CFE;
+  --primary-color-light: #F6F5FF;
+  --toggle-color: #DDD;
+  --text-color: #707070;
+
+  --tran-02: all 0.2s ease;
+  --tran-03: all 0.3s ease;
+  --tran-04: all 0.4s ease;
+  --tran-05: all 0.5s ease;
+}
+
+
 body {
-  background-color: #090c10;
+  height: 100vh;
+  background-color: var(--body-color);
+  transition: var(--tran-02);
+}
+
+body:has(.dark) {
+  --body-color: #3aafa9;
+  --sidebar-color: #2b7a78;
+  --primary-color: #2b7a78;
+  --primary-color-light: #3aafa9;
+  --secondary-color: #17252a;
+  --toggle-color: #def2f1;
+  --text-color: #feffff;
+}
+
+body:has(.dark2) {
+  --body-color: #001e1d;
+  --sidebar-color: #004643;
+  --primary-color: #004643;
+  --primary-color-light: #f9bc60;
+  --secondary-color: #f9bc60;
+  --toggle-color: #def2f1;
+  --text-color: #fffffe;
+  --text-color-dark: #001e1d;
 }
 
 .block {
+  background-color: var(--primary-color);
   border-radius: 10px;
-  background-color: #0d1117;
   padding: 1rem;
+  display: block;
+  margin-bottom: 1rem;
 }
 
 .form-element {
@@ -37,7 +80,7 @@ body {
   padding: 0.5rem;
   width: 100%;
   margin: 0.5rem 0rem 1.5rem 0;
-  background-color: #070a10;
+  background-color: var(--body-color);
   border-radius: 4px;
 }
 
@@ -47,25 +90,25 @@ input[type=submit], button {
   border: none;
   border-radius: 4px;
   color: #fffffe;
-  color: var(--secondary-color);
+  color: var(--text-color-dark);
   cursor: pointer;
   font-size: 1rem;
   outline: none;
   padding: 6px 12px;
 
   --tw-bg-opacity: 1;
-  background-color: rgb(16 185 129 / var(--tw-bg-opacity));
+  background-color: var(--secondary-color);
   color: #fffffe;
-  color: var(--secondary-color);
+  color: var(--text-color-dark);
   font-size: 1rem;
   padding: 12px 24px;
 }
 
 .form-element input[type=submit], .form-element button {
   --tw-bg-opacity: 1;
-  background-color: rgb(16 185 129 / var(--tw-bg-opacity));
+  background-color: var(--secondary-color);
   color: #fffffe;
-  color: var(--secondary-color);
+  color: var(--text-color-dark);
   font-size: 1rem;
   padding: 12px 24px;
 }
@@ -84,7 +127,8 @@ input[type=submit]:hover, button:hover {
 }
 
 .tr-text-green-500 {
-  background-color: rgb(16 185 129 / var(--tw-bg-opacity));
+  background-color: var(--secondary-color);
+  color: var(--text-color-dark);
 }
 
 .tr-text-rose-500 {
@@ -93,10 +137,12 @@ input[type=submit]:hover, button:hover {
 
 .tr-bg-green-500 {
   --tw-bg-opacity: 1;
-  background-color: rgb(16 185 129 / var(--tw-bg-opacity));
+  background-color: var(--secondary-color);
+  color: var(--text-color-dark);
 }
 
 .tr-bg-green-500:hover {
   --tw-bg-opacity: 0.9;
-  background-color: rgb(16 185 129 / var(--tw-bg-opacity));
+  background-color: var(--secondary-color);
+  color: var(--text-color-dark);
 }

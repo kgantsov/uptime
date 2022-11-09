@@ -86,6 +86,7 @@ export function MonitorPage() {
             <button onClick={handleServiceDelete}>Delete</button>
           </div>
         </div>
+        <div className='block'>
         <Tracking marginTop="mt-2">
             {heartbeats.map(heartbeat => {
                 return (
@@ -97,29 +98,32 @@ export function MonitorPage() {
                     );
                 })}
         </Tracking>
-        <AreaChart
-          data={latencies.map(item => {
-            const createdAt = new Date(item.created_at)
-            return {
-              time: format(createdAt, 'H:mm'),
-              response_time: item.response_time,
-            }
-          })}
-          categories={['response_time',]}
-          dataKey="time"
-          colors={["cyan"]}
-          valueFormatter={undefined}
-          startEndOnly={false}
-          showXAxis={true}
-          showYAxis={true}
-          yAxisWidth="w-14"
-          showTooltip={true}
-          showLegend={false}
-          showGridLines={false}
-          showAnimation={true}
-          height="h-80"
-          marginTop="mt-0"
-        />
+        </div>
+        <div className='block'>
+          <AreaChart
+            data={latencies.map(item => {
+              const createdAt = new Date(item.created_at)
+              return {
+                time: format(createdAt, 'H:mm'),
+                response_time: item.response_time,
+              }
+            })}
+            categories={['response_time',]}
+            dataKey="time"
+            colors={["cyan"]}
+            valueFormatter={undefined}
+            startEndOnly={false}
+            showXAxis={true}
+            showYAxis={true}
+            yAxisWidth="w-14"
+            showTooltip={true}
+            showLegend={false}
+            showGridLines={false}
+            showAnimation={true}
+            height="h-80"
+            marginTop="mt-0"
+          />
+        </div>
       </>
     )
   }

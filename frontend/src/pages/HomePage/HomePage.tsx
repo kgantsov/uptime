@@ -7,6 +7,7 @@ import {
 } from "@tremor/react";
 import { Outlet, NavLink, Link, useNavigate } from 'react-router-dom';
 import { PlusIcon, HeartIcon, CheckCircleIcon, ExclamationCircleIcon } from '@heroicons/react/24/solid'
+import { FaPlus } from 'react-icons/fa';
 import { Button } from "@tremor/react";
 import { Icon } from "@tremor/react";
 import { Badge } from "@tremor/react";
@@ -68,7 +69,7 @@ export function HomePage() {
         <div className={styles.controls}>
             <Button
                 text="new"
-                icon={PlusIcon}
+                icon={FaPlus}
                 iconPosition="left"
                 size="sm"
                 color="green"

@@ -6,7 +6,9 @@ import {
   TrackingBlock,
 } from "@tremor/react";
 import { Outlet, NavLink, Link } from 'react-router-dom';
-import { PlusIcon, HeartIcon } from '@heroicons/react/24/solid'
+import { BellIcon, Square3Stack3DIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/solid'
+import { FaHeartbeat } from 'react-icons/fa';
+import { BsChevronRight, BsChevronLeft } from 'react-icons/bs';
 import { Icon } from "@tremor/react";
 import { Badge } from "@tremor/react";
 
@@ -62,15 +64,76 @@ export function Layout() {
     }, []);
 
   return (
-    <>
-        <header>
-            <Link to="/">Uptime</Link>
-        </header>
+    <div className='dark2'>
+        <nav className={styles.sidebar}>
+            <div className={styles.logo}>
+                <span className="image">
+                    <Icon
+                        icon={FaHeartbeat}
+                        variant="simple"
+                        tooltip=""
+                        size="lg"
+                        color="blue"
+                        marginTop="mt-0"
+                    />
+                </span>
+
+                <div className="header-text">
+                    <span className="name">Uptime</span>
+                </div>
+                <span className={styles.toggle}>
+                    <Icon
+                        icon={BsChevronRight}
+                        variant="simple"
+                        tooltip=""
+                        size="md"
+                        color="blue"
+                        marginTop="mt-0"
+                    />
+                </span>
+            </div>
+            <div className={styles.sidebarMenu}>
+                <ul className={styles.menuLinks}>
+                    <li className={styles.navLink}>
+                        <NavLink 
+                            className={(navData) => (navData.isActive ? styles.active : '')}
+                            to='/monitors/'
+                        >
+                            <Icon
+                                icon={Square3Stack3DIcon}
+                                variant="simple"
+                                tooltip=""
+                                size="md"
+                                color="blue"
+                                marginTop="mt-0"
+                            />
+                            <span>Services</span>
+                        </NavLink>
+                    </li>
+                    <li className={styles.navLink}>
+                        <NavLink 
+                            className={(navData) => (navData.isActive ? styles.active : '')}
+                            to='/notifications/'
+                        >
+                            <Icon
+                                icon={BellIcon}
+                                variant="simple"
+                                tooltip=""
+                                size="md"
+                                color="blue"
+                                marginTop="mt-0"
+                            />
+                            <span>Notifications</span>
+                        </NavLink>
+                    </li>
+                </ul>
+            </div>
+        </nav>
         <main>
             <div className={styles.main}>
                 <Outlet />
             </div>
         </main>
-      </>
+      </div>
   );
 }

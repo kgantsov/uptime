@@ -1,60 +1,76 @@
-header {
-  padding: 1.7rem;
-  background-color: #161b22;
-  font-size: 1.2rem;
+.logo {
+  display: flex;
+  height: 80px;
+  align-items: center;
+  padding: 2rem;
+  color: var(--secondary-color);
+}
+
+.logo span {
+  color: var(--secondary-color);
   font-weight: 600;
+  font-size: 1.4rem;
 }
 
 main {
-  padding: 1rem 1rem;
-  display: flex;
-}
-
-.sidebar {
-  width: 400px;
+  left: 300px;
+  position: absolute;
+  padding: 1.5rem 3rem;
+  width: calc(100% - 300px);
 }
 
 .main {
-  width: 100%;
-  padding: 0 1rem;
+
 }
 
-.main h1 {
-  margin-top: 0;
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 300px;
+  background: var(--sidebar-color);
 }
 
-.successRate {
-  background-color: #5cdd8b;
-  color: #161b22;
-  font-weight: 700;
-  margin: 5px;
-  padding: 5px;
-  border-radius: 44px;
-  font-size: 0.8rem;
+.sidebarMenu {
+
 }
 
-.monitorItemWrap {
+.menuLinks {
+  padding: 1rem;
+}
+
+.navLink {
+  padding: 1rem 0.5rem;
+}
+
+.navLink a {
   display: flex;
-  justify-content: space-between;
+  align-items: center;
 }
 
-.heartbeats {
-  display: flex;
-  justify-content: end;
-  gap: 3px;
-}
-
-.heartbeat {
-  height: 20px;
-  width: 5px;
+.navLink:has(> a.active) {
+  background-color: var(--primary-color-light);
   border-radius: 5px;
-  
+  transition: var(--trans-02);
 }
 
-.heartbeat.success {
-  background-color: #5cdd8b;
+.toggle {
+  position: absolute;
+  right: -12px;
+  width: 25px;
+  display: flex;
+  height: 25px;
+  justify-content: center;
+  align-items: center;
+  background: var(--primary-color);
+  border-radius: 50%;
+  top: 25px;
 }
 
-.heartbeat.fail {
-  background-color: #dc3545;
-}
+
+/* .navLink:hover {
+  background-color: var(--primary-color);
+  border-radius: 5px;
+  transition: var(--trans-02);
+} */
