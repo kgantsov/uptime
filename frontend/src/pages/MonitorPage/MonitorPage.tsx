@@ -110,7 +110,7 @@ export function MonitorPage() {
             })}
             categories={['response_time',]}
             dataKey="time"
-            colors={["cyan"]}
+            colors={["yellow"]}
             valueFormatter={undefined}
             startEndOnly={false}
             showXAxis={true}

@@ -131,8 +131,8 @@ input[type=submit]:hover, button:hover {
   color: var(--text-color-dark);
 }
 
-.tr-text-rose-500 {
-  background-color: rgb(244 63 94 / var(--tw-bg-opacity));
+.tr-text-rose-500, .tr-bg-rose-500 {
+  background-color: #e16162;
 }
 
 .tr-bg-green-500 {
@@ -145,4 +145,8 @@ input[type=submit]:hover, button:hover {
   --tw-bg-opacity: 0.9;
   background-color: var(--secondary-color);
   color: var(--text-color-dark);
+}
+
+.tremor-base :is( *, ::before, ::after ) tspan {
+  fill: var(--secondary-color);
 }
