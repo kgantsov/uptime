@@ -60,6 +60,10 @@ body:has(.dark2) {
   margin-bottom: 1rem;
 }
 
+.block > .tr-mt-2 {
+  margin: 0;
+}
+
 .form-element {
   display: block;
   /* margin-bottom: 1.5rem; */

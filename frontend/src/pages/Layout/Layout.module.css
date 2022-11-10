@@ -2,8 +2,21 @@
   display: flex;
   height: 80px;
   align-items: center;
-  padding: 2rem;
+  padding: 1rem;
   color: var(--secondary-color);
+  gap: 5px;
+}
+
+.open .logo {
+  padding: 2rem;
+}
+
+.logoText {
+  display: none;
+}
+
+.open .logoText {
+  display: block;
 }
 
 .logo span {
@@ -12,15 +25,19 @@
   font-size: 1.4rem;
 }
 
-main {
+main.open {
   left: 300px;
   position: absolute;
   padding: 1.5rem 3rem;
   width: calc(100% - 300px);
 }
 
-.main {
-
+main {
+  left: 72px;
+  position: absolute;
+  padding: 1.5rem 3rem;
+  width: calc(100% - 72px);
+  transition: width 300ms, left 300ms;
 }
 
 .sidebar {
@@ -28,28 +45,55 @@ main {
   top: 0;
   left: 0;
   height: 100%;
-  width: 300px;
+  width: 72px;
   background: var(--sidebar-color);
+  z-index: 1;
+  transition: width 300ms;
 }
 
-.sidebarMenu {
+.sidebar.open {
+  width: 300px;
+  transition: width 300ms;
+}
 
+.navLinkTitle {
+  display: none;
+}
+
+.open .navLinkTitle {
+  display: block;
 }
 
 .menuLinks {
+  padding: 0;
+  margin-top: 2rem;
+}
+
+.open .menuLinks {
+  margin-top: 2rem;
+}
+
+.open .navLink a {
   padding: 1rem;
 }
 
 .navLink {
-  padding: 1rem 0.5rem;
+  padding: 0 0.7rem;
 }
 
 .navLink a {
   display: flex;
   align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px;
 }
 
-.navLink:has(> a.active) {
+.open .navLink a {
+  justify-content: start;
+}
+
+.navLink  a.active {
   background-color: var(--primary-color-light);
   border-radius: 5px;
   transition: var(--trans-02);
@@ -63,14 +107,12 @@ main {
   height: 25px;
   justify-content: center;
   align-items: center;
-  background: var(--primary-color);
+  background: var(--secondary-color);
   border-radius: 50%;
-  top: 25px;
+  top: 60px;
+  cursor: pointer;
 }
 
-
-/* .navLink:hover {
-  background-color: var(--primary-color);
-  border-radius: 5px;
-  transition: var(--trans-02);
-} */
+.toggle path {
+  color: var(--primary-color);
+}

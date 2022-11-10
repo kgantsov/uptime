@@ -6,7 +6,7 @@ import {
   TrackingBlock,
 } from "@tremor/react";
 import { Outlet, NavLink, Link, useNavigate } from 'react-router-dom';
-import { PlusIcon, HeartIcon, CheckCircleIcon, ExclamationCircleIcon } from '@heroicons/react/24/solid'
+import { FaHeart, FaCheckCircle, FaExclamationCircle } from 'react-icons/fa';
 import { FaPlus } from 'react-icons/fa';
 import { Button } from "@tremor/react";
 import { Icon } from "@tremor/react";
@@ -119,7 +119,7 @@ export function HomePage() {
                                     text={isUp ? 'Up' : 'Down'}
                                     color={isUp ? "green" : "rose"}
                                     size="sm"
-                                    icon={isUp ? CheckCircleIcon : ExclamationCircleIcon}
+                                    icon={isUp ? FaCheckCircle : FaExclamationCircle}
                                     tooltip=""
                                     marginTop="mt-0" />
                             </td>
@@ -134,7 +134,7 @@ export function HomePage() {
                                     text={`${(success * 100 / heartbeats.length) || 0}%`}
                                     color={"green"}
                                     size="sm"
-                                    icon={HeartIcon}
+                                    icon={FaHeart}
                                     tooltip=""
                                     marginTop="mt-0" />
                             </td>
