@@ -66,18 +66,24 @@ export function HomePage() {
 
   return (
     <>
-        <div className={styles.controls}>
-            <Button
-                text="new"
-                icon={FaPlus}
-                iconPosition="left"
-                size="sm"
-                color="green"
-                importance="primary"
-                handleClick={() => navigate('/monitors/new')}
-                // disabled={false}
-                marginTop="mt-0"
-            />
+        <div className='pageHeader'>
+            <div>
+                <h2>Services</h2>
+            </div>
+        
+            <div className='pageControls'>
+                <Button
+                    text="new"
+                    icon={FaPlus}
+                    iconPosition="left"
+                    size="sm"
+                    color="green"
+                    importance="primary"
+                    handleClick={() => navigate('/monitors/new')}
+                    // disabled={false}
+                    marginTop="mt-0"
+                />
+            </div>
         </div>
         <table className={styles.monitorList}>
             <thead>

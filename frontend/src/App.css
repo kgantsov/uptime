@@ -154,3 +154,13 @@ input[type=submit]:hover, button:hover {
 .tremor-base :is( *, ::before, ::after ) tspan {
   fill: var(--secondary-color);
 }
+
+.pageHeader {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.pageControls {
+
+}

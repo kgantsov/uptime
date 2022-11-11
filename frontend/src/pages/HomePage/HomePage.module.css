@@ -29,10 +29,3 @@
 .monitorList .heartbeats {
     min-width: 250px;
 }
-
-.controls {
-    display: flex;
-    margin-bottom: 1rem;
-    justify-content: end;
-}
-
