@@ -111,6 +111,12 @@ main {
   border-radius: 50%;
   top: 60px;
   cursor: pointer;
+  transition: transform 400ms;
+}
+
+.open .toggle {
+  transform: rotate(180deg);
+  transition: transform 400ms;
 }
 
 .toggle path {
