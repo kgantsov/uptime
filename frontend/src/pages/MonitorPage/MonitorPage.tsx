@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AreaChart, Tracking, TrackingBlock } from "@tremor/react";
+import { Button } from "@tremor/react";
+import { FaTrashAlt, FaPencilAlt } from 'react-icons/fa';
 import { format } from 'date-fns';
 import { Service } from '../../types/services';
 import { Heartbeat, STATUS_COLORS_MAP } from '../../types/heartbeats';
@@ -34,6 +36,10 @@ export function MonitorPage() {
       } catch (e) {
           console.log(e);
       }
+    }
+
+    async function handleServiceEdit() {
+      navigate(`/monitors/${monitorId}/edit`);
     }
 
     async function handleServiceDelete() {
@@ -82,8 +88,26 @@ export function MonitorPage() {
             <h4><a href={service.url} target='_blank' rel="noreferrer">{service.url}</a></h4>
           </div>
           <div className={styles.controls}>
-            {/* <button>Edit</button> */}
-            <button onClick={handleServiceDelete}>Delete</button>
+            <Button
+                text="Edit"
+                icon={FaPencilAlt}
+                iconPosition="left"
+                size="sm"
+                color="green"
+                importance="primary"
+                handleClick={handleServiceEdit}
+                marginTop="mt-0"
+            />
+            <Button
+                text="Delete"
+                icon={FaTrashAlt}
+                iconPosition="left"
+                size="sm"
+                color="green"
+                importance="primary"
+                handleClick={handleServiceDelete}
+                marginTop="mt-0"
+            />
           </div>
         </div>
         <div className='block'>

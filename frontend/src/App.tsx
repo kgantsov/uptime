@@ -5,6 +5,7 @@ import { NotificationsPage } from './pages/NotificationsPage/NotificationsPage';
 import { Layout } from './pages/Layout/Layout';
 import { MonitorPage } from './pages/MonitorPage/MonitorPage';
 import { NewMonitorPage } from './pages/NewMonitorPage/NewMonitorPage';
+import { EditMonitorPage } from './pages/EditMonitorPage/EditMonitorPage';
 import '@tremor/react/dist/esm/tremor.css';
 import './App.css';
 
@@ -17,6 +18,7 @@ function App() {
           <Route path="/monitors/" element={<HomePage />} />
           <Route path="/notifications/" element={<NotificationsPage />} />
           <Route path="/monitors/:monitorId" element={<MonitorPage />} />
+          <Route path="/monitors/:monitorId/edit" element={<EditMonitorPage />} />
           <Route path="/monitors/new" element={<NewMonitorPage />} />
         </Route>
       </Routes>
