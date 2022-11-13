@@ -12,12 +12,12 @@ import { Button } from "@tremor/react";
 import { Icon } from "@tremor/react";
 import { Badge } from "@tremor/react";
 
-import styles from './HomePage.module.css';
+import styles from './MonotorsPage.module.css';
 import { Service } from '../../types/services';
 import { Heartbeat, STATUS_COLORS_MAP } from '../../types/heartbeats';
 
 
-export function HomePage() {
+export function MonotorsPage() {
     let navigate = useNavigate();
     const [services, setServices] = useState<Service[]>([]);
     const [stats, setStats] = useState<Heartbeat[]>([]);

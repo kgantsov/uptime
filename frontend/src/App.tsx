@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { HomePage } from './pages/HomePage/HomePage';
+import { MonotorsPage } from './pages/MonotorsPage/MonotorsPage';
 import { NotificationsPage } from './pages/NotificationsPage/NotificationsPage';
 import { Layout } from './pages/Layout/Layout';
 import { MonitorPage } from './pages/MonitorPage/MonitorPage';
@@ -16,8 +16,8 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route element={<Layout />}>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/monitors/" element={<HomePage />} />
+          <Route path="/" element={<MonotorsPage />} />
+          <Route path="/monitors/" element={<MonotorsPage />} />
           <Route path="/notifications/" element={<NotificationsPage />} />
           <Route path="/notifications/:notificationName/edit" element={<NotificationEditPage />} />
           <Route path="/notifications/new" element={<NotificationNewPage />} />
