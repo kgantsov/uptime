@@ -6,8 +6,8 @@ import { Layout } from './pages/Layout/Layout';
 import { MonitorPage } from './pages/MonitorPage/MonitorPage';
 import { NotificationNewPage } from './pages/NotificationNewPage/NotificationNewPage';
 import { NotificationEditPage } from './pages/NotificationEditPage/NotificationEditPage';
-import { NewMonitorPage } from './pages/NewMonitorPage/NewMonitorPage';
-import { EditMonitorPage } from './pages/EditMonitorPage/EditMonitorPage';
+import { MonitorNewPage } from './pages/MonitorNewPage/MonitorNewPage';
+import { MonitorEditPage } from './pages/MonitorEditPage/MonitorEditPage';
 import '@tremor/react/dist/esm/tremor.css';
 import './App.css';
 
@@ -22,8 +22,8 @@ function App() {
           <Route path="/notifications/:notificationName/edit" element={<NotificationEditPage />} />
           <Route path="/notifications/new" element={<NotificationNewPage />} />
           <Route path="/monitors/:monitorId" element={<MonitorPage />} />
-          <Route path="/monitors/:monitorId/edit" element={<EditMonitorPage />} />
-          <Route path="/monitors/new" element={<NewMonitorPage />} />
+          <Route path="/monitors/:monitorId/edit" element={<MonitorEditPage />} />
+          <Route path="/monitors/new" element={<MonitorNewPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

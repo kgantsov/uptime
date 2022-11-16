@@ -4,7 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { FaTelegramPlane } from 'react-icons/fa';
 
-import styles from './NotificationsPage.module.css';
+import styles from './NotificationEditPage.module.css';
 import { API } from '../../API';
 
 export function NotificationEditPage() {
