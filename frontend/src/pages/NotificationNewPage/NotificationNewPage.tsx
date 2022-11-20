@@ -1,8 +1,5 @@
-import { Divider } from '@tremor/react';
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Link } from 'react-router-dom';
-import { FaTelegramPlane } from 'react-icons/fa';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import styles from './NotificationsPage.module.css';
 import { API } from '../../API';
@@ -14,7 +11,6 @@ export function NotificationNewPage() {
     name: '',
     callback: '',
     callback_chat_id: '',
-    // callback_type: '',
   });
 
   const handleChange = (e: { target: { name: any; value: any; }; }) => {
@@ -34,7 +30,6 @@ export function NotificationNewPage() {
       callback: values.callback,
       callback_chat_id: values.callback_chat_id,
       callback_type: 'TELEGRAM',
-      // callback_type: values.callback_type,
     }).then((data) => {
       navigate(`/notifications`);
     });

@@ -92,19 +92,6 @@ export function NotificationEditPage() {
               />
             </div>
 
-            {/* <div className="form-element">
-              <label htmlFor="timeout">Timeout</label>
-              <input
-                className=""
-                id="timeout"
-                name="timeout"
-                type="number"
-                value={values.timeout}
-                onChange={handleChange}
-                required
-              />
-            </div> */}
-
             <div className="form-element">
               <div className="submit-wrapper">
                 <input type="submit" value="Save" />

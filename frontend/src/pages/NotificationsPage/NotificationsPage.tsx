@@ -1,4 +1,3 @@
-import { Divider } from '@tremor/react';
 import { useState, useEffect } from 'react';
 import { Notification } from '../../types/services';
 import { Button } from "@tremor/react";
