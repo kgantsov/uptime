@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { API } from '../../API';
 import { Button } from "@tremor/react";
+import Async from 'react-select/async';
+import { OptionsOrGroups, GroupBase } from 'react-select';
 
 import styles from './MonitorPage.module.css';
 
@@ -15,6 +17,7 @@ export function MonitorEditPage() {
     check_interval: '',
     timeout: '',
   });
+  const [notifications, setNotifications] = useState<any[]>([]);
 
   const handleChange = (e: { target: { name: any; value: any; }; }) => {
     setValues((oldValues) => ({
@@ -23,9 +26,25 @@ export function MonitorEditPage() {
     }));
   };
 
+  const promiseOptions = (inputValue: string): Promise<any> => {
+    return new Promise((resolve) => {
+      API.fetch('GET', `/API/v1/notifications?q=${inputValue}`).then((data) => {
+        resolve(
+          data
+            .map((notification: { name: any; }) => {
+              return { value: notification.name, label: notification.name, ...notification };
+            }),
+        );
+      });
+    });
+  }
+
   useEffect(() => {
     API.fetch('GET', `/API/v1/services/${monitorId}`).then((data) => {
       setValues(data)
+      setNotifications(data.notifications.map((notification: { name: any; }) => {
+        return { value: notification.name, label: notification.name, ...notification };
+      }))
     })
   }, [monitorId])
 
@@ -39,6 +58,7 @@ export function MonitorEditPage() {
       url: values.url,
       check_interval: Number.parseInt(values.check_interval),
       timeout: Number.parseInt(values.timeout),
+      notifications: notifications,
     }).then((data) => {
       navigate(`/monitors/${monitorId}`);
     });
@@ -98,6 +118,24 @@ export function MonitorEditPage() {
                 value={values.timeout}
                 onChange={handleChange}
                 required
+              />
+            </div>
+
+            <div className="form-element">
+              <label htmlFor="callback_chat_id">Notifications</label>
+              <Async
+                className="react-select-container"
+                classNamePrefix="react-select"
+                cacheOptions
+                defaultOptions
+                isMulti={true}
+                loadOptions={promiseOptions}
+                placeholder='Select'
+                name="narratives"
+                value={notifications}
+                onChange={(option: readonly any[]) => {
+                  setNotifications([...option])
+                }}
               />
             </div>
 

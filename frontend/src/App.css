@@ -164,3 +164,35 @@ input[type=submit]:hover, button:hover {
 .pageControls {
 
 }
+
+.react-select-container {
+  margin: 0.5rem 0rem 1.5rem 0;
+}
+
+.react-select-container .react-select__control {
+  background-color: var(--body-color);
+  color: var(--text-color);
+}
+
+.react-select-container .css-6j8wv5-Input {
+  color: var(--text-color);
+}
+
+.react-select-container .css-1n7v3ny-option {
+  background-color: var(--primary-color-light);
+  color: var(--text-color);
+}
+
+.react-select-container .css-4ljt47-MenuList {
+  background-color: var(--body-color);
+  color: var(--text-color);
+}
+
+.react-select-container .css-1rhbuit-multiValue {
+  background-color: var(--primary-color-light);
+  color: var(--text-color);
+}
+
+.react-select-container .css-12jo7m5 {
+  padding: 0.4rem;
+}
