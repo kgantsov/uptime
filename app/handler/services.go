@@ -124,6 +124,20 @@ func (h *Handler) UpdateService(c echo.Context) error {
 	service.Notifications = updateService.Notifications
 	service.Timeout = updateService.Timeout
 
+	err = h.DB.Where("service_id = ?", serviceID).Delete(&model.ServiceNotification{}).Error
+	if err != nil {
+		return &echo.HTTPError{Code: http.StatusBadRequest, Message: err}
+	}
+
+	for _, notification := range updateService.Notifications {
+		serviceNotification := &model.ServiceNotification{
+			ServiceID:        int(service.ID),
+			NotificationName: notification.Name,
+		}
+
+		h.DB.Create(serviceNotification)
+	}
+
 	h.DB.Save(service)
 
 	h.Dispatcher.RestartService(service.ID)
