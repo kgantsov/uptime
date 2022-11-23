@@ -116,24 +116,8 @@ func (m *Monitor) Start() {
 			)
 
 			if status == "UP" {
-				if !failing {
-					for _, notification := range m.service.Notifications {
-						m.NotifyTg(
-							notification,
-							emoji.Sprintf(
-								":exclamation: Service '%s' %s is DOWN",
-								m.service.Name,
-								m.service.URL,
-							),
-						)
-					}
+				log.Infof("Service %s %s is up and running: %d %s %t\n", t, m.service.URL, statusCode, status, failing)
 
-					failing = true
-					startedFailingAt = time.Now()
-				}
-
-				log.Infof("Service %s %s is up and running: %d\n", t, m.service.URL, status)
-			} else {
 				if failing {
 					for _, notification := range m.service.Notifications {
 						m.NotifyTg(
@@ -149,7 +133,24 @@ func (m *Monitor) Start() {
 					failing = false
 					startedFailingAt = time.Time{}
 				}
-				log.Infof("Failed to get %s url. Got status code: %d\n", m.service.URL, status)
+			} else {
+				log.Infof("Failed to get %s url. Got status code: %d %s %t\n", m.service.URL, statusCode, status, failing)
+
+				if !failing {
+					for _, notification := range m.service.Notifications {
+						m.NotifyTg(
+							notification,
+							emoji.Sprintf(
+								":exclamation: Service '%s' %s is DOWN",
+								m.service.Name,
+								m.service.URL,
+							),
+						)
+					}
+
+					failing = true
+					startedFailingAt = time.Now()
+				}
 			}
 		}
 	}
