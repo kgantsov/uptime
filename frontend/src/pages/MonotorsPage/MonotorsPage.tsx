@@ -77,7 +77,7 @@ export function MonotorsPage() {
                     icon={FaPlus}
                     iconPosition="left"
                     size="sm"
-                    color="green"
+                    color="orange"
                     importance="primary"
                     handleClick={() => navigate('/monitors/new')}
                     // disabled={false}
@@ -138,7 +138,7 @@ export function MonotorsPage() {
                             <td>
                                 <Badge
                                     text={`${(success * 100 / heartbeats.length) || 0}%`}
-                                    color={"green"}
+                                    color={"orange"}
                                     size="sm"
                                     icon={FaHeart}
                                     tooltip=""

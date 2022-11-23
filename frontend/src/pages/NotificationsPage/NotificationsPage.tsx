@@ -46,7 +46,7 @@ export function NotificationsPage() {
                   icon={FaPlus}
                   iconPosition="left"
                   size="sm"
-                  color="green"
+                  color="orange"
                   importance="primary"
                   handleClick={() => navigate('/notifications/new')}
                   // disabled={false}

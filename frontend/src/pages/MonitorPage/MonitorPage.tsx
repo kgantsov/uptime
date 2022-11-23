@@ -93,7 +93,7 @@ export function MonitorPage() {
                 icon={FaPencilAlt}
                 iconPosition="left"
                 size="sm"
-                color="green"
+                color="orange"
                 importance="primary"
                 handleClick={handleServiceEdit}
                 marginTop="mt-0"
@@ -103,7 +103,7 @@ export function MonitorPage() {
                 icon={FaTrashAlt}
                 iconPosition="left"
                 size="sm"
-                color="green"
+                color="orange"
                 importance="primary"
                 handleClick={handleServiceDelete}
                 marginTop="mt-0"

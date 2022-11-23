@@ -131,6 +131,11 @@ input[type=submit]:hover, button:hover {
 }
 
 .tr-text-green-500 {
+  background-color: rgb(16 185 129 / var(--tw-bg-opacity));
+  color: var(--text-color-dark);
+}
+
+.tr-text-orange-500 {
   background-color: var(--secondary-color);
   color: var(--text-color-dark);
 }
@@ -139,15 +144,27 @@ input[type=submit]:hover, button:hover {
   background-color: #e16162;
 }
 
-.tr-bg-green-500 {
+.tr-bg-orange-500 {
   --tw-bg-opacity: 1;
   background-color: var(--secondary-color);
   color: var(--text-color-dark);
 }
 
-.tr-bg-green-500:hover {
+.tr-bg-orange-500:hover {
   --tw-bg-opacity: 0.9;
   background-color: var(--secondary-color);
+  color: var(--text-color-dark);
+}
+
+.tr-bg-green-500 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(16 185 129 / var(--tw-bg-opacity));
+  color: var(--text-color-dark);
+}
+
+.tr-bg-green-500:hover {
+  --tw-bg-opacity: 0.9;
+  background-color: rgb(16 185 129 / var(--tw-bg-opacity));
   color: var(--text-color-dark);
 }
 
