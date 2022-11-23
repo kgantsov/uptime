@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { API } from '../../API';
+import Async from 'react-select/async';
 import { Button } from "@tremor/react";
 
 import styles from './MonitorNewPage.module.css';
@@ -14,6 +15,7 @@ export function MonitorNewPage() {
     check_interval: '',
     timeout: '',
   });
+  const [notifications, setNotifications] = useState<any[]>([]);
 
   const handleChange = (e: { target: { name: any; value: any; }; }) => {
     setValues((oldValues) => ({
@@ -21,6 +23,19 @@ export function MonitorNewPage() {
       [e.target.name]: e.target.value,
     }));
   };
+
+  const promiseOptions = (inputValue: string): Promise<any> => {
+    return new Promise((resolve) => {
+      API.fetch('GET', `/API/v1/notifications?q=${inputValue}`).then((data) => {
+        resolve(
+          data
+            .map((notification: { name: any; }) => {
+              return { value: notification.name, label: notification.name, ...notification };
+            }),
+        );
+      });
+    });
+  }
 
   const handleSubmit = (e?: { preventDefault: () => void; }) => {
     if (e !== undefined) {
@@ -32,6 +47,7 @@ export function MonitorNewPage() {
       url: values.url,
       check_interval: Number.parseInt(values.check_interval),
       timeout: Number.parseInt(values.timeout),
+      notifications: notifications,
     }).then((data) => {
       navigate(`/monitors/${data['id']}`);
     });
@@ -87,6 +103,24 @@ export function MonitorNewPage() {
                 type="number"
                 onChange={handleChange}
                 required
+              />
+            </div>
+
+            <div className="form-element">
+              <label htmlFor="callback_chat_id">Notifications</label>
+              <Async
+                className="react-select-container"
+                classNamePrefix="react-select"
+                cacheOptions
+                defaultOptions
+                isMulti={true}
+                loadOptions={promiseOptions}
+                placeholder='Select'
+                name="narratives"
+                value={notifications}
+                onChange={(option: readonly any[]) => {
+                  setNotifications([...option])
+                }}
               />
             </div>
 
