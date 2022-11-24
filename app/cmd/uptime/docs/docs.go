@@ -689,6 +689,9 @@ const docTemplate = `{
         "model.AddService": {
             "type": "object",
             "properties": {
+                "accepted_status_code": {
+                    "type": "integer"
+                },
                 "check_interval": {
                     "type": "integer"
                 },
@@ -775,6 +778,9 @@ const docTemplate = `{
         "model.Service": {
             "type": "object",
             "properties": {
+                "accepted_status_code": {
+                    "type": "integer"
+                },
                 "check_interval": {
                     "type": "integer"
                 },
@@ -836,6 +842,9 @@ const docTemplate = `{
         "model.UpdateService": {
             "type": "object",
             "properties": {
+                "accepted_status_code": {
+                    "type": "integer"
+                },
                 "check_interval": {
                     "type": "integer"
                 },

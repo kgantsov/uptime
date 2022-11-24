@@ -681,6 +681,9 @@
         "model.AddService": {
             "type": "object",
             "properties": {
+                "accepted_status_code": {
+                    "type": "integer"
+                },
                 "check_interval": {
                     "type": "integer"
                 },
@@ -767,6 +770,9 @@
         "model.Service": {
             "type": "object",
             "properties": {
+                "accepted_status_code": {
+                    "type": "integer"
+                },
                 "check_interval": {
                     "type": "integer"
                 },
@@ -828,6 +834,9 @@
         "model.UpdateService": {
             "type": "object",
             "properties": {
+                "accepted_status_code": {
+                    "type": "integer"
+                },
                 "check_interval": {
                     "type": "integer"
                 },
