@@ -19,11 +19,12 @@ type Notification struct {
 type Service struct {
 	Model
 	// ID            uint           `json:"id"`
-	Name          string         `json:"name"`
-	URL           string         `json:"url"`
-	Notifications []Notification `gorm:"many2many:service_notifications;" json:"notifications"`
-	Timeout       int            `json:"timeout"`
-	CheckInterval int            `json:"check_interval"`
+	Name               string         `json:"name"`
+	URL                string         `json:"url"`
+	Notifications      []Notification `gorm:"many2many:service_notifications;" json:"notifications"`
+	Timeout            int            `json:"timeout"`
+	CheckInterval      int            `json:"check_interval"`
+	AcceptedStatusCode int            `json:"accepted_status_code"`
 }
 
 type ServiceNotification struct {
@@ -32,19 +33,21 @@ type ServiceNotification struct {
 }
 
 type AddService struct {
-	Name          string            `json:"name"`
-	Notifications []AddNotification `gorm:"many2many:service_notifications;" json:"notifications"`
-	URL           string            `json:"url"`
-	Timeout       int               `json:"timeout"`
-	CheckInterval int               `json:"check_interval"`
+	Name               string            `json:"name"`
+	Notifications      []AddNotification `gorm:"many2many:service_notifications;" json:"notifications"`
+	URL                string            `json:"url"`
+	Timeout            int               `json:"timeout"`
+	CheckInterval      int               `json:"check_interval"`
+	AcceptedStatusCode int               `json:"accepted_status_code"`
 }
 
 type UpdateService struct {
-	Name          string         `json:"name"`
-	URL           string         `json:"url"`
-	Notifications []Notification `gorm:"many2many:service_notifications;" json:"notifications"`
-	Timeout       int            `json:"timeout"`
-	CheckInterval int            `json:"check_interval"`
+	Name               string         `json:"name"`
+	URL                string         `json:"url"`
+	Notifications      []Notification `gorm:"many2many:service_notifications;" json:"notifications"`
+	Timeout            int            `json:"timeout"`
+	CheckInterval      int            `json:"check_interval"`
+	AcceptedStatusCode int            `json:"accepted_status_code"`
 }
 
 type AddNotification struct {

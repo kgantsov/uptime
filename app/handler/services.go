@@ -123,6 +123,7 @@ func (h *Handler) UpdateService(c echo.Context) error {
 	service.CheckInterval = updateService.CheckInterval
 	service.Notifications = updateService.Notifications
 	service.Timeout = updateService.Timeout
+	service.AcceptedStatusCode = updateService.AcceptedStatusCode
 
 	err = h.DB.Where("service_id = ?", serviceID).Delete(&model.ServiceNotification{}).Error
 	if err != nil {

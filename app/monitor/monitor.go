@@ -79,7 +79,7 @@ func (m *Monitor) CheckHealth() (int, string) {
 
 	defer resp.Body.Close()
 
-	if resp.StatusCode == http.StatusOK {
+	if resp.StatusCode == m.service.AcceptedStatusCode {
 		return resp.StatusCode, "UP"
 	}
 
