@@ -16,6 +16,7 @@ export function MonitorEditPage() {
     url: '',
     check_interval: '',
     timeout: '',
+    accepted_status_code: '',
   });
   const [notifications, setNotifications] = useState<any[]>([]);
 
@@ -58,6 +59,7 @@ export function MonitorEditPage() {
       url: values.url,
       check_interval: Number.parseInt(values.check_interval),
       timeout: Number.parseInt(values.timeout),
+      accepted_status_code: Number.parseInt(values.accepted_status_code),
       notifications: notifications,
     }).then((data) => {
       navigate(`/monitors/${monitorId}`);
@@ -116,6 +118,21 @@ export function MonitorEditPage() {
                 name="timeout"
                 type="number"
                 value={values.timeout}
+                onChange={handleChange}
+                required
+              />
+            </div>
+
+            <div className="form-element">
+              <label htmlFor="accepted_status_code">Accepted status code</label>
+              <input
+                className=""
+                id="accepted_status_code"
+                name="accepted_status_code"
+                type="number"
+                min={100}
+                max={600}
+                value={values.accepted_status_code}
                 onChange={handleChange}
                 required
               />
