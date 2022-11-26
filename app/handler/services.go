@@ -118,25 +118,48 @@ func (h *Handler) UpdateService(c echo.Context) error {
 		return &echo.HTTPError{Code: http.StatusBadRequest, Message: err}
 	}
 
-	service.Name = updateService.Name
-	service.URL = updateService.URL
-	service.CheckInterval = updateService.CheckInterval
-	service.Notifications = updateService.Notifications
-	service.Timeout = updateService.Timeout
-	service.AcceptedStatusCode = updateService.AcceptedStatusCode
+	if updateService.Name != nil {
+		service.Name = *updateService.Name
+	}
+
+	if updateService.URL != nil {
+		service.URL = *updateService.URL
+	}
+
+	if updateService.Enabled != nil {
+		service.Enabled = *updateService.Enabled
+	}
+
+	if updateService.CheckInterval != nil {
+		service.CheckInterval = *updateService.CheckInterval
+	}
+
+	if updateService.Notifications != nil {
+		service.Notifications = *updateService.Notifications
+	}
+
+	if updateService.Timeout != nil {
+		service.Timeout = *updateService.Timeout
+	}
+
+	if updateService.AcceptedStatusCode != nil {
+		service.AcceptedStatusCode = *updateService.AcceptedStatusCode
+	}
 
 	err = h.DB.Where("service_id = ?", serviceID).Delete(&model.ServiceNotification{}).Error
 	if err != nil {
 		return &echo.HTTPError{Code: http.StatusBadRequest, Message: err}
 	}
 
-	for _, notification := range updateService.Notifications {
-		serviceNotification := &model.ServiceNotification{
-			ServiceID:        int(service.ID),
-			NotificationName: notification.Name,
-		}
+	if updateService.Notifications != nil {
+		for _, notification := range *updateService.Notifications {
+			serviceNotification := &model.ServiceNotification{
+				ServiceID:        int(service.ID),
+				NotificationName: notification.Name,
+			}
 
-		h.DB.Create(serviceNotification)
+			h.DB.Create(serviceNotification)
+		}
 	}
 
 	h.DB.Save(service)

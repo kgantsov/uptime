@@ -32,8 +32,11 @@ func (d *Dispatcher) init() {
 
 	for i := range services {
 		service := services[i]
-		m := NewMonitor(d.DB, service)
-		d.monitors[service.ID] = m
+
+		if service.Enabled {
+			m := NewMonitor(d.DB, service)
+			d.monitors[service.ID] = m
+		}
 	}
 }
 
@@ -61,9 +64,11 @@ func (d *Dispatcher) AddService(serviceID uint) {
 	d.mux.Lock()
 	defer d.mux.Unlock()
 
-	m := NewMonitor(d.DB, service)
-	go m.Start()
-	d.monitors[service.ID] = m
+	if service.Enabled {
+		m := NewMonitor(d.DB, service)
+		go m.Start()
+		d.monitors[service.ID] = m
+	}
 }
 
 func (d *Dispatcher) RemoveService(serviceID uint) {
