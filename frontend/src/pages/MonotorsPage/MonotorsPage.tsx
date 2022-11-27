@@ -120,10 +120,10 @@ export function MonotorsPage() {
                     )
                     return (
                         <tr key={service.id}>
-                            <td>
+                            <td className='badge'>
                                 <Badge
                                     text={isUp ? 'Up' : 'Down'}
-                                    color={isUp ? "green" : "rose"}
+                                    color={(!service.enabled) ? 'gray' : (isUp ? "green" : "rose")}
                                     size="sm"
                                     icon={isUp ? FaCheckCircle : FaExclamationCircle}
                                     tooltip=""

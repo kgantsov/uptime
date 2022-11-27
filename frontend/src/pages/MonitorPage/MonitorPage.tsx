@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { AreaChart, Tracking, TrackingBlock } from "@tremor/react";
 import { Button } from "@tremor/react";
 import { FaTrashAlt, FaPencilAlt } from 'react-icons/fa';
+import { BsPlay, BsStop } from 'react-icons/bs';
 import { format } from 'date-fns';
 import { Service } from '../../types/services';
 import { Heartbeat, STATUS_COLORS_MAP } from '../../types/heartbeats';
@@ -35,6 +36,17 @@ export function MonitorPage() {
         setLatencies(data.reverse())
       } catch (e) {
           console.log(e);
+      }
+    }
+
+    async function handleServiceEnableToggle() {
+      try {
+        await API.fetch(
+          'PATCH', `/API/v1/services/${monitorId}`, null, {enabled: !service?.enabled}
+        );
+        fetchData(Number(monitorId));
+      } catch(e) {
+        console.log(e);
       }
     }
 
@@ -89,6 +101,16 @@ export function MonitorPage() {
           </div>
           <div className={styles.controls}>
             <Button
+                text={(service?.enabled) ? 'Stop' : 'Start'}
+                icon={(service?.enabled) ? BsStop : BsPlay}
+                iconPosition="left"
+                size="sm"
+                color={(service?.enabled) ? 'gray' : 'green'}
+                importance="primary"
+                handleClick={handleServiceEnableToggle}
+                marginTop="mt-0"
+            />
+            <Button
                 text="Edit"
                 icon={FaPencilAlt}
                 iconPosition="left"
@@ -103,7 +125,7 @@ export function MonitorPage() {
                 icon={FaTrashAlt}
                 iconPosition="left"
                 size="sm"
-                color="orange"
+                color="red"
                 importance="primary"
                 handleClick={handleServiceDelete}
                 marginTop="mt-0"

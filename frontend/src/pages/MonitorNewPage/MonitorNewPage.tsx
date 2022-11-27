@@ -50,6 +50,7 @@ export function MonitorNewPage() {
       accepted_status_code: Number.parseInt(values.accepted_status_code),
       timeout: Number.parseInt(values.timeout),
       notifications: notifications,
+      enabled: true,
     }).then((data) => {
       navigate(`/monitors/${data['id']}`);
     });

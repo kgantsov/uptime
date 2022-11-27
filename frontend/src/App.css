@@ -140,6 +140,10 @@ input[type=submit]:hover, button:hover {
   color: var(--text-color-dark);
 }
 
+.badge .tr-text-gray-500 {
+  background-color: rgb(107 114 128 / var(--tw-bg-opacity));
+}
+
 .tr-text-rose-500, .tr-bg-rose-500 {
   background-color: #e16162;
 }

@@ -11,4 +11,5 @@ export interface Service {
   id: number,
   name: string,
   url: string,
+  enabled: boolean,
 }
