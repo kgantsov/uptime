@@ -35,7 +35,7 @@ export function MonotorsPage() {
 
     async function fetchStats() {
         try {
-            const response = await fetch(`/API/v1/heartbeats/stats?size=${size}`);
+            const response = await fetch(`/API/v1/heartbeats/latencies/last?size=${size}`);
             const data = await response.json();
             return data
         } catch (e) {

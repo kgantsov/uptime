@@ -95,7 +95,7 @@ func main() {
 	v1 := e.Group("/API/v1")
 
 	v1.GET("/heartbeats/latencies", h.GetHeartbeatsLatencies)
-	v1.GET("/heartbeats/stats", h.GetHeartbeatStats)
+	v1.GET("/heartbeats/latencies/last", h.GetHeartbeatsLastLatencies)
 
 	v1.GET("/services", h.GetServices)
 	v1.POST("/services", h.CreateService)

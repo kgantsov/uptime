@@ -60,8 +60,8 @@ func (h *Handler) GetHeartbeatsLatencies(c echo.Context) error {
 // @Success      200  {object}  []model.HeartbeatPoint
 // @Failure      404  {object}  echo.HTTPError
 // @Failure      500  {object}  echo.HTTPError
-// @Router       /API/v1/heartbeats/stats [get]
-func (h *Handler) GetHeartbeatStats(c echo.Context) error {
+// @Router       /API/v1/heartbeats/latencies/last [get]
+func (h *Handler) GetHeartbeatsLastLatencies(c echo.Context) error {
 	s := c.QueryParam("size")
 	if s == "" {
 		s = "3"

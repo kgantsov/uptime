@@ -69,7 +69,7 @@
                 }
             }
         },
-        "/API/v1/heartbeats/stats": {
+        "/API/v1/heartbeats/latencies/last": {
             "get": {
                 "description": "Returns heartbeats stats",
                 "consumes": [
@@ -687,6 +687,9 @@
                 "check_interval": {
                     "type": "integer"
                 },
+                "enabled": {
+                    "type": "boolean"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -782,11 +785,13 @@
                 "deleted_at": {
                     "$ref": "#/definitions/sql.NullTime"
                 },
+                "enabled": {
+                    "type": "boolean"
+                },
                 "id": {
                     "type": "integer"
                 },
                 "name": {
-                    "description": "ID            uint           `json:\"id\"`",
                     "type": "string"
                 },
                 "notifications": {
@@ -839,6 +844,9 @@
                 },
                 "check_interval": {
                     "type": "integer"
+                },
+                "enabled": {
+                    "type": "boolean"
                 },
                 "name": {
                     "type": "string"

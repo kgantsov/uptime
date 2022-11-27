@@ -21,6 +21,8 @@ definitions:
         type: integer
       check_interval:
         type: integer
+      enabled:
+        type: boolean
       name:
         type: string
       notifications:
@@ -83,10 +85,11 @@ definitions:
         type: string
       deleted_at:
         $ref: '#/definitions/sql.NullTime'
+      enabled:
+        type: boolean
       id:
         type: integer
       name:
-        description: ID            uint           `json:"id"`
         type: string
       notifications:
         items:
@@ -121,6 +124,8 @@ definitions:
         type: integer
       check_interval:
         type: integer
+      enabled:
+        type: boolean
       name:
         type: string
       notifications:
@@ -187,7 +192,7 @@ paths:
       summary: Get all heartbeats
       tags:
       - heartbeats
-  /API/v1/heartbeats/stats:
+  /API/v1/heartbeats/latencies/last:
     get:
       consumes:
       - application/json

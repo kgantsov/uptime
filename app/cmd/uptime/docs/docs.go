@@ -77,7 +77,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/API/v1/heartbeats/stats": {
+        "/API/v1/heartbeats/latencies/last": {
             "get": {
                 "description": "Returns heartbeats stats",
                 "consumes": [
@@ -695,6 +695,9 @@ const docTemplate = `{
                 "check_interval": {
                     "type": "integer"
                 },
+                "enabled": {
+                    "type": "boolean"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -790,11 +793,13 @@ const docTemplate = `{
                 "deleted_at": {
                     "$ref": "#/definitions/sql.NullTime"
                 },
+                "enabled": {
+                    "type": "boolean"
+                },
                 "id": {
                     "type": "integer"
                 },
                 "name": {
-                    "description": "ID            uint           ` + "`" + `json:\"id\"` + "`" + `",
                     "type": "string"
                 },
                 "notifications": {
@@ -847,6 +852,9 @@ const docTemplate = `{
                 },
                 "check_interval": {
                     "type": "integer"
+                },
+                "enabled": {
+                    "type": "boolean"
                 },
                 "name": {
                     "type": "string"
