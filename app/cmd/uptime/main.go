@@ -96,6 +96,7 @@ func main() {
 
 	v1.GET("/heartbeats/latencies", h.GetHeartbeatsLatencies)
 	v1.GET("/heartbeats/latencies/last", h.GetHeartbeatsLastLatencies)
+	v1.GET("/heartbeats/stats/:days", h.GetHeartbeatStats)
 
 	v1.GET("/services", h.GetServices)
 	v1.POST("/services", h.CreateService)

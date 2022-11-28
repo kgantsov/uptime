@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -50,9 +51,9 @@ func (h *Handler) GetHeartbeatsLatencies(c echo.Context) error {
 	return c.JSON(http.StatusOK, heartbeats)
 }
 
-// GetHeartbeatStats godoc
-// @Summary      Getheartbeats stats
-// @Description  Returns heartbeats stats
+// GetHeartbeatsLastLatencies godoc
+// @Summary      GetHeartbeatsLastLatencies stats
+// @Description  Returns last latencies
 // @Tags         heartbeats
 // @Accept       json
 // @Produce      json
@@ -92,4 +93,46 @@ func (h *Handler) GetHeartbeatsLastLatencies(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, heartbeats)
+}
+
+// GetHeartbeatStats godoc
+// @Summary      GetHeartbeatStats stats
+// @Description  Returns heartbeats stats
+// @Tags         heartbeats
+// @Accept       json
+// @Produce      json
+// @Param        days    path     int  true  "Number of days to get stats for"
+// @Success      200  {object}  []model.HeartbeatStatsPoint
+// @Failure      404  {object}  echo.HTTPError
+// @Failure      500  {object}  echo.HTTPError
+// @Router       /API/v1/heartbeats/stats/{days} [get]
+func (h *Handler) GetHeartbeatStats(c echo.Context) error {
+	_days := c.Param("days")
+	days, err := strconv.Atoi(_days)
+
+	if err != nil {
+		return &echo.HTTPError{Code: http.StatusBadRequest, Message: err}
+	}
+
+	var heartbeatStatsPoints []model.HeartbeatStatsPoint
+
+	err = h.DB.Raw(
+		`
+		SELECT
+			service_id,
+			status,
+			count(1) as counter,
+			avg(response_time) as average_response_time
+		FROM heartbeats
+		WHERE created_at > DATE('now', ?)
+		GROUP BY service_id, status;
+		`,
+		fmt.Sprintf("-%d day", days),
+	).Scan(&heartbeatStatsPoints).Error
+
+	if err != nil {
+		return &echo.HTTPError{Code: http.StatusNotFound, Message: err}
+	}
+
+	return c.JSON(http.StatusOK, heartbeatStatsPoints)
 }

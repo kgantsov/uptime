@@ -79,7 +79,7 @@ const docTemplate = `{
         },
         "/API/v1/heartbeats/latencies/last": {
             "get": {
-                "description": "Returns heartbeats stats",
+                "description": "Returns last latencies",
                 "consumes": [
                     "application/json"
                 ],
@@ -89,7 +89,7 @@ const docTemplate = `{
                 "tags": [
                     "heartbeats"
                 ],
-                "summary": "Getheartbeats stats",
+                "summary": "GetHeartbeatsLastLatencies stats",
                 "parameters": [
                     {
                         "type": "string",
@@ -105,6 +105,53 @@ const docTemplate = `{
                             "type": "array",
                             "items": {
                                 "$ref": "#/definitions/model.HeartbeatPoint"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/API/v1/heartbeats/stats/{days}": {
+            "get": {
+                "description": "Returns heartbeats stats",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "heartbeats"
+                ],
+                "summary": "GetHeartbeatStats stats",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Number of days to get stats for",
+                        "name": "days",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/model.HeartbeatStatsPoint"
                             }
                         }
                     },
@@ -749,6 +796,23 @@ const docTemplate = `{
                 },
                 "service_id": {
                     "type": "integer"
+                }
+            }
+        },
+        "model.HeartbeatStatsPoint": {
+            "type": "object",
+            "properties": {
+                "average_response_time": {
+                    "type": "number"
+                },
+                "counter": {
+                    "type": "integer"
+                },
+                "service_id": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
                 }
             }
         },

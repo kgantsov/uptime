@@ -58,6 +58,17 @@ definitions:
       service_id:
         type: integer
     type: object
+  model.HeartbeatStatsPoint:
+    properties:
+      average_response_time:
+        type: number
+      counter:
+        type: integer
+      service_id:
+        type: integer
+      status:
+        type: string
+    type: object
   model.Notification:
     properties:
       callback:
@@ -196,7 +207,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: Returns heartbeats stats
+      description: Returns last latencies
       parameters:
       - description: Size
         in: query
@@ -219,7 +230,38 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/echo.HTTPError'
-      summary: Getheartbeats stats
+      summary: GetHeartbeatsLastLatencies stats
+      tags:
+      - heartbeats
+  /API/v1/heartbeats/stats/{days}:
+    get:
+      consumes:
+      - application/json
+      description: Returns heartbeats stats
+      parameters:
+      - description: Number of days to get stats for
+        in: path
+        name: days
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.HeartbeatStatsPoint'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      summary: GetHeartbeatStats stats
       tags:
       - heartbeats
   /API/v1/notifications:

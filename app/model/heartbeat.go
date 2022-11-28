@@ -17,4 +17,11 @@ type (
 		Latency   int64  `json:"latency"`
 		Date      string `json:"date"`
 	}
+
+	HeartbeatStatsPoint struct {
+		ServiceID           uint    `json:"service_id"`
+		Status              string  `json:"status"`
+		Counter             uint    `json:"counter"`
+		AverageResponseTime float64 `json:"average_response_time"`
+	}
 )
