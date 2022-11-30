@@ -119,7 +119,8 @@ input[type=submit], button {
 
 input[type=submit]:hover, button:hover {
   --tw-bg-opacity: 0.9;
-  background-color: rgb(16 185 129 / var(--tw-bg-opacity));
+  opacity: 0.9;
+  background-color: var(--secondary-color);
 }
 
 .form-element .submit-wrapper {
@@ -130,17 +131,17 @@ input[type=submit]:hover, button:hover {
 
 }
 
-.tr-text-green-500 {
+.tr-text-green-500, .tr-text-green-700 {
   background-color: rgb(16 185 129 / var(--tw-bg-opacity));
   color: var(--text-color-dark);
 }
 
-.tr-text-orange-500 {
+.tr-text-orange-500, .tr-text-orange-700, .tr-text-rose-700 {
   background-color: var(--secondary-color);
   color: var(--text-color-dark);
 }
 
-.badge .tr-text-gray-500 {
+.badge .tr-text-gray-500, .badge .tr-text-gray-700 {
   background-color: rgb(107 114 128 / var(--tw-bg-opacity));
 }
 
@@ -148,25 +149,25 @@ input[type=submit]:hover, button:hover {
   background-color: #e16162;
 }
 
-.tr-bg-orange-500 {
+.tr-bg-orange-500, .tr-bg-orange-700 {
   --tw-bg-opacity: 1;
   background-color: var(--secondary-color);
   color: var(--text-color-dark);
 }
 
-.tr-bg-orange-500:hover {
+.tr-bg-orange-500:hover, .tr-bg-orange-700:hover {
   --tw-bg-opacity: 0.9;
   background-color: var(--secondary-color);
   color: var(--text-color-dark);
 }
 
-.tr-bg-green-500 {
+.tr-bg-green-100, .tr-bg-green-500 {
   --tw-bg-opacity: 1;
   background-color: rgb(16 185 129 / var(--tw-bg-opacity));
   color: var(--text-color-dark);
 }
 
-.tr-bg-green-500:hover {
+.tr-bg-green-100:hover, .tr-bg-green-100:hover {
   --tw-bg-opacity: 0.9;
   background-color: rgb(16 185 129 / var(--tw-bg-opacity));
   color: var(--text-color-dark);
@@ -216,4 +217,30 @@ input[type=submit]:hover, button:hover {
 
 .react-select-container .css-12jo7m5 {
   padding: 0.4rem;
+}
+
+.cards {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr 1fr 1fr;
+  margin: 1rem 0;
+}
+
+.cards .tr-bg-white {
+  background-color: var(--primary-color);
+  --tw-ring-shadow: none;
+}
+
+.cards .tr-text-gray-500 {
+  opacity: 0.6;
+  color: var(--primary-color-light);
+}
+
+.cards .tr-text-gray-700 {
+  color: var(--primary-color-light);
+}
+
+.cards .tr-text-3xl {
+  font-size: 1.5rem;
+  line-height: 2.25rem;
 }
