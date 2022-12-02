@@ -1,0 +1,17 @@
+.notificationsList {
+    width: 100%;
+}
+
+.notificationsList td {
+    height: 3rem;
+}
+
+.notificationsList .name {
+    width: 80%;
+}
+
+.notificationsList td a {
+    display: flex;
+    gap: 5px;
+    font-size: 1.1rem;
+}

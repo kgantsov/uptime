@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, SetStateAction } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AreaChart, Tracking, TrackingBlock } from "@tremor/react";
 import { Button } from "@tremor/react";
@@ -10,6 +10,7 @@ import { Heartbeat, STATUS_COLORS_MAP } from '../../types/heartbeats';
 
 import styles from './MonitorPage.module.css';
 import { API } from '../../API';
+import { MonitorCards } from './MonitorCards';
 
 export function MonitorPage() {
     let navigate = useNavigate();
@@ -26,7 +27,7 @@ export function MonitorPage() {
           console.log(e);
       }
     }
-    
+
     const size = 100
 
     async function fetchLatencies(monitorId: number) {
@@ -132,6 +133,7 @@ export function MonitorPage() {
             />
           </div>
         </div>
+        <MonitorCards monitorId={monitorId} />
         <div className='block'>
         <Tracking marginTop="mt-2">
             {heartbeats.map(heartbeat => {

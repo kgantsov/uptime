@@ -55,21 +55,23 @@ export function NotificationsPage() {
             </div>
         </div>
         <div className='block'>
-        <table className={styles.monitorList}>
+        <table className={styles.notificationsList}>
             <thead>
                 <tr>
                     <td>Name</td>
+                    <td>Callback Chat ID</td>
                 </tr>
             </thead>
             <tbody>
               {notifications.map(notification => {
                 return (
                   <tr key={notification.id}>
-                    <td>
+                    <td className={styles.name}>
                       <Link to={`/notifications/${notification.name}/edit`}>
                         <FaTelegramPlane size={'25px'}/> {notification.name}
                       </Link>
                     </td>
+                    <td>{notification.callback_chat_id}</td>
                   </tr>
                 )
               })}

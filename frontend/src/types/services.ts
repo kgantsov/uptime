@@ -5,6 +5,8 @@ export interface Notification {
   callback: string,
   callback_chat_id: string,
   callback_type: string,
+  created_at: string,
+  updated_at: string,
 }
 
 export interface Service {
