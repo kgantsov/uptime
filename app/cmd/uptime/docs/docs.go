@@ -359,7 +359,7 @@ const docTemplate = `{
                     },
                     {
                         "description": "Update notification",
-                        "name": "account",
+                        "name": "body",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -578,7 +578,7 @@ const docTemplate = `{
                     },
                     {
                         "description": "Update service",
-                        "name": "account",
+                        "name": "body",
                         "in": "body",
                         "required": true,
                         "schema": {

@@ -387,7 +387,7 @@ paths:
         type: string
       - description: Update notification
         in: body
-        name: account
+        name: body
         required: true
         schema:
           $ref: '#/definitions/model.UpdateNotification'
@@ -532,7 +532,7 @@ paths:
         type: string
       - description: Update service
         in: body
-        name: account
+        name: body
         required: true
         schema:
           $ref: '#/definitions/model.UpdateService'

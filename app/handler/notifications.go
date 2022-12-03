@@ -86,7 +86,7 @@ func (h *Handler) CreateNotification(c echo.Context) error {
 // @Accept       json
 // @Produce      json
 // @Param        notification_name    path     string  true  "Updates a notification by notification_name"
-// @Param        account  body      model.UpdateNotification  true  "Update notification"
+// @Param        body  body      model.UpdateNotification  true  "Update notification"
 // @Success      200  {object}  model.Notification
 // @Failure      404  {object}  echo.HTTPError
 // @Failure      500  {object}  echo.HTTPError
@@ -107,9 +107,17 @@ func (h *Handler) UpdateNotification(c echo.Context) error {
 		return &echo.HTTPError{Code: http.StatusBadRequest, Message: err}
 	}
 
-	notification.Callback = updateNotification.Callback
-	notification.CallbackChatID = updateNotification.CallbackChatID
-	notification.CallbackType = updateNotification.CallbackType
+	if updateNotification.Callback != nil {
+		notification.Callback = *updateNotification.Callback
+	}
+
+	if updateNotification.CallbackChatID != nil {
+		notification.CallbackChatID = *updateNotification.CallbackChatID
+	}
+
+	if updateNotification.CallbackType != nil {
+		notification.CallbackType = *updateNotification.CallbackType
+	}
 
 	h.DB.Save(notification)
 

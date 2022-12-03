@@ -92,7 +92,7 @@ func (h *Handler) CreateService(c echo.Context) error {
 // @Accept       json
 // @Produce      json
 // @Param        service_id    path     string  true  "Updates by service_id"
-// @Param        account  body      model.UpdateService  true  "Update service"
+// @Param        body  body      model.UpdateService  true  "Update service"
 // @Success      200  {object}  model.Service
 // @Failure      404  {object}  echo.HTTPError
 // @Failure      500  {object}  echo.HTTPError

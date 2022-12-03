@@ -59,7 +59,7 @@ type AddNotification struct {
 	Callback       string `json:"callback"`
 }
 type UpdateNotification struct {
-	CallbackType   string `json:"callback_type"`
-	CallbackChatID string `json:"callback_chat_id"`
-	Callback       string `json:"callback"`
+	CallbackType   *string `json:"callback_type"`
+	CallbackChatID *string `json:"callback_chat_id"`
+	Callback       *string `json:"callback"`
 }
