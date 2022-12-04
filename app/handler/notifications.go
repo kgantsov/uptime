@@ -141,7 +141,7 @@ func (h *Handler) UpdateNotification(c echo.Context) error {
 func (h *Handler) DeleteNotification(c echo.Context) error {
 	notificationName := c.Param("notification_name")
 
-	err := h.DB.Delete(&model.Service{}, notificationName).Error
+	err := h.DB.Where("name = ?", notificationName).Delete(&model.Notification{}).Error
 
 	if err != nil {
 		return &echo.HTTPError{Code: http.StatusBadRequest, Message: err}
