@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { FaTelegramPlane } from 'react-icons/fa';
+import { Button } from "@tremor/react";
+import { FaTrashAlt, FaPencilAlt } from 'react-icons/fa';
 
 import styles from './NotificationEditPage.module.css';
 import { API } from '../../API';
@@ -30,6 +32,18 @@ export function NotificationEditPage() {
       setValues(data)
     })
   }, [notificationName])
+
+  async function handleNotificationDelete() {
+
+    try {
+      const response = await fetch(`/API/v1/notifications/${notificationName}`, {method: "DELETE"});
+      if (response.status === 204) {
+        navigate(`/notifications/`);
+      }
+    } catch(e) {
+      console.log(e);
+    }
+  }
 
   const handleSubmit = (e?: { preventDefault: () => void; }) => {
     if (e !== undefined) {
@@ -94,7 +108,26 @@ export function NotificationEditPage() {
 
             <div className="form-element">
               <div className="submit-wrapper">
-                <input type="submit" value="Save" />
+                <Button
+                    text="Save"
+                    icon={undefined}
+                    iconPosition="left"
+                    size="sm"
+                    color="green"
+                    importance="primary"
+                    handleClick={handleSubmit}
+                    marginTop="mt-0"
+                />
+                <Button
+                    text="Delete"
+                    icon={FaTrashAlt}
+                    iconPosition="left"
+                    size="sm"
+                    color="red"
+                    importance="primary"
+                    handleClick={handleNotificationDelete}
+                    marginTop="mt-0"
+                />
               </div>
             </div>
           </form>
