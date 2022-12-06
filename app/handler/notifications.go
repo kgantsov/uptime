@@ -62,7 +62,7 @@ func (h *Handler) GetNotification(c echo.Context) error {
 // @Tags         notifications
 // @Accept       json
 // @Produce      json
-// @Param        account  body      model.AddNotification  true  "Add notification"
+// @Param        body  body      model.AddNotification  true  "Add notification"
 // @Success      200  {object}  model.Notification
 // @Failure      404  {object}  echo.HTTPError
 // @Failure      500  {object}  echo.HTTPError

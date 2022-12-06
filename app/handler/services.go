@@ -66,7 +66,7 @@ func (h *Handler) GetService(c echo.Context) error {
 // @Tags         services
 // @Accept       json
 // @Produce      json
-// @Param        account  body      model.AddService  true  "Add service"
+// @Param        body  body      model.AddService  true  "Add service"
 // @Success      200  {object}  model.Service
 // @Failure      404  {object}  echo.HTTPError
 // @Failure      500  {object}  echo.HTTPError
