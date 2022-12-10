@@ -63,7 +63,8 @@ export function MonitorCards({ monitorId }: Props): JSX.Element {
     const calcPercentage = (data: StatsData): number => {
         const success = data?.UP?.counter | 0;
         const total = Object.values(data).reduce((a: number, v: HeartbeatStats) => a + v.counter, 0);
-        return 100 / total * success
+        
+        return (success > 0) ? 100 / total * success : 0
     }
 
     return (
@@ -71,21 +72,21 @@ export function MonitorCards({ monitorId }: Props): JSX.Element {
             <Card maxWidth="max-w-xs" decoration="top" decorationColor="orange">
                 <Metric>24 hours</Metric>
                 <Text>Avg. Response</Text>
-                <Title>{Math.round(statsDay['UP']?.average_response_time)} ms</Title>
+                <Title>{Math.round(statsDay['UP']?.average_response_time || 0)} ms</Title>
                 <Text>Uptime</Text>
                 <Title>{calcPercentage(statsDay).toFixed(2)}%</Title>
             </Card>
             <Card maxWidth="max-w-xs" decoration="top" decorationColor="orange">
                 <Metric>7 days</Metric>
                 <Text>Avg. Response</Text>
-                <Title>{Math.round(statsWeek['UP']?.average_response_time)} ms</Title>
+                <Title>{Math.round(statsWeek['UP']?.average_response_time || 0)} ms</Title>
                 <Text>Uptime</Text>
                 <Title>{calcPercentage(statsWeek).toFixed(2)}%</Title>
             </Card>
             <Card maxWidth="max-w-xs" decoration="top" decorationColor="orange">
                 <Metric>30 days</Metric>
                 <Text>Avg. Response</Text>
-                <Title>{Math.round(statsMonth['UP']?.average_response_time)} ms</Title>
+                <Title>{Math.round(statsMonth['UP']?.average_response_time || 0)} ms</Title>
                 <Text>Uptime</Text>
                 <Title>{calcPercentage(statsMonth).toFixed(2)}%</Title>
             </Card>
