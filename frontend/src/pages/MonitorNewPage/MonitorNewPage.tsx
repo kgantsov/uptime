@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { API } from '../../API';
 import Async from 'react-select/async';
 import { Button } from "@tremor/react";
+import { FaPlus } from 'react-icons/fa';
 
 import styles from './MonitorNewPage.module.css';
 
@@ -144,7 +145,16 @@ export function MonitorNewPage() {
 
             <div className="form-element">
               <div className="submit-wrapper">
-                <input type="submit" value="Create" />
+                <Button
+                    text="Create"
+                    icon={FaPlus}
+                    iconPosition="left"
+                    size="sm"
+                    color="green"
+                    importance="primary"
+                    handleClick={handleSubmit}
+                    marginTop="mt-0"
+                />
               </div>
             </div>
           </form>

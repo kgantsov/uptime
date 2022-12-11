@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 
 import styles from './NotificationsPage.module.css';
 import { API } from '../../API';
+import { Button } from "@tremor/react";
+import { FaPlus } from 'react-icons/fa';
 
 export function NotificationNewPage() {
   let navigate = useNavigate();
@@ -82,7 +84,16 @@ export function NotificationNewPage() {
 
             <div className="form-element">
               <div className="submit-wrapper">
-                <input type="submit" value="Add" />
+                <Button
+                    text="Add"
+                    icon={FaPlus}
+                    iconPosition="left"
+                    size="sm"
+                    color="green"
+                    importance="primary"
+                    handleClick={handleSubmit}
+                    marginTop="mt-0"
+                />
               </div>
             </div>
           </form>

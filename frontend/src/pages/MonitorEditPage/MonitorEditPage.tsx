@@ -158,7 +158,16 @@ export function MonitorEditPage() {
 
             <div className="form-element">
               <div className="submit-wrapper">
-                <input type="submit" value="Save" />
+                <Button
+                    text="Save"
+                    icon={undefined}
+                    iconPosition="left"
+                    size="sm"
+                    color="green"
+                    importance="primary"
+                    handleClick={handleSubmit}
+                    marginTop="mt-0"
+                />
               </div>
             </div>
           </form>
