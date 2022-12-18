@@ -5,13 +5,22 @@ import { Link } from 'react-router-dom';
 import { FaTelegramPlane } from 'react-icons/fa';
 import { Button } from "@tremor/react";
 import { FaTrashAlt, FaPencilAlt } from 'react-icons/fa';
+import { useForm, SubmitHandler } from "react-hook-form";
 
 import styles from './NotificationEditPage.module.css';
 import { API } from '../../API';
 
+type Inputs = {
+  name: string,
+  callback: string,
+  callback_chat_id: string,
+};
+
 export function NotificationEditPage() {
   let navigate = useNavigate();
   const { notificationName } = useParams();
+
+  const { register, setValue, handleSubmit, watch, formState: { errors } } = useForm<Inputs>();
 
   const [values, setValues] = useState({
     name: '',
@@ -29,7 +38,9 @@ export function NotificationEditPage() {
 
   useEffect(() => {
     API.fetch('GET', `/API/v1/notifications/${notificationName}`).then((data) => {
-      setValues(data)
+      setValue('name', data.name);
+      setValue('callback', data.callback);
+      setValue('callback_chat_id', data.callback_chat_id);
     })
   }, [notificationName])
 
@@ -45,15 +56,11 @@ export function NotificationEditPage() {
     }
   }
 
-  const handleSubmit = (e?: { preventDefault: () => void; }) => {
-    if (e !== undefined) {
-      e.preventDefault();
-    }
-
+  const onSubmit: SubmitHandler<Inputs> = data => {
     API.fetch('PATCH', `/API/v1/notifications/${notificationName}`, null, {
-      name: values.name,
-      callback: values.callback,
-      callback_chat_id: values.callback_chat_id,
+      name: data.name,
+      callback: data.callback,
+      callback_chat_id: data.callback_chat_id,
       callback_type: 'TELEGRAM',
       // callback_type: values.callback_type,
     }).then((data) => {
@@ -65,45 +72,34 @@ export function NotificationEditPage() {
     <>
         <>
         <div className='block'>
-          <h1>Edit Monitor</h1>
-          <form method="post" onSubmit={handleSubmit}>
-            <div className="form-element">
+          <h1>Edit Notification</h1>
+          <form onSubmit={handleSubmit(onSubmit)}>
+          <div className={(errors.name) ? "form-element error" : "form-element"}>
               <label htmlFor="name">Name</label>
               <input
-                className=""
-                id="name"
-                name="name"
                 type="text"
-                value={values.name}
-                onChange={handleChange}
-                required
+                {...register("name", { required: 'Name is required' })}
+                disabled
               />
+              <div className="error-message">{errors.name?.message}</div>
             </div>
 
-            <div className="form-element">
+            <div className={(errors.callback) ? "form-element error" : "form-element"}>
               <label htmlFor="callback">Callback</label>
               <input
-                className=""
-                id="callback"
-                name="callback"
                 type="text"
-                value={values.callback}
-                onChange={handleChange}
-                required
+                {...register("callback", { required: 'Callback is required' })}
               />
+              <div className="error-message">{errors.callback?.message}</div>
             </div>
 
-            <div className="form-element">
+            <div className={(errors.callback_chat_id) ? "form-element error" : "form-element"}>
               <label htmlFor="callback_chat_id">Callback chat ID</label>
               <input
-                className=""
-                id="callback_chat_id"
-                name="callback_chat_id"
                 type="text"
-                value={values.callback_chat_id}
-                onChange={handleChange}
-                required
+                {...register("callback_chat_id", { required: 'Callback chat ID is required' })}
               />
+              <div className="error-message">{errors.callback_chat_id?.message}</div>
             </div>
 
             <div className="form-element">
@@ -115,7 +111,7 @@ export function NotificationEditPage() {
                     size="sm"
                     color="green"
                     importance="primary"
-                    handleClick={handleSubmit}
+                    handleClick={handleSubmit(onSubmit)}
                     marginTop="mt-0"
                 />
                 <Button

@@ -9,8 +9,7 @@ import styles from './Layout.module.css';
 
 
 export function Layout() {
-	const [sidebarOpen, setSidebarOpen] = useState(true)
-	console.log('=====>', sidebarOpen)
+  const [sidebarOpen, setSidebarOpen] = useState(true)
   return (
     <div className='dark2'>
         <nav className={(sidebarOpen) ? `${styles.sidebar} ${styles.open}` : styles.sidebar}>

@@ -67,6 +67,7 @@ body:has(.dark2) {
 .form-element {
   display: block;
   /* margin-bottom: 1.5rem; */
+  margin: 0.5rem 0rem 1.5rem 0;
 }
 
 .form-element label {
@@ -83,7 +84,6 @@ body:has(.dark2) {
   height: 3rem;
   padding: 0.5rem;
   width: 100%;
-  margin: 0.5rem 0rem 1.5rem 0;
   background-color: var(--body-color);
   border-radius: 4px;
 }
@@ -244,4 +244,14 @@ input[type=submit]:hover, button:hover {
 .cards .tr-text-3xl {
   font-size: 1.5rem;
   line-height: 2.25rem;
+}
+
+.form-element.error input{
+  border: 1px solid #e16162;
+}
+
+.form-element.error .error-message {
+  margin-top: 5px;
+  color: #e16162;
+  font-size: 0.9rem;
 }
