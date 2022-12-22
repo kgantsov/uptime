@@ -135,7 +135,6 @@ export function MonitorEditPage() {
               isMulti={true}
               loadOptions={promiseOptions}
               placeholder='Select'
-              name="narratives"
               value={notifications}
               onChange={(option: readonly any[]) => {
                 setNotifications([...option])
