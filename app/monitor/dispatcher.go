@@ -4,7 +4,7 @@ import (
 	"sync"
 
 	"github.com/kgantsov/uptime/app/model"
-	"github.com/labstack/gommon/log"
+	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -53,6 +53,7 @@ func (d *Dispatcher) getServices() []model.Service {
 }
 
 func (d *Dispatcher) AddService(serviceID uint) {
+	log.Infof("AddService %d", serviceID)
 	var service model.Service
 
 	err := d.DB.Model(&model.Service{}).Preload("Notifications").Order("id desc").First(&service).Error
@@ -72,6 +73,7 @@ func (d *Dispatcher) AddService(serviceID uint) {
 }
 
 func (d *Dispatcher) RemoveService(serviceID uint) {
+	log.Infof("RemoveService %d", serviceID)
 	d.mux.Lock()
 	defer d.mux.Unlock()
 

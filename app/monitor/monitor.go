@@ -1,8 +1,6 @@
 package monitor
 
 import (
-	"bytes"
-	"encoding/json"
 	"net"
 	"net/http"
 	"time"
@@ -15,53 +13,33 @@ import (
 )
 
 type Monitor struct {
-	DB      *gorm.DB
-	client  http.Client
-	done    chan struct{}
-	service model.Service
+	DB        *gorm.DB
+	client    http.Client
+	done      chan struct{}
+	service   model.Service
+	notifiers []Notifier
 }
 
 func NewMonitor(db *gorm.DB, service model.Service) *Monitor {
+	log.Infof("NewMonitor %d", service.ID)
 	client := http.Client{Timeout: time.Duration(service.Timeout) * time.Second}
 
+	notifiers := []Notifier{}
+
+	for _, notification := range service.Notifications {
+		notifier := NewTelegramNotifier(notification)
+		notifiers = append(notifiers, notifier)
+	}
+
 	m := &Monitor{
-		DB:      db,
-		service: service,
-		client:  client,
-		done:    make(chan struct{}),
+		DB:        db,
+		service:   service,
+		client:    client,
+		done:      make(chan struct{}),
+		notifiers: notifiers,
 	}
 
 	return m
-}
-
-func (m *Monitor) NotifyTg(notification model.Notification, message string) {
-	log.Infof("Sending telegram message: %s to %s\n", message, notification.CallbackChatID)
-
-	bodyParams := map[string]interface{}{
-		"chat_id":              notification.CallbackChatID,
-		"text":                 message,
-		"disable_notification": true,
-	}
-
-	jsonBody, _ := json.Marshal(bodyParams)
-
-	request, err := http.NewRequest(
-		"POST", notification.Callback, bytes.NewBuffer(jsonBody),
-	)
-	if err != nil {
-		log.Infof("Failed to notify telegram %s\n", err)
-		return
-	}
-
-	request.Header.Set("Content-Type", "application/json; charset=UTF-8")
-
-	response, err := m.client.Do(request)
-	if err != nil {
-		log.Infof("Failed to notify telegram %s\n", err)
-		return
-	}
-
-	response.Body.Close()
 }
 
 func (m *Monitor) CheckHealth() (int, string) {
@@ -106,6 +84,10 @@ func (m *Monitor) Start() {
 
 			elapsed := time.Since(start)
 
+			log.Debugf(
+				"Service check %d %s %d %s %t", m.service.ID, m.service.URL, statusCode, status, failing,
+			)
+
 			m.DB.Create(
 				&model.Heartbeat{
 					ServiceID:    m.service.ID,
@@ -119,9 +101,8 @@ func (m *Monitor) Start() {
 				log.Infof("Service %s %s is up and running: %d %s %t\n", t, m.service.URL, statusCode, status, failing)
 
 				if failing {
-					for _, notification := range m.service.Notifications {
-						m.NotifyTg(
-							notification,
+					for _, notifier := range m.notifiers {
+						notifier.Notify(
 							emoji.Sprintf(
 								":check_mark_button: Service '%s' %s is UP again. Downtime: %s",
 								m.service.Name,
@@ -137,9 +118,8 @@ func (m *Monitor) Start() {
 				log.Infof("Failed to get %s url. Got status code: %d %s %t\n", m.service.URL, statusCode, status, failing)
 
 				if !failing {
-					for _, notification := range m.service.Notifications {
-						m.NotifyTg(
-							notification,
+					for _, notifier := range m.notifiers {
+						notifier.Notify(
 							emoji.Sprintf(
 								":exclamation: Service '%s' %s is DOWN",
 								m.service.Name,
