@@ -54,6 +54,7 @@ func (d *Dispatcher) getServices() []model.Service {
 
 func (d *Dispatcher) AddService(serviceID uint) {
 	log.Infof("AddService %d", serviceID)
+
 	var service model.Service
 
 	err := d.DB.Model(&model.Service{}).Preload("Notifications").Order("id desc").First(&service).Error

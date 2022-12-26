@@ -16,17 +16,19 @@ type Monitor struct {
 	DB        *gorm.DB
 	client    http.Client
 	done      chan struct{}
-	service   model.Service
 	notifiers []Notifier
+	service   model.Service
 }
 
 func NewMonitor(db *gorm.DB, service model.Service) *Monitor {
 	log.Infof("NewMonitor %d", service.ID)
+
 	client := http.Client{Timeout: time.Duration(service.Timeout) * time.Second}
 
 	notifiers := []Notifier{}
 
-	for _, notification := range service.Notifications {
+	for i := range service.Notifications {
+		notification := service.Notifications[i]
 		notifier := NewTelegramNotifier(notification)
 		notifiers = append(notifiers, notifier)
 	}
@@ -111,6 +113,7 @@ func (m *Monitor) Start() {
 							),
 						)
 					}
+
 					failing = false
 					startedFailingAt = time.Time{}
 				}
