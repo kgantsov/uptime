@@ -1,7 +1,6 @@
 package monitor
 
 import (
-	"net"
 	"net/http"
 	"time"
 
@@ -16,6 +15,7 @@ type Monitor struct {
 	DB        *gorm.DB
 	client    http.Client
 	done      chan struct{}
+	checker   Checker
 	notifiers []Notifier
 	service   model.Service
 }
@@ -33,37 +33,20 @@ func NewMonitor(db *gorm.DB, service model.Service) *Monitor {
 		notifiers = append(notifiers, notifier)
 	}
 
+	checker := NewHTTPCHecker(
+		service.Name, service.URL, service.Timeout, service.AcceptedStatusCode,
+	)
+
 	m := &Monitor{
 		DB:        db,
 		service:   service,
 		client:    client,
 		done:      make(chan struct{}),
 		notifiers: notifiers,
+		checker:   checker,
 	}
 
 	return m
-}
-
-func (m *Monitor) CheckHealth() (int, string) {
-	resp, err := m.client.Get(m.service.URL)
-
-	if err != nil {
-		log.Infof("Error checking '%s' %s %s\n", m.service.Name, m.service.URL, err)
-	}
-
-	if err, ok := err.(net.Error); ok && err.Timeout() {
-		return 0, "TIMEOUT"
-	} else if err != nil {
-		return 0, "DOWN"
-	}
-
-	defer resp.Body.Close()
-
-	if resp.StatusCode == m.service.AcceptedStatusCode {
-		return resp.StatusCode, "UP"
-	}
-
-	return resp.StatusCode, "FAILED"
 }
 
 func (m *Monitor) Start() {
@@ -82,7 +65,7 @@ func (m *Monitor) Start() {
 		case t := <-ticker.C:
 			start := time.Now()
 
-			statusCode, status := m.CheckHealth()
+			statusCode, status := m.checker.Check()
 
 			elapsed := time.Since(start)
 
