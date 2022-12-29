@@ -15,11 +15,11 @@ type Notifier interface {
 }
 
 type TelegramNotifier struct {
+	notification *model.Notification
 	client       http.Client
-	notification model.Notification
 }
 
-func NewTelegramNotifier(notification model.Notification) *TelegramNotifier {
+func NewTelegramNotifier(notification *model.Notification) *TelegramNotifier {
 	client := http.Client{Timeout: time.Duration(10) * time.Second}
 
 	n := &TelegramNotifier{

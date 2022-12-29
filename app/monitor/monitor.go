@@ -29,7 +29,7 @@ func NewMonitor(db *gorm.DB, service model.Service) *Monitor {
 
 	for i := range service.Notifications {
 		notification := service.Notifications[i]
-		notifier := NewTelegramNotifier(notification)
+		notifier := NewTelegramNotifier(&notification)
 		notifiers = append(notifiers, notifier)
 	}
 
