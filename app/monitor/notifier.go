@@ -10,6 +10,8 @@ import (
 	"github.com/labstack/gommon/log"
 )
 
+const TelegramNotifierTimeout int = 10
+
 type Notifier interface {
 	Notify(message string)
 }
@@ -20,7 +22,7 @@ type TelegramNotifier struct {
 }
 
 func NewTelegramNotifier(notification *model.Notification) *TelegramNotifier {
-	client := http.Client{Timeout: time.Duration(10) * time.Second}
+	client := http.Client{Timeout: time.Duration(TelegramNotifierTimeout) * time.Second}
 
 	n := &TelegramNotifier{
 		client:       client,
