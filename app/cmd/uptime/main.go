@@ -74,9 +74,7 @@ func main() {
 
 	e := echo.New()
 	log := logrus.New()
-	// level, _ := logrus.ParseLevel("INFO")
-	// e.Logger.SetLevel(level)
-	// e.Use(middleware.Logger())
+
 	e.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
 		LogURI:    true,
 		LogStatus: true,
