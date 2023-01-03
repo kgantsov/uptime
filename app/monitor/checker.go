@@ -8,6 +8,11 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+const StatusTimeout string = "TIMEOUT"
+const StatusDown string = "DOWN"
+const StatusUp string = "UP"
+const StatusFailed string = "FAILED"
+
 type Checker interface {
 	Check() (int, string)
 }
@@ -39,16 +44,16 @@ func (c *HTTPCHecker) Check() (int, string) {
 	}
 
 	if err, ok := err.(net.Error); ok && err.Timeout() {
-		return 0, "TIMEOUT"
+		return 0, StatusTimeout
 	} else if err != nil {
-		return 0, "DOWN"
+		return 0, StatusDown
 	}
 
 	defer resp.Body.Close()
 
 	if resp.StatusCode == c.AcceptedStatusCode {
-		return resp.StatusCode, "UP"
+		return resp.StatusCode, StatusUp
 	}
 
-	return resp.StatusCode, "FAILED"
+	return resp.StatusCode, StatusFailed
 }

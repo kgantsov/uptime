@@ -82,7 +82,7 @@ func (m *Monitor) Start() {
 				},
 			)
 
-			if status == "UP" {
+			if status == StatusUp {
 				log.Infof("Service %s %s is up and running: %d %s %t\n", t, m.service.URL, statusCode, status, failing)
 
 				if failing {
