@@ -34,7 +34,7 @@ func (d *Dispatcher) init() {
 		service := services[i]
 
 		if service.Enabled {
-			m := NewMonitor(d.DB, service)
+			m := NewMonitor(d.DB, &service)
 			d.monitors[service.ID] = m
 		}
 	}
@@ -67,7 +67,7 @@ func (d *Dispatcher) AddService(serviceID uint) {
 	defer d.mux.Unlock()
 
 	if service.Enabled {
-		m := NewMonitor(d.DB, service)
+		m := NewMonitor(d.DB, &service)
 		go m.Start()
 		d.monitors[service.ID] = m
 	}

@@ -17,10 +17,10 @@ type Monitor struct {
 	done      chan struct{}
 	checker   Checker
 	notifiers []Notifier
-	service   model.Service
+	service   *model.Service
 }
 
-func NewMonitor(db *gorm.DB, service model.Service) *Monitor {
+func NewMonitor(db *gorm.DB, service *model.Service) *Monitor {
 	log.Infof("NewMonitor %d", service.ID)
 
 	client := http.Client{Timeout: time.Duration(service.Timeout) * time.Second}
