@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io/fs"
 	"os"
 	"os/signal"
 	"syscall"
@@ -18,10 +19,19 @@ import (
 	"github.com/kgantsov/uptime/app/model"
 	"github.com/kgantsov/uptime/app/monitor"
 
+	rice "github.com/GeertJohan/go.rice"
 	echoSwagger "github.com/swaggo/echo-swagger"
 
 	_ "github.com/kgantsov/uptime/app/cmd/uptime/docs"
 )
+
+type HTTPBox struct {
+	*rice.Box
+}
+
+func (hb *HTTPBox) Open(name string) (fs.File, error) {
+	return hb.Box.Open(name)
+}
 
 // @title Swagger Example API
 // @version 1.0
@@ -111,6 +121,14 @@ func main() {
 	v1.DELETE("/notifications/:notification_name", h.DeleteNotification)
 
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
+
+	appBox, err := rice.FindBox("../../../frontend/build/static/")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	e.StaticFS("/static/", &HTTPBox{appBox})
+	e.FileFS("/", "../../../frontend/build/index.html", &HTTPBox{appBox})
 
 	go func() {
 		e.Logger.Fatal(e.Start(":1323"))

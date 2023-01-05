@@ -3,6 +3,7 @@ module github.com/kgantsov/uptime
 go 1.19
 
 require (
+	github.com/GeertJohan/go.rice v1.0.3
 	github.com/kyokomi/emoji v2.2.4+incompatible
 	github.com/labstack/echo/v4 v4.9.0
 	github.com/labstack/gommon v0.3.1
@@ -17,6 +18,7 @@ require (
 	github.com/KyleBanks/depth v1.2.1 // indirect
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
+	github.com/daaku/go.zipexe v1.0.2 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/jsonreference v0.19.6 // indirect
 	github.com/go-openapi/spec v0.20.4 // indirect
