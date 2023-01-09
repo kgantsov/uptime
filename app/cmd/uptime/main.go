@@ -122,13 +122,18 @@ func main() {
 
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 
-	appBox, err := rice.FindBox("../../../frontend/build/static/")
+	appStaticBox, err := rice.FindBox("../../../frontend/build/static/")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	e.StaticFS("/static/", &HTTPBox{appBox})
-	e.FileFS("/", "../../../frontend/build/index.html", &HTTPBox{appBox})
+	appIndexBox, err := rice.FindBox("../../../frontend/build/")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	e.StaticFS("/static/", &HTTPBox{appStaticBox})
+	e.GET("/*", echo.StaticFileHandler("index.html", &HTTPBox{appIndexBox}))
 
 	go func() {
 		e.Logger.Fatal(e.Start(":1323"))
