@@ -120,7 +120,7 @@ func main() {
 	v1.PATCH("/notifications/:notification_name", h.UpdateNotification)
 	v1.DELETE("/notifications/:notification_name", h.DeleteNotification)
 
-	e.GET("/swagger/*", echoSwagger.WrapHandler)
+	e.GET("/docs/*", echoSwagger.WrapHandler)
 
 	appStaticBox, err := rice.FindBox("../../../frontend/build/static/")
 	if err != nil {
