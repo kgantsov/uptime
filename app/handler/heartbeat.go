@@ -37,7 +37,7 @@ func (h *Handler) GetHeartbeatsLatencies(c echo.Context) error {
 		return &echo.HTTPError{Code: http.StatusBadRequest, Message: err}
 	}
 
-	var heartbeats []model.Heartbeat
+	heartbeats := []model.Heartbeat{}
 	if serviceID != "" {
 		err = h.DB.Order("id desc").Where("service_id = ?", serviceID).Limit(size).Find(&heartbeats).Error
 	} else {
@@ -73,7 +73,7 @@ func (h *Handler) GetHeartbeatsLastLatencies(c echo.Context) error {
 		return &echo.HTTPError{Code: http.StatusBadRequest, Message: err}
 	}
 
-	var heartbeats []model.Heartbeat
+	heartbeats := []model.Heartbeat{}
 
 	err = h.DB.Raw(
 		`
@@ -114,7 +114,7 @@ func (h *Handler) GetHeartbeatStats(c echo.Context) error {
 		return &echo.HTTPError{Code: http.StatusBadRequest, Message: err}
 	}
 
-	var heartbeatStatsPoints []model.HeartbeatStatsPoint
+	heartbeatStatsPoints := []model.HeartbeatStatsPoint{}
 
 	err = h.DB.Raw(
 		`

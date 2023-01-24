@@ -19,7 +19,7 @@ import (
 // @Failure      500  {object}  echo.HTTPError
 // @Router       /API/v1/services [get]
 func (h *Handler) GetServices(c echo.Context) error {
-	var services []model.Service
+	services := []model.Service{}
 
 	err := h.DB.Model(&model.Service{}).Preload("Notifications").Order("id desc").Find(&services).Error
 

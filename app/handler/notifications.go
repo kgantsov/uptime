@@ -19,7 +19,7 @@ import (
 // @Failure      500  {object}  echo.HTTPError
 // @Router       /API/v1/notifications [get]
 func (h *Handler) GetNotifications(c echo.Context) error {
-	var notifications []model.Notification
+	notifications := []model.Notification{}
 
 	err := h.DB.Model(&model.Notification{}).Order("created_at desc").Find(&notifications).Error
 
