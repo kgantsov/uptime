@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io/fs"
 	"os"
 	"os/signal"
@@ -9,7 +8,6 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
 	"github.com/sirupsen/logrus"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -47,17 +45,23 @@ func (hb *HTTPBox) Open(name string) (fs.File, error) {
 
 // @BasePath /
 func main() {
+	log := logrus.New()
+	log.SetFormatter(new(handler.StackdriverFormatter))
 
 	db, err := gorm.Open(sqlite.Open("test.db"), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Error),
 	})
 	if err != nil {
-		fmt.Print("failed to connect database\n")
+		log.Info("failed to connect database")
 		return
 	}
 
 	dispatcher := monitor.NewDispatcher(db)
 	dispatcher.Start()
+
+	h := handler.NewHandler(log, db, dispatcher)
+
+	e := echo.New()
 
 	done := make(chan struct{})
 	sigs := make(chan os.Signal, 1)
@@ -65,9 +69,9 @@ func main() {
 
 	go func() {
 		sig := <-sigs
-		fmt.Printf("Got signal: %s\n", sig)
+		e.Logger.Infof("Got signal: %s", sig)
 
-		fmt.Print("Stopping monitoring\n")
+		h.Logger.Info("Stopping monitoring")
 
 		dispatcher.Stop()
 
@@ -82,35 +86,19 @@ func main() {
 	)
 	db.SetupJoinTable(&model.Service{}, "Notifications", &model.ServiceNotification{})
 
-	e := echo.New()
-	log := logrus.New()
-
-	e.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
-		LogURI:    true,
-		LogStatus: true,
-		LogValuesFunc: func(c echo.Context, values middleware.RequestLoggerValues) error {
-			log.WithFields(logrus.Fields{
-				"URI":    values.URI,
-				"status": values.Status,
-			}).Info("request")
-
-			return nil
-		},
-	}))
-
-	h := handler.NewHandler(db, dispatcher)
+	h.ConfigureMiddleware(e)
 	h.RegisterRoutes(e)
 
 	e.GET("/docs/*", echoSwagger.WrapHandler)
 
 	appStaticBox, err := rice.FindBox("../../../frontend/build/static/")
 	if err != nil {
-		log.Fatal(err)
+		e.Logger.Fatal(err)
 	}
 
 	appIndexBox, err := rice.FindBox("../../../frontend/build/")
 	if err != nil {
-		log.Fatal(err)
+		e.Logger.Fatal(err)
 	}
 
 	e.StaticFS("/static/", &HTTPBox{appStaticBox})
@@ -120,9 +108,9 @@ func main() {
 		e.Logger.Fatal(e.Start(":1323"))
 	}()
 
-	log.Infof("Started uptime monitor\n")
+	e.Logger.Infof("Started uptime monitor")
 
 	<-done
 
-	fmt.Print("Stopped monitoring\n")
+	e.Logger.Info("Stopped monitoring")
 }

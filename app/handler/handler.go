@@ -3,6 +3,8 @@ package handler
 import (
 	"github.com/kgantsov/uptime/app/monitor"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -10,6 +12,7 @@ type (
 	Handler struct {
 		DB         *gorm.DB
 		Dispatcher *monitor.Dispatcher
+		Logger     *logrus.Logger
 	}
 )
 
@@ -18,8 +21,8 @@ const (
 	Key = "secret"
 )
 
-func NewHandler(db *gorm.DB, dispatcher *monitor.Dispatcher) *Handler {
-	h := &Handler{DB: db, Dispatcher: dispatcher}
+func NewHandler(logger *logrus.Logger, db *gorm.DB, dispatcher *monitor.Dispatcher) *Handler {
+	h := &Handler{Logger: logger, DB: db, Dispatcher: dispatcher}
 
 	return h
 }
@@ -44,4 +47,19 @@ func (h *Handler) RegisterRoutes(e *echo.Echo) {
 	v1.GET("/notifications/:notification_name", h.GetNotification)
 	v1.PATCH("/notifications/:notification_name", h.UpdateNotification)
 	v1.DELETE("/notifications/:notification_name", h.DeleteNotification)
+}
+
+func (h *Handler) ConfigureMiddleware(e *echo.Echo) {
+	e.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
+		LogURI:    true,
+		LogStatus: true,
+		LogValuesFunc: func(c echo.Context, values middleware.RequestLoggerValues) error {
+			h.Logger.WithFields(logrus.Fields{
+				"URI":    values.URI,
+				"status": values.Status,
+			}).Info("request")
+
+			return nil
+		},
+	}))
 }
