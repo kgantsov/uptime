@@ -1,9 +1,12 @@
 package handler
 
 import (
+	"time"
+
 	"github.com/kgantsov/uptime/app/monitor"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/labstack/gommon/log"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
@@ -50,16 +53,36 @@ func (h *Handler) RegisterRoutes(e *echo.Echo) {
 }
 
 func (h *Handler) ConfigureMiddleware(e *echo.Echo) {
+	e.HideBanner = true
+	e.Logger.SetLevel(log.DEBUG)
+
 	e.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
-		LogURI:    true,
-		LogStatus: true,
+		LogMethod:    true,
+		LogURI:       true,
+		LogStatus:    true,
+		LogRequestID: true,
+
 		LogValuesFunc: func(c echo.Context, values middleware.RequestLoggerValues) error {
 			h.Logger.WithFields(logrus.Fields{
-				"URI":    values.URI,
-				"status": values.Status,
-			}).Info("request")
+				"RequestID": values.RequestID,
+			}).Infof("%s %s %d", values.Method, values.URI, values.Status)
 
 			return nil
 		},
 	}))
+
+	e.Pre(middleware.RemoveTrailingSlash())
+
+	e.Use(middleware.RecoverWithConfig(middleware.RecoverConfig{
+		StackSize: 1 << 10, // 1 KB
+		// LogLevel:  log.Lvl,
+	}))
+
+	e.Use(middleware.TimeoutWithConfig(middleware.TimeoutConfig{
+		OnTimeoutRouteErrorHandler: func(err error, c echo.Context) {
+			e.Logger.Warn("GotTimeout")
+		},
+		Timeout: 30 * time.Second,
+	}))
+	e.Use(middleware.SecureWithConfig(middleware.DefaultSecureConfig))
 }
