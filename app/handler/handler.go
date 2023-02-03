@@ -56,6 +56,14 @@ func (h *Handler) ConfigureMiddleware(e *echo.Echo) {
 	e.HideBanner = true
 	e.Logger.SetLevel(log.DEBUG)
 
+	e.Use(middleware.RequestID())
+
+	e.Use(middleware.RequestIDWithConfig(middleware.RequestIDConfig{
+		RequestIDHandler: func(c echo.Context, rid string) {
+			c.Set(echo.HeaderXRequestID, rid)
+		},
+	}))
+
 	e.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
 		LogMethod:    true,
 		LogURI:       true,

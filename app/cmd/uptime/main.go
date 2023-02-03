@@ -59,9 +59,9 @@ func main() {
 	dispatcher := monitor.NewDispatcher(db)
 	dispatcher.Start()
 
-	h := handler.NewHandler(log, db, dispatcher)
-
 	e := echo.New()
+
+	h := handler.NewHandler(log, db, dispatcher)
 
 	done := make(chan struct{})
 	sigs := make(chan os.Signal, 1)

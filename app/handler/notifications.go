@@ -5,7 +5,7 @@ import (
 
 	"github.com/kgantsov/uptime/app/model"
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/gommon/log"
+	"github.com/sirupsen/logrus"
 )
 
 // GetNotifications godoc
@@ -24,7 +24,10 @@ func (h *Handler) GetNotifications(c echo.Context) error {
 	err := h.DB.Model(&model.Notification{}).Order("created_at desc").Find(&notifications).Error
 
 	if err != nil {
-		log.Errorf("Got an error %s", err)
+		h.Logger.WithFields(logrus.Fields{
+			"RequestID": c.Get(echo.HeaderXRequestID),
+		}).Infof("Got an error getting notifications %s", err)
+
 		return &echo.HTTPError{Code: http.StatusInternalServerError, Message: err}
 	}
 
@@ -50,6 +53,10 @@ func (h *Handler) GetNotification(c echo.Context) error {
 	err := h.DB.Model(&model.Notification{}).Where("name = ?", notificationName).First(&notification).Error
 
 	if err != nil {
+		h.Logger.WithFields(logrus.Fields{
+			"RequestID": c.Get(echo.HeaderXRequestID),
+		}).Infof("Got an error getting a notification %s %s", notificationName, err)
+
 		return &echo.HTTPError{Code: http.StatusBadRequest, Message: err}
 	}
 

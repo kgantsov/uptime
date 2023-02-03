@@ -7,6 +7,7 @@ import (
 
 	"github.com/kgantsov/uptime/app/model"
 	"github.com/labstack/echo/v4"
+	"github.com/sirupsen/logrus"
 )
 
 // GetHeartbeats godoc
@@ -89,6 +90,10 @@ func (h *Handler) GetHeartbeatsLastLatencies(c echo.Context) error {
 	).Scan(&heartbeats).Error
 
 	if err != nil {
+		h.Logger.WithFields(logrus.Fields{
+			"RequestID": c.Get(echo.HeaderXRequestID),
+		}).Infof("Got an error getting latest latencies %s", err)
+
 		return &echo.HTTPError{Code: http.StatusNotFound, Message: err}
 	}
 
@@ -131,6 +136,9 @@ func (h *Handler) GetHeartbeatStats(c echo.Context) error {
 	).Scan(&heartbeatStatsPoints).Error
 
 	if err != nil {
+		h.Logger.WithFields(logrus.Fields{
+			"RequestID": c.Get(echo.HeaderXRequestID),
+		}).Infof("Got an error getting latencies stats %s", err)
 		return &echo.HTTPError{Code: http.StatusNotFound, Message: err}
 	}
 
