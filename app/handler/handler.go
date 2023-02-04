@@ -88,7 +88,9 @@ func (h *Handler) ConfigureMiddleware(e *echo.Echo) {
 
 	e.Use(middleware.TimeoutWithConfig(middleware.TimeoutConfig{
 		OnTimeoutRouteErrorHandler: func(err error, c echo.Context) {
-			e.Logger.Warn("GotTimeout")
+			h.Logger.WithFields(logrus.Fields{
+				"RequestID": c.Get(echo.HeaderXRequestID),
+			}).Warn("GotTimeout")
 		},
 		Timeout: 30 * time.Second,
 	}))
