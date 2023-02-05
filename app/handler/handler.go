@@ -3,6 +3,7 @@ package handler
 import (
 	"time"
 
+	"github.com/kgantsov/uptime/app/auth"
 	"github.com/kgantsov/uptime/app/monitor"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -32,6 +33,9 @@ func NewHandler(logger *logrus.Logger, db *gorm.DB, dispatcher *monitor.Dispatch
 
 func (h *Handler) RegisterRoutes(e *echo.Echo) {
 	v1 := e.Group("/API/v1")
+
+	v1.POST("/tokens", h.CreateToken)
+	v1.DELETE("/tokens", h.DeleteToken)
 
 	v1.GET("/heartbeats/latencies", h.GetHeartbeatsLatencies)
 	v1.GET("/heartbeats/latencies/last", h.GetHeartbeatsLastLatencies)
@@ -63,6 +67,14 @@ func (h *Handler) ConfigureMiddleware(e *echo.Echo) {
 			c.Set(echo.HeaderXRequestID, rid)
 		},
 	}))
+
+	e.Use(middleware.JWTWithConfig(middleware.JWTConfig{
+		SigningKey: []byte(Key),
+		ContextKey: "token",
+
+		Skipper: auth.AuthSkipperFunc,
+	}))
+	e.Use(auth.CheckTokenMiddleware(h.DB, h.Logger))
 
 	e.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
 		LogMethod:    true,

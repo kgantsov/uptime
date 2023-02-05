@@ -13,6 +13,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 
+	"github.com/kgantsov/uptime/app/auth"
 	"github.com/kgantsov/uptime/app/handler"
 	"github.com/kgantsov/uptime/app/model"
 	"github.com/kgantsov/uptime/app/monitor"
@@ -44,6 +45,10 @@ func (hb *HTTPBox) Open(name string) (fs.File, error) {
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
 
 // @BasePath /
+// @securityDefinitions.apikey  HttpBearer
+// @in                          header
+// @name                        Authorization
+// @description                 Description for what is this security definition being used
 func main() {
 	log := logrus.New()
 	log.SetFormatter(new(handler.StackdriverFormatter))
@@ -82,9 +87,29 @@ func main() {
 
 	// Migrate the schema
 	db.AutoMigrate(
-		&model.Heartbeat{}, &model.Service{}, &model.Notification{}, &model.ServiceNotification{},
+		&model.User{},
+		&model.Token{},
+		&model.Heartbeat{},
+		&model.Service{},
+		&model.Notification{},
+		&model.ServiceNotification{},
 	)
 	db.SetupJoinTable(&model.Service{}, "Notifications", &model.ServiceNotification{})
+
+	user := &model.User{}
+
+	err = db.Model(&model.User{}).Where("email = ?", "admin@uptime.io").First(&user).Error
+
+	if err != nil {
+		h, _ := auth.HashPassword("12345qwert")
+		user = &model.User{
+			FirstName: "!",
+			LastName:  "2",
+			Email:     "admin@uptime.io",
+			Password:  h,
+		}
+		db.Create(user)
+	}
 
 	h.ConfigureMiddleware(e)
 	h.RegisterRoutes(e)

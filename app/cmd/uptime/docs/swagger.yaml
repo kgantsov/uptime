@@ -34,6 +34,13 @@ definitions:
       url:
         type: string
     type: object
+  model.CreateToken:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
   model.Heartbeat:
     properties:
       created_at:
@@ -120,6 +127,25 @@ definitions:
       serviceID:
         type: integer
     type: object
+  model.Token:
+    properties:
+      created_at:
+        type: string
+      deleted_at:
+        $ref: '#/definitions/sql.NullTime'
+      expire_at:
+        type: string
+      id:
+        type: integer
+      token:
+        type: string
+      updated_at:
+        type: string
+      user:
+        $ref: '#/definitions/model.User'
+      userID:
+        type: integer
+    type: object
   model.UpdateNotification:
     properties:
       callback:
@@ -146,6 +172,25 @@ definitions:
       timeout:
         type: integer
       url:
+        type: string
+    type: object
+  model.User:
+    properties:
+      created_at:
+        type: string
+      deleted_at:
+        $ref: '#/definitions/sql.NullTime'
+      email:
+        type: string
+      first_name:
+        type: string
+      id:
+        type: integer
+      last_name:
+        type: string
+      password:
+        type: string
+      updated_at:
         type: string
     type: object
   sql.NullTime:
@@ -200,6 +245,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/echo.HTTPError'
+      security:
+      - HttpBearer: []
       summary: Get all heartbeats
       tags:
       - heartbeats
@@ -230,6 +277,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/echo.HTTPError'
+      security:
+      - HttpBearer: []
       summary: GetHeartbeatsLastLatencies stats
       tags:
       - heartbeats
@@ -261,6 +310,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/echo.HTTPError'
+      security:
+      - HttpBearer: []
       summary: GetHeartbeatStats stats
       tags:
       - heartbeats
@@ -286,6 +337,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/echo.HTTPError'
+      security:
+      - HttpBearer: []
       summary: Get notifications
       tags:
       - notifications
@@ -296,7 +349,7 @@ paths:
       parameters:
       - description: Add notification
         in: body
-        name: account
+        name: body
         required: true
         schema:
           $ref: '#/definitions/model.AddNotification'
@@ -315,6 +368,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/echo.HTTPError'
+      security:
+      - HttpBearer: []
       summary: Create a new notification
       tags:
       - notifications
@@ -344,6 +399,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/echo.HTTPError'
+      security:
+      - HttpBearer: []
       summary: Delete a notification
       tags:
       - notifications
@@ -372,6 +429,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/echo.HTTPError'
+      security:
+      - HttpBearer: []
       summary: Get a notification
       tags:
       - notifications
@@ -406,6 +465,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/echo.HTTPError'
+      security:
+      - HttpBearer: []
       summary: Update a notification
       tags:
       - notifications
@@ -431,6 +492,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/echo.HTTPError'
+      security:
+      - HttpBearer: []
       summary: Get all services
       tags:
       - services
@@ -441,7 +504,7 @@ paths:
       parameters:
       - description: Add service
         in: body
-        name: account
+        name: body
         required: true
         schema:
           $ref: '#/definitions/model.AddService'
@@ -460,6 +523,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/echo.HTTPError'
+      security:
+      - HttpBearer: []
       summary: Create a new service
       tags:
       - services
@@ -489,6 +554,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/echo.HTTPError'
+      security:
+      - HttpBearer: []
       summary: Delete a service
       tags:
       - services
@@ -517,6 +584,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/echo.HTTPError'
+      security:
+      - HttpBearer: []
       summary: Get a service
       tags:
       - services
@@ -551,6 +620,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/echo.HTTPError'
+      security:
+      - HttpBearer: []
       summary: Update a service
       tags:
       - services
@@ -585,6 +656,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/echo.HTTPError'
+      security:
+      - HttpBearer: []
       summary: Delete a notification to a service
       tags:
       - services
@@ -618,7 +691,69 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/echo.HTTPError'
+      security:
+      - HttpBearer: []
       summary: Add a notification to a service
       tags:
       - services
+  /API/v1/tokens:
+    delete:
+      consumes:
+      - application/json
+      description: Delete an auth token
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+          schema:
+            $ref: '#/definitions/model.Token'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      security:
+      - HttpBearer: []
+      summary: Delete an auth token
+      tags:
+      - tokens
+    post:
+      consumes:
+      - application/json
+      description: Create an auth token
+      parameters:
+      - description: Create an auth token
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.CreateToken'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Token'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      summary: Create an auth token
+      tags:
+      - tokens
+securityDefinitions:
+  HttpBearer:
+    description: Description for what is this security definition being used
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

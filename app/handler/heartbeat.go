@@ -21,6 +21,7 @@ import (
 // @Success      200  {object}  []model.Heartbeat
 // @Failure      404  {object}  echo.HTTPError
 // @Failure      500  {object}  echo.HTTPError
+// @Security     HttpBearer
 // @Router       /API/v1/heartbeats/latencies [get]
 func (h *Handler) GetHeartbeatsLatencies(c echo.Context) error {
 	var err error
@@ -62,6 +63,7 @@ func (h *Handler) GetHeartbeatsLatencies(c echo.Context) error {
 // @Success      200  {object}  []model.HeartbeatPoint
 // @Failure      404  {object}  echo.HTTPError
 // @Failure      500  {object}  echo.HTTPError
+// @Security     HttpBearer
 // @Router       /API/v1/heartbeats/latencies/last [get]
 func (h *Handler) GetHeartbeatsLastLatencies(c echo.Context) error {
 	s := c.QueryParam("size")
@@ -110,6 +112,7 @@ func (h *Handler) GetHeartbeatsLastLatencies(c echo.Context) error {
 // @Success      200  {object}  []model.HeartbeatStatsPoint
 // @Failure      404  {object}  echo.HTTPError
 // @Failure      500  {object}  echo.HTTPError
+// @Security     HttpBearer
 // @Router       /API/v1/heartbeats/stats/{days} [get]
 func (h *Handler) GetHeartbeatStats(c echo.Context) error {
 	_days := c.Param("days")

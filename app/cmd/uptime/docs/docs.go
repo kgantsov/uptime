@@ -27,6 +27,11 @@ const docTemplate = `{
     "paths": {
         "/API/v1/heartbeats/latencies": {
             "get": {
+                "security": [
+                    {
+                        "HttpBearer": []
+                    }
+                ],
                 "description": "Returns all heartbeats",
                 "consumes": [
                     "application/json"
@@ -79,6 +84,11 @@ const docTemplate = `{
         },
         "/API/v1/heartbeats/latencies/last": {
             "get": {
+                "security": [
+                    {
+                        "HttpBearer": []
+                    }
+                ],
                 "description": "Returns last latencies",
                 "consumes": [
                     "application/json"
@@ -125,6 +135,11 @@ const docTemplate = `{
         },
         "/API/v1/heartbeats/stats/{days}": {
             "get": {
+                "security": [
+                    {
+                        "HttpBearer": []
+                    }
+                ],
                 "description": "Returns heartbeats stats",
                 "consumes": [
                     "application/json"
@@ -172,6 +187,11 @@ const docTemplate = `{
         },
         "/API/v1/notifications": {
             "get": {
+                "security": [
+                    {
+                        "HttpBearer": []
+                    }
+                ],
                 "description": "Returns all notifications",
                 "consumes": [
                     "application/json"
@@ -208,6 +228,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "HttpBearer": []
+                    }
+                ],
                 "description": "Creates notifications",
                 "consumes": [
                     "application/json"
@@ -222,7 +247,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "description": "Add notification",
-                        "name": "account",
+                        "name": "body",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -254,6 +279,11 @@ const docTemplate = `{
         },
         "/API/v1/notifications/{notification_name}": {
             "get": {
+                "security": [
+                    {
+                        "HttpBearer": []
+                    }
+                ],
                 "description": "Returns a notification",
                 "consumes": [
                     "application/json"
@@ -296,6 +326,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "HttpBearer": []
+                    }
+                ],
                 "description": "Deletes notifications",
                 "consumes": [
                     "application/json"
@@ -338,6 +373,11 @@ const docTemplate = `{
                 }
             },
             "patch": {
+                "security": [
+                    {
+                        "HttpBearer": []
+                    }
+                ],
                 "description": "Updates a notification",
                 "consumes": [
                     "application/json"
@@ -391,6 +431,11 @@ const docTemplate = `{
         },
         "/API/v1/services": {
             "get": {
+                "security": [
+                    {
+                        "HttpBearer": []
+                    }
+                ],
                 "description": "Returns all services",
                 "consumes": [
                     "application/json"
@@ -427,6 +472,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "HttpBearer": []
+                    }
+                ],
                 "description": "Creates a new service and starts monitor it",
                 "consumes": [
                     "application/json"
@@ -441,7 +491,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "description": "Add service",
-                        "name": "account",
+                        "name": "body",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -473,6 +523,11 @@ const docTemplate = `{
         },
         "/API/v1/services/{service_id}": {
             "get": {
+                "security": [
+                    {
+                        "HttpBearer": []
+                    }
+                ],
                 "description": "Gets a service by its ID",
                 "consumes": [
                     "application/json"
@@ -515,6 +570,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "HttpBearer": []
+                    }
+                ],
                 "description": "Stops a service monitoring and deletes it",
                 "consumes": [
                     "application/json"
@@ -557,6 +617,11 @@ const docTemplate = `{
                 }
             },
             "patch": {
+                "security": [
+                    {
+                        "HttpBearer": []
+                    }
+                ],
                 "description": "Updates an existing service and restarts monitoring for it",
                 "consumes": [
                     "application/json"
@@ -610,6 +675,11 @@ const docTemplate = `{
         },
         "/API/v1/services/{service_id}/notifications/{notification_name}": {
             "post": {
+                "security": [
+                    {
+                        "HttpBearer": []
+                    }
+                ],
                 "description": "Adds a notification to a service",
                 "consumes": [
                     "application/json"
@@ -659,6 +729,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "HttpBearer": []
+                    }
+                ],
                 "description": "Deletes a notification to a service",
                 "consumes": [
                     "application/json"
@@ -691,6 +766,90 @@ const docTemplate = `{
                         "description": "No Content",
                         "schema": {
                             "$ref": "#/definitions/model.ServiceNotification"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/API/v1/tokens": {
+            "post": {
+                "description": "Create an auth token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tokens"
+                ],
+                "summary": "Create an auth token",
+                "parameters": [
+                    {
+                        "description": "Create an auth token",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.CreateToken"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Token"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/echo.HTTPError"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "HttpBearer": []
+                    }
+                ],
+                "description": "Delete an auth token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tokens"
+                ],
+                "summary": "Delete an auth token",
+                "responses": {
+                    "204": {
+                        "description": "No Content",
+                        "schema": {
+                            "$ref": "#/definitions/model.Token"
                         }
                     },
                     "404": {
@@ -758,6 +917,17 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.CreateToken": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
                     "type": "string"
                 }
             }
@@ -894,6 +1064,35 @@ const docTemplate = `{
                 }
             }
         },
+        "model.Token": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "deleted_at": {
+                    "$ref": "#/definitions/sql.NullTime"
+                },
+                "expire_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "token": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/model.User"
+                },
+                "userID": {
+                    "type": "integer"
+                }
+            }
+        },
         "model.UpdateNotification": {
             "type": "object",
             "properties": {
@@ -937,6 +1136,35 @@ const docTemplate = `{
                 }
             }
         },
+        "model.User": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "deleted_at": {
+                    "$ref": "#/definitions/sql.NullTime"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "sql.NullTime": {
             "type": "object",
             "properties": {
@@ -948,6 +1176,14 @@ const docTemplate = `{
                     "type": "boolean"
                 }
             }
+        }
+    },
+    "securityDefinitions": {
+        "HttpBearer": {
+            "description": "Description for what is this security definition being used",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }`

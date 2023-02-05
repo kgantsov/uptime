@@ -17,6 +17,7 @@ import (
 // @Success      200  {object}  []model.Service
 // @Failure      404  {object}  echo.HTTPError
 // @Failure      500  {object}  echo.HTTPError
+// @Security     HttpBearer
 // @Router       /API/v1/services [get]
 func (h *Handler) GetServices(c echo.Context) error {
 	services := []model.Service{}
@@ -40,6 +41,7 @@ func (h *Handler) GetServices(c echo.Context) error {
 // @Success      200  {object}  model.Service
 // @Failure      404  {object}  echo.HTTPError
 // @Failure      500  {object}  echo.HTTPError
+// @Security     HttpBearer
 // @Router       /API/v1/services/{service_id} [get]
 func (h *Handler) GetService(c echo.Context) error {
 	id := c.Param("service_id")
@@ -70,6 +72,7 @@ func (h *Handler) GetService(c echo.Context) error {
 // @Success      200  {object}  model.Service
 // @Failure      404  {object}  echo.HTTPError
 // @Failure      500  {object}  echo.HTTPError
+// @Security     HttpBearer
 // @Router       /API/v1/services [post]
 func (h *Handler) CreateService(c echo.Context) error {
 	service := new(model.Service)
@@ -96,6 +99,7 @@ func (h *Handler) CreateService(c echo.Context) error {
 // @Success      200  {object}  model.Service
 // @Failure      404  {object}  echo.HTTPError
 // @Failure      500  {object}  echo.HTTPError
+// @Security     HttpBearer
 // @Router       /API/v1/services/{service_id} [patch]
 func (h *Handler) UpdateService(c echo.Context) error {
 	id := c.Param("service_id")
@@ -179,6 +183,7 @@ func (h *Handler) UpdateService(c echo.Context) error {
 // @Success      204  {object}  model.Service
 // @Failure      404  {object}  echo.HTTPError
 // @Failure      500  {object}  echo.HTTPError
+// @Security     HttpBearer
 // @Router       /API/v1/services/{service_id} [delete]
 func (h *Handler) DeleteService(c echo.Context) error {
 	serviceIDStr := c.Param("service_id")
@@ -210,6 +215,7 @@ func (h *Handler) DeleteService(c echo.Context) error {
 // @Success      200  {object}  model.ServiceNotification
 // @Failure      404  {object}  echo.HTTPError
 // @Failure      500  {object}  echo.HTTPError
+// @Security     HttpBearer
 // @Router       /API/v1/services/{service_id}/notifications/{notification_name} [post]
 func (h *Handler) ServiceAddNotification(c echo.Context) error {
 	id := c.Param("service_id")
@@ -257,6 +263,7 @@ func (h *Handler) ServiceAddNotification(c echo.Context) error {
 // @Success      204  {object}  model.ServiceNotification
 // @Failure      404  {object}  echo.HTTPError
 // @Failure      500  {object}  echo.HTTPError
+// @Security     HttpBearer
 // @Router       /API/v1/services/{service_id}/notifications/{notification_name} [delete]
 func (h *Handler) ServiceDeleteNotification(c echo.Context) error {
 	id := c.Param("service_id")

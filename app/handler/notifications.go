@@ -17,6 +17,7 @@ import (
 // @Success      200  {object}  []model.Notification
 // @Failure      404  {object}  echo.HTTPError
 // @Failure      500  {object}  echo.HTTPError
+// @Security     HttpBearer
 // @Router       /API/v1/notifications [get]
 func (h *Handler) GetNotifications(c echo.Context) error {
 	notifications := []model.Notification{}
@@ -44,6 +45,7 @@ func (h *Handler) GetNotifications(c echo.Context) error {
 // @Success      200  {object}  model.Notification
 // @Failure      404  {object}  echo.HTTPError
 // @Failure      500  {object}  echo.HTTPError
+// @Security     HttpBearer
 // @Router       /API/v1/notifications/{notification_name} [get]
 func (h *Handler) GetNotification(c echo.Context) error {
 	notificationName := c.Param("notification_name")
@@ -73,6 +75,7 @@ func (h *Handler) GetNotification(c echo.Context) error {
 // @Success      200  {object}  model.Notification
 // @Failure      404  {object}  echo.HTTPError
 // @Failure      500  {object}  echo.HTTPError
+// @Security     HttpBearer
 // @Router       /API/v1/notifications [post]
 func (h *Handler) CreateNotification(c echo.Context) error {
 	notification := new(model.Notification)
@@ -97,6 +100,7 @@ func (h *Handler) CreateNotification(c echo.Context) error {
 // @Success      200  {object}  model.Notification
 // @Failure      404  {object}  echo.HTTPError
 // @Failure      500  {object}  echo.HTTPError
+// @Security     HttpBearer
 // @Router       /API/v1/notifications/{notification_name} [patch]
 func (h *Handler) UpdateNotification(c echo.Context) error {
 	notificationName := c.Param("notification_name")
@@ -144,6 +148,7 @@ func (h *Handler) UpdateNotification(c echo.Context) error {
 // @Success      200  {object}  model.Notification
 // @Failure      404  {object}  echo.HTTPError
 // @Failure      500  {object}  echo.HTTPError
+// @Security     HttpBearer
 // @Router       /API/v1/notifications/{notification_name} [delete]
 func (h *Handler) DeleteNotification(c echo.Context) error {
 	notificationName := c.Param("notification_name")
