@@ -9,10 +9,6 @@ export const API = {
         if (token !== null) {
             headers['Authorization'] = `Bearer ${token}`
         }
-        const workspace_id = localStorage.getItem('workspace_id')
-        if (workspace_id !== null) {
-            headers['workspace-id'] = workspace_id
-        }
 
         const requestParameters: { [x: string]: any } = {
             method: method,
@@ -31,8 +27,6 @@ export const API = {
 
             if (resp.status === 401 || resp.status === 403) {
                 localStorage.removeItem('token')
-                localStorage.removeItem('workspace_id');
-                localStorage.removeItem('workspace_name');
                 window.location.href = '/'
             }
 
