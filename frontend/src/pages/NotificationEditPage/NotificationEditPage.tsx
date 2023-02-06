@@ -37,7 +37,9 @@ export function NotificationEditPage() {
   };
 
   useEffect(() => {
-    API.fetch('GET', `/API/v1/notifications/${notificationName}`).then((data) => {
+    API.fetch('GET', `/API/v1/notifications/${notificationName}`)
+    .then(resp => resp.json())
+    .then((data) => {
       setValue('name', data.name);
       setValue('callback', data.callback);
       setValue('callback_chat_id', data.callback_chat_id);
@@ -47,7 +49,7 @@ export function NotificationEditPage() {
   async function handleNotificationDelete() {
 
     try {
-      const response = await fetch(`/API/v1/notifications/${notificationName}`, {method: "DELETE"});
+      const response = await API.fetch('DELETE', `/API/v1/notifications/${notificationName}`);
       if (response.status === 204) {
         navigate(`/notifications/`);
       }
@@ -63,7 +65,7 @@ export function NotificationEditPage() {
       callback_chat_id: data.callback_chat_id,
       callback_type: 'TELEGRAM',
       // callback_type: values.callback_type,
-    }).then((data) => {
+    }).then(resp => resp.json()).then((data) => {
       navigate(`/notifications`);
     });
   };

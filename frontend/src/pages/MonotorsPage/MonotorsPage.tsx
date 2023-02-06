@@ -15,6 +15,7 @@ import { Badge } from "@tremor/react";
 import styles from './MonotorsPage.module.css';
 import { Service } from '../../types/services';
 import { Heartbeat, STATUS_COLORS_MAP } from '../../types/heartbeats';
+import { API } from '../../API';
 
 
 export function MonotorsPage() {
@@ -25,8 +26,8 @@ export function MonotorsPage() {
 
     async function fetchServices() {
         try {
-            const response = await fetch('/API/v1/services');
-            const data = await response.json();
+            const resp = await API.fetch('GET', '/API/v1/services');
+            const data = await resp.json();
             return data
         } catch(e) {
             console.log(e);
@@ -35,8 +36,8 @@ export function MonotorsPage() {
 
     async function fetchStats() {
         try {
-            const response = await fetch(`/API/v1/heartbeats/latencies/last?size=${size}`);
-            const data = await response.json();
+            const resp = await API.fetch('GET', `/API/v1/heartbeats/latencies/last?size=${size}`);
+            const data = await resp.json();
             return data
         } catch (e) {
             console.log(e);

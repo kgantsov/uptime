@@ -5,12 +5,13 @@ import { Link, useNavigate } from 'react-router-dom';
 import { FaPlus, FaTelegramPlane } from 'react-icons/fa';
 
 import styles from './NotificationsPage.module.css';
+import { API } from '../../API';
 
 
 async function fetchNotifications() {
   try {
-      const response = await fetch('/API/v1/notifications');
-      const data = await response.json();
+      const resp = await API.fetch('GET', '/API/v1/notifications');
+      const data = await resp.json();
       return data
   } catch(e) {
       console.log(e);

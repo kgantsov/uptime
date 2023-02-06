@@ -37,7 +37,9 @@ export function MonitorEditPage() {
 
   const promiseOptions = (inputValue: string): Promise<any> => {
     return new Promise((resolve) => {
-      API.fetch('GET', `/API/v1/notifications?q=${inputValue}`).then((data) => {
+      API.fetch('GET', `/API/v1/notifications?q=${inputValue}`)
+      .then(resp => resp.json())
+      .then((data) => {
         resolve(
           data
             .map((notification: { name: any; }) => {
@@ -49,7 +51,9 @@ export function MonitorEditPage() {
   }
 
   useEffect(() => {
-    API.fetch('GET', `/API/v1/services/${monitorId}`).then((data) => {
+    API.fetch('GET', `/API/v1/services/${monitorId}`)
+    .then(resp => resp.json())
+    .then((data) => {
       setValue('name', data.name);
       setValue('url', data.url);
       setValue('check_interval', data.check_interval);
@@ -70,7 +74,7 @@ export function MonitorEditPage() {
       timeout: data.timeout,
       accepted_status_code: data.accepted_status_code,
       notifications: notifications,
-    }).then((data) => {
+    }).then((resp) => {
       navigate(`/monitors/${monitorId}`);
     });
   };

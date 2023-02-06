@@ -22,7 +22,7 @@ export function NotificationNewPage() {
       callback: data.callback,
       callback_chat_id: data.callback_chat_id,
       callback_type: 'TELEGRAM',
-    }).then((data) => {
+    }).then(resp => resp.json()).then((data) => {
       navigate(`/notifications`);
     });
   }

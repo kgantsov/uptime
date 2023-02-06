@@ -1,5 +1,8 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { AuthProvider, RequireAuth } from './contexts/Auth';
+import { CurrentUserProvider } from './contexts/CurrentUser';
+import { LoginPage } from './pages/LoginPage/LoginPage';
 import { MonotorsPage } from './pages/MonotorsPage/MonotorsPage';
 import { NotificationsPage } from './pages/NotificationsPage/NotificationsPage';
 import { Layout } from './pages/Layout/Layout';
@@ -13,20 +16,29 @@ import './App.css';
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route element={<Layout />}>
-          <Route path="/" element={<MonotorsPage />} />
-          <Route path="/monitors/" element={<MonotorsPage />} />
-          <Route path="/notifications/" element={<NotificationsPage />} />
-          <Route path="/notifications/:notificationName/edit" element={<NotificationEditPage />} />
-          <Route path="/notifications/new" element={<NotificationNewPage />} />
-          <Route path="/monitors/:monitorId" element={<MonitorPage />} />
-          <Route path="/monitors/:monitorId/edit" element={<MonitorEditPage />} />
-          <Route path="/monitors/new" element={<MonitorNewPage />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
+    <AuthProvider>
+      <CurrentUserProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route element={
+              <RequireAuth>
+                <Layout />
+              </RequireAuth>
+            }>
+              <Route path="/" element={<MonotorsPage />} />
+              <Route path="/monitors/" element={<MonotorsPage />} />
+              <Route path="/notifications/" element={<NotificationsPage />} />
+              <Route path="/notifications/:notificationName/edit" element={<NotificationEditPage />} />
+              <Route path="/notifications/new" element={<NotificationNewPage />} />
+              <Route path="/monitors/:monitorId" element={<MonitorPage />} />
+              <Route path="/monitors/:monitorId/edit" element={<MonitorEditPage />} />
+              <Route path="/monitors/new" element={<MonitorNewPage />} />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </CurrentUserProvider>
+    </AuthProvider>
   );
 }
 

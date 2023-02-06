@@ -20,8 +20,8 @@ export function MonitorPage() {
 
     async function fetchData(monitorId: number) {
       try {
-        const response = await fetch(`/API/v1/services/${monitorId}`);
-        const data = await response.json();
+        const resp = await API.fetch('GET', `/API/v1/services/${monitorId}`);
+        const data = await resp.json();
         setService(data)
       } catch(e) {
           console.log(e);
@@ -32,8 +32,8 @@ export function MonitorPage() {
 
     async function fetchLatencies(monitorId: number) {
       try {
-        const response = await fetch(`/API/v1/heartbeats/latencies?service_id=${monitorId}&size=${size}`);
-        const data = await response.json();
+        const resp = await API.fetch('GET', `/API/v1/heartbeats/latencies?service_id=${monitorId}&size=${size}`);
+        const data = await resp.json();
         setLatencies(data.reverse())
       } catch (e) {
           console.log(e);
@@ -57,7 +57,7 @@ export function MonitorPage() {
 
     async function handleServiceDelete() {
       try {
-        const response = await fetch(`/API/v1/services/${monitorId}`, {method: "DELETE"});
+        const response = await API.fetch('DELETE', `/API/v1/services/${monitorId}`);
         if (response.status === 204) {
           navigate(`/`);
         }

@@ -37,14 +37,12 @@ export const API = {
             }
 
             if (!resp.ok) {
-                return {}
+                throw new Error(resp.statusText);
             }
 
-            const data = await resp.json()
-
-            return data
+            return resp;
         } catch (error) {
-            return false
+            throw new Error('Something went wrong');
         }
     }
 };

@@ -27,8 +27,8 @@ export function MonitorCards({ monitorId }: Props): JSX.Element {
 
     async function fetchStatsData(days: number, setDataFunc: { (value: SetStateAction<StatsData | undefined>): void; (value: SetStateAction<StatsData | undefined>): void; (arg0: any): void; }) {
         try {
-          const response = await fetch(`/API/v1/heartbeats/stats/${days}`);
-          const data = await response.json();
+          const resp = await API.fetch('GET', `/API/v1/heartbeats/stats/${days}`);
+          const data = await resp.json();
           setDataFunc(
             data
               .filter((x: HeartbeatStats) => x.service_id === Number(monitorId))

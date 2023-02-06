@@ -36,7 +36,9 @@ export function MonitorNewPage() {
 
   const promiseOptions = (inputValue: string): Promise<any> => {
     return new Promise((resolve) => {
-      API.fetch('GET', `/API/v1/notifications?q=${inputValue}`).then((data) => {
+      API.fetch('GET', `/API/v1/notifications?q=${inputValue}`)
+      .then(resp => resp.json())
+      .then((data) => {
         resolve(
           data
             .map((notification: { name: any; }) => {
@@ -56,7 +58,7 @@ export function MonitorNewPage() {
       timeout: data.timeout,
       notifications: notifications,
       enabled: true,
-    }).then((data) => {
+    }).then(resp => resp.json()).then((data) => {
       navigate(`/monitors/${data['id']}`);
     });
   }
