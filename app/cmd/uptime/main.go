@@ -1,7 +1,6 @@
 package main
 
 import (
-	"io/fs"
 	"os"
 	"os/signal"
 	"syscall"
@@ -18,19 +17,10 @@ import (
 	"github.com/kgantsov/uptime/app/model"
 	"github.com/kgantsov/uptime/app/monitor"
 
-	rice "github.com/GeertJohan/go.rice"
 	echoSwagger "github.com/swaggo/echo-swagger"
 
 	_ "github.com/kgantsov/uptime/app/cmd/uptime/docs"
 )
-
-type HTTPBox struct {
-	*rice.Box
-}
-
-func (hb *HTTPBox) Open(name string) (fs.File, error) {
-	return hb.Box.Open(name)
-}
 
 // @title Swagger Example API
 // @version 1.0
@@ -113,21 +103,9 @@ func main() {
 
 	h.ConfigureMiddleware(e)
 	h.RegisterRoutes(e)
+	h.InitStaticServer(e)
 
 	e.GET("/docs/*", echoSwagger.WrapHandler)
-
-	appStaticBox, err := rice.FindBox("../../../frontend/build/static/")
-	if err != nil {
-		e.Logger.Fatal(err)
-	}
-
-	appIndexBox, err := rice.FindBox("../../../frontend/build/")
-	if err != nil {
-		e.Logger.Fatal(err)
-	}
-
-	e.StaticFS("/static/", &HTTPBox{appStaticBox})
-	e.GET("/*", echo.StaticFileHandler("index.html", &HTTPBox{appIndexBox}))
 
 	go func() {
 		e.Logger.Fatal(e.Start(":1323"))
