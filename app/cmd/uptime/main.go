@@ -75,16 +75,7 @@ func main() {
 		done <- struct{}{}
 	}()
 
-	// Migrate the schema
-	db.AutoMigrate(
-		&model.User{},
-		&model.Token{},
-		&model.Heartbeat{},
-		&model.Service{},
-		&model.Notification{},
-		&model.ServiceNotification{},
-	)
-	db.SetupJoinTable(&model.Service{}, "Notifications", &model.ServiceNotification{})
+	model.MigrateDB(db)
 
 	user := &model.User{}
 
