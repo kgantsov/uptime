@@ -1,7 +1,6 @@
 package monitor
 
 import (
-	"net/http"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -13,7 +12,6 @@ import (
 
 type Monitor struct {
 	DB        *gorm.DB
-	client    http.Client
 	done      chan struct{}
 	checker   Checker
 	notifiers []Notifier
@@ -22,8 +20,6 @@ type Monitor struct {
 
 func NewMonitor(db *gorm.DB, service *model.Service) *Monitor {
 	log.Infof("NewMonitor %d", service.ID)
-
-	client := http.Client{Timeout: time.Duration(service.Timeout) * time.Second}
 
 	notifiers := []Notifier{}
 
@@ -40,7 +36,6 @@ func NewMonitor(db *gorm.DB, service *model.Service) *Monitor {
 	m := &Monitor{
 		DB:        db,
 		service:   service,
-		client:    client,
 		done:      make(chan struct{}),
 		notifiers: notifiers,
 		checker:   checker,
