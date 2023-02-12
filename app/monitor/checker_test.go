@@ -34,9 +34,6 @@ func TestHTTPCHecker(t *testing.T) {
 			rw.WriteHeader(tc.statusCode)
 			rw.Write([]byte(`OK`))
 		}))
-		// Close the server when test finishes
-
-		fmt.Printf("sdasdas %s", server.URL)
 
 		checker := NewHTTPCHecker(
 			"test checker", fmt.Sprintf("%s/API/v1/healthz", server.URL), 1, tc.expectedStatusCode,
