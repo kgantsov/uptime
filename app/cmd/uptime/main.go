@@ -17,8 +17,6 @@ import (
 	"github.com/kgantsov/uptime/app/model"
 	"github.com/kgantsov/uptime/app/monitor"
 
-	echoSwagger "github.com/swaggo/echo-swagger"
-
 	_ "github.com/kgantsov/uptime/app/cmd/uptime/docs"
 )
 
@@ -95,8 +93,6 @@ func main() {
 	h.ConfigureMiddleware(e)
 	h.RegisterRoutes(e)
 	h.InitStaticServer(e)
-
-	e.GET("/docs/*", echoSwagger.WrapHandler)
 
 	go func() {
 		e.Logger.Fatal(e.Start(":1323"))

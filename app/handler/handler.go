@@ -10,6 +10,8 @@ import (
 	"github.com/labstack/gommon/log"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
+
+	echoSwagger "github.com/swaggo/echo-swagger"
 )
 
 type (
@@ -54,6 +56,8 @@ func (h *Handler) RegisterRoutes(e *echo.Echo) {
 	v1.GET("/notifications/:notification_name", h.GetNotification)
 	v1.PATCH("/notifications/:notification_name", h.UpdateNotification)
 	v1.DELETE("/notifications/:notification_name", h.DeleteNotification)
+
+	e.GET("/docs/*", echoSwagger.WrapHandler)
 }
 
 func (h *Handler) ConfigureMiddleware(e *echo.Echo) {
