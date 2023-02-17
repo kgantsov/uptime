@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bufio"
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -75,20 +77,7 @@ func main() {
 
 	model.MigrateDB(db)
 
-	user := &model.User{}
-
-	err = db.Model(&model.User{}).Where("email = ?", "admin@uptime.io").First(&user).Error
-
-	if err != nil {
-		h, _ := auth.HashPassword("12345qwert")
-		user = &model.User{
-			FirstName: "!",
-			LastName:  "2",
-			Email:     "admin@uptime.io",
-			Password:  h,
-		}
-		db.Create(user)
-	}
+	initUser(db)
 
 	h.ConfigureMiddleware(e)
 	h.RegisterRoutes(e)
@@ -103,4 +92,45 @@ func main() {
 	<-done
 
 	e.Logger.Info("Stopped monitoring")
+}
+
+func initUser(db *gorm.DB) {
+	var count int64
+
+	err := db.Model(&model.User{}).Count(&count).Error
+
+	if err == nil && count > 0 {
+		return
+	}
+
+	scanner := bufio.NewScanner((os.Stdin))
+
+	fmt.Println("Enter your First Name: ")
+	scanner.Scan()
+	firstName := scanner.Text()
+
+	fmt.Println("Enter your Last Name: ")
+	scanner.Scan()
+	lastName := scanner.Text()
+
+	fmt.Println("Enter your Email: ")
+	scanner.Scan()
+	email := scanner.Text()
+
+	fmt.Println("Enter your Password: ")
+	scanner.Scan()
+	password := scanner.Text()
+
+	createUser(db, firstName, lastName, email, password)
+}
+
+func createUser(db *gorm.DB, firstName, lastName, email, password string) {
+	h, _ := auth.HashPassword(password)
+	user := &model.User{
+		FirstName: firstName,
+		LastName:  lastName,
+		Email:     email,
+		Password:  h,
+	}
+	db.Create(user)
 }
