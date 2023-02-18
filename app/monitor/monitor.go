@@ -3,6 +3,7 @@ package monitor
 import (
 	"time"
 
+	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/kgantsov/uptime/app/model"
@@ -16,9 +17,10 @@ type Monitor struct {
 	checker   Checker
 	notifiers []Notifier
 	service   *model.Service
+	logger    *logrus.Logger
 }
 
-func NewMonitor(db *gorm.DB, service *model.Service) *Monitor {
+func NewMonitor(db *gorm.DB, logger *logrus.Logger, service *model.Service) *Monitor {
 	log.Infof("NewMonitor %d", service.ID)
 
 	notifiers := []Notifier{}
@@ -39,6 +41,7 @@ func NewMonitor(db *gorm.DB, service *model.Service) *Monitor {
 		done:      make(chan struct{}),
 		notifiers: notifiers,
 		checker:   checker,
+		logger:    logger,
 	}
 
 	return m

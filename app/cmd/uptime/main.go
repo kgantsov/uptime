@@ -51,7 +51,7 @@ func main() {
 		return
 	}
 
-	dispatcher := monitor.NewDispatcher(db)
+	dispatcher := monitor.NewDispatcher(db, log)
 	dispatcher.Start()
 
 	e := echo.New()

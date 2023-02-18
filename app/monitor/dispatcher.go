@@ -4,6 +4,7 @@ import (
 	"sync"
 
 	"github.com/kgantsov/uptime/app/model"
+	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
@@ -12,10 +13,15 @@ type Dispatcher struct {
 	DB       *gorm.DB
 	monitors map[uint]*Monitor
 	mux      sync.Mutex
+	logger   *logrus.Logger
 }
 
-func NewDispatcher(db *gorm.DB) *Dispatcher {
-	d := &Dispatcher{DB: db, monitors: make(map[uint]*Monitor)}
+func NewDispatcher(db *gorm.DB, logger *logrus.Logger) *Dispatcher {
+	d := &Dispatcher{
+		DB:       db,
+		monitors: make(map[uint]*Monitor),
+		logger:   logger,
+	}
 
 	d.init()
 
@@ -34,7 +40,7 @@ func (d *Dispatcher) init() {
 		service := services[i]
 
 		if service.Enabled {
-			m := NewMonitor(d.DB, &service)
+			m := NewMonitor(d.DB, d.logger, &service)
 			d.monitors[service.ID] = m
 		}
 	}
@@ -67,7 +73,7 @@ func (d *Dispatcher) AddService(serviceID uint) {
 	defer d.mux.Unlock()
 
 	if service.Enabled {
-		m := NewMonitor(d.DB, &service)
+		m := NewMonitor(d.DB, d.logger, &service)
 		go m.Start()
 		d.monitors[service.ID] = m
 	}
