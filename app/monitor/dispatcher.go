@@ -5,7 +5,6 @@ import (
 
 	"github.com/kgantsov/uptime/app/model"
 	"github.com/sirupsen/logrus"
-	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -34,7 +33,7 @@ func (d *Dispatcher) init() {
 	d.mux.Lock()
 	defer d.mux.Unlock()
 
-	log.Debugf("Found %d services", len(services))
+	d.logger.Debugf("Found %d services", len(services))
 
 	for i := range services {
 		service := services[i]
@@ -59,7 +58,7 @@ func (d *Dispatcher) getServices() []model.Service {
 }
 
 func (d *Dispatcher) AddService(serviceID uint) {
-	log.Infof("AddService %d", serviceID)
+	d.logger.Infof("AddService %d", serviceID)
 
 	var service model.Service
 
@@ -80,7 +79,7 @@ func (d *Dispatcher) AddService(serviceID uint) {
 }
 
 func (d *Dispatcher) RemoveService(serviceID uint) {
-	log.Infof("RemoveService %d", serviceID)
+	d.logger.Infof("RemoveService %d", serviceID)
 	d.mux.Lock()
 	defer d.mux.Unlock()
 

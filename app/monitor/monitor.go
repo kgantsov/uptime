@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
-	log "github.com/sirupsen/logrus"
 
 	"github.com/kgantsov/uptime/app/model"
 	"github.com/kyokomi/emoji"
@@ -21,7 +20,7 @@ type Monitor struct {
 }
 
 func NewMonitor(db *gorm.DB, logger *logrus.Logger, service *model.Service) *Monitor {
-	log.Infof("NewMonitor %d", service.ID)
+	logger.Infof("NewMonitor %d", service.ID)
 
 	notifiers := []Notifier{}
 
@@ -48,7 +47,7 @@ func NewMonitor(db *gorm.DB, logger *logrus.Logger, service *model.Service) *Mon
 }
 
 func (m *Monitor) Start() {
-	log.Infof("Starting '%s' %s service monitoring\n", m.service.Name, m.service.URL)
+	m.logger.Infof("Starting '%s' %s service monitoring\n", m.service.Name, m.service.URL)
 
 	failing := false
 	startedFailingAt := time.Time{}
@@ -58,7 +57,7 @@ func (m *Monitor) Start() {
 	for {
 		select {
 		case <-m.done:
-			log.Infof("Stop monitoring for '%s' %s\n", m.service.Name, m.service.URL)
+			m.logger.Infof("Stop monitoring for '%s' %s\n", m.service.Name, m.service.URL)
 			return
 		case t := <-ticker.C:
 			start := time.Now()
@@ -67,7 +66,7 @@ func (m *Monitor) Start() {
 
 			elapsed := time.Since(start)
 
-			log.Debugf(
+			m.logger.Debugf(
 				"Service check %d %s %d %s %t", m.service.ID, m.service.URL, statusCode, status, failing,
 			)
 
@@ -81,7 +80,14 @@ func (m *Monitor) Start() {
 			)
 
 			if status == StatusUp {
-				log.Infof("Service %s %s is up and running: %d %s %t\n", t, m.service.URL, statusCode, status, failing)
+				m.logger.Infof(
+					"Service %s %s is up and running: %d %s %t\n",
+					t,
+					m.service.URL,
+					statusCode,
+					status,
+					failing,
+				)
 
 				if failing {
 					for _, notifier := range m.notifiers {
@@ -99,7 +105,13 @@ func (m *Monitor) Start() {
 					startedFailingAt = time.Time{}
 				}
 			} else {
-				log.Infof("Failed to get %s url. Got status code: %d %s %t\n", m.service.URL, statusCode, status, failing)
+				m.logger.Infof(
+					"Failed to get %s url. Got status code: %d %s %t\n",
+					m.service.URL,
+					statusCode,
+					status,
+					failing,
+				)
 
 				if !failing {
 					for _, notifier := range m.notifiers {
@@ -122,5 +134,5 @@ func (m *Monitor) Start() {
 
 func (m *Monitor) Stop() {
 	m.done <- struct{}{}
-	log.Infof("Stopping '%s'\n", m.service.Name)
+	m.logger.Infof("Stopping '%s'\n", m.service.Name)
 }
