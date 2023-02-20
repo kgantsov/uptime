@@ -14,3 +14,6 @@ build:
 	cd frontend; npm run build
 	go test ./... -cover
 	cd app/cmd/uptime/; swag init --pd true; rice embed-go; go build
+
+test:
+	go test ./... -cover
