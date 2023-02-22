@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -22,15 +23,17 @@ type HTTPCHecker struct {
 	URL                string
 	Name               string
 	AcceptedStatusCode int
+	logger             *logrus.Logger
 }
 
-func NewHTTPCHecker(name, url string, timeout, acceptedStatusCode int) *HTTPCHecker {
+func NewHTTPCHecker(logger *logrus.Logger, name, url string, timeout, acceptedStatusCode int) *HTTPCHecker {
 	client := http.Client{Timeout: time.Duration(timeout) * time.Second}
 
 	c := &HTTPCHecker{
 		client:             client,
 		URL:                url,
 		AcceptedStatusCode: acceptedStatusCode,
+		logger:             logger,
 	}
 
 	return c

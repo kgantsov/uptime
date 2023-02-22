@@ -8,6 +8,7 @@ import (
 
 	"github.com/kgantsov/uptime/app/model"
 	"github.com/labstack/gommon/log"
+	"github.com/sirupsen/logrus"
 )
 
 const TelegramNotifierTimeout int = 10
@@ -19,14 +20,16 @@ type Notifier interface {
 type TelegramNotifier struct {
 	notification *model.Notification
 	client       http.Client
+	logger       *logrus.Logger
 }
 
-func NewTelegramNotifier(notification *model.Notification) *TelegramNotifier {
+func NewTelegramNotifier(logger *logrus.Logger, notification *model.Notification) *TelegramNotifier {
 	client := http.Client{Timeout: time.Duration(TelegramNotifierTimeout) * time.Second}
 
 	n := &TelegramNotifier{
 		client:       client,
 		notification: notification,
+		logger:       logger,
 	}
 
 	return n

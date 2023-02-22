@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -23,6 +24,8 @@ func TestHTTPCHecker(t *testing.T) {
 		{expectedStatusCode: 200, statusCode: 500, status: StatusFailed, timeout: 1, sleep: 0},
 	}
 
+	log := logrus.New()
+
 	for _, tc := range tests {
 		server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 			assert.Equal(t, "/API/v1/healthz", req.URL.String())
@@ -36,7 +39,11 @@ func TestHTTPCHecker(t *testing.T) {
 		}))
 
 		checker := NewHTTPCHecker(
-			"test checker", fmt.Sprintf("%s/API/v1/healthz", server.URL), 1, tc.expectedStatusCode,
+			log,
+			"test checker",
+			fmt.Sprintf("%s/API/v1/healthz", server.URL),
+			1,
+			tc.expectedStatusCode,
 		)
 		statusCode, status := checker.Check()
 		assert.Equal(t, tc.statusCode, statusCode)

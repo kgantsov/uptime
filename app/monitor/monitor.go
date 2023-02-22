@@ -26,12 +26,12 @@ func NewMonitor(db *gorm.DB, logger *logrus.Logger, service *model.Service) *Mon
 
 	for i := range service.Notifications {
 		notification := service.Notifications[i]
-		notifier := NewTelegramNotifier(&notification)
+		notifier := NewTelegramNotifier(logger, &notification)
 		notifiers = append(notifiers, notifier)
 	}
 
 	checker := NewHTTPCHecker(
-		service.Name, service.URL, service.Timeout, service.AcceptedStatusCode,
+		logger, service.Name, service.URL, service.Timeout, service.AcceptedStatusCode,
 	)
 
 	m := &Monitor{
