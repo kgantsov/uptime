@@ -2,15 +2,18 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
+	"io/fs"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
+	rice "github.com/GeertJohan/go.rice"
+	"github.com/glebarez/sqlite"
 	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 
@@ -21,6 +24,29 @@ import (
 
 	_ "github.com/kgantsov/uptime/app/cmd/uptime/docs"
 )
+
+type HTTPBox struct {
+	*rice.Box
+}
+
+func (hb *HTTPBox) Open(name string) (fs.File, error) {
+	return hb.Box.Open(name)
+}
+
+func InitStaticServer(e *echo.Echo) {
+	appStaticBox, err := rice.FindBox("../../../frontend/build/static/")
+	if err != nil {
+		e.Logger.Fatal(err)
+	}
+
+	appIndexBox, err := rice.FindBox("../../../frontend/build/")
+	if err != nil {
+		e.Logger.Fatal(err)
+	}
+
+	e.StaticFS("/static/", &HTTPBox{appStaticBox})
+	e.GET("/*", echo.StaticFileHandler("index.html", &HTTPBox{appIndexBox}))
+}
 
 // @title Swagger Example API
 // @version 1.0
@@ -40,10 +66,13 @@ import (
 // @name                        Authorization
 // @description                 Description for what is this security definition being used
 func main() {
+	dbPathPtr := flag.String("db-path", "./test.db", "A path to a DB file")
+	flag.Parse()
+
 	log := logrus.New()
 	log.SetFormatter(new(handler.StackdriverFormatter))
 
-	db, err := gorm.Open(sqlite.Open("test.db"), &gorm.Config{
+	db, err := gorm.Open(sqlite.Open(*dbPathPtr), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Error),
 	})
 	if err != nil {
@@ -81,7 +110,7 @@ func main() {
 
 	h.ConfigureMiddleware(e)
 	h.RegisterRoutes(e)
-	h.InitStaticServer(e)
+	InitStaticServer(e)
 
 	go func() {
 		e.Logger.Fatal(e.Start(":1323"))

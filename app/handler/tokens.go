@@ -30,7 +30,7 @@ func (h *Handler) CreateToken(c echo.Context) (err error) {
 		return c.JSON(http.StatusBadRequest, err)
 	}
 
-	err = h.DB.Model(&model.User{}).Where("email = ?", "admin@uptime.io").First(&user).Error
+	err = h.DB.Model(&model.User{}).Where("email = ?", t.Email).First(&user).Error
 	if err != nil {
 		return &echo.HTTPError{
 			Code: http.StatusBadRequest, Message: "Email or password is incorrect",
