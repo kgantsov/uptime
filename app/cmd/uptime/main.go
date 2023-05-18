@@ -70,7 +70,8 @@ func main() {
 	flag.Parse()
 
 	log := logrus.New()
-	log.SetFormatter(new(handler.StackdriverFormatter))
+	log.SetLevel(logrus.DebugLevel)
+	// log.SetFormatter(new(handler.StackdriverFormatter))
 
 	db, err := gorm.Open(sqlite.Open(*dbPathPtr), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Error),

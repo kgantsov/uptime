@@ -905,6 +905,9 @@
                         "$ref": "#/definitions/model.AddNotification"
                     }
                 },
+                "retries": {
+                    "type": "integer"
+                },
                 "timeout": {
                     "type": "integer"
                 },
@@ -1034,6 +1037,9 @@
                         "$ref": "#/definitions/model.Notification"
                     }
                 },
+                "retries": {
+                    "type": "integer"
+                },
                 "timeout": {
                     "type": "integer"
                 },
@@ -1119,6 +1125,9 @@
                     "items": {
                         "$ref": "#/definitions/model.Notification"
                     }
+                },
+                "retries": {
+                    "type": "integer"
                 },
                 "timeout": {
                     "type": "integer"

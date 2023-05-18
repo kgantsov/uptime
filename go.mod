@@ -4,6 +4,7 @@ go 1.19
 
 require (
 	github.com/GeertJohan/go.rice v1.0.3
+	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/glebarez/sqlite v1.8.0
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/kyokomi/emoji v2.2.4+incompatible

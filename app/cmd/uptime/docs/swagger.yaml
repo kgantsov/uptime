@@ -29,6 +29,8 @@ definitions:
         items:
           $ref: '#/definitions/model.AddNotification'
         type: array
+      retries:
+        type: integer
       timeout:
         type: integer
       url:
@@ -113,6 +115,8 @@ definitions:
         items:
           $ref: '#/definitions/model.Notification'
         type: array
+      retries:
+        type: integer
       timeout:
         type: integer
       updated_at:
@@ -169,6 +173,8 @@ definitions:
         items:
           $ref: '#/definitions/model.Notification'
         type: array
+      retries:
+        type: integer
       timeout:
         type: integer
       url:

@@ -913,6 +913,9 @@ const docTemplate = `{
                         "$ref": "#/definitions/model.AddNotification"
                     }
                 },
+                "retries": {
+                    "type": "integer"
+                },
                 "timeout": {
                     "type": "integer"
                 },
@@ -1042,6 +1045,9 @@ const docTemplate = `{
                         "$ref": "#/definitions/model.Notification"
                     }
                 },
+                "retries": {
+                    "type": "integer"
+                },
                 "timeout": {
                     "type": "integer"
                 },
@@ -1127,6 +1133,9 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/model.Notification"
                     }
+                },
+                "retries": {
+                    "type": "integer"
                 },
                 "timeout": {
                     "type": "integer"

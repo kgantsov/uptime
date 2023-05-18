@@ -15,6 +15,7 @@ type Inputs = {
   url: string,
   check_interval: number,
   accepted_status_code: number,
+  retries: number,
   timeout: number,
 };
 
@@ -23,6 +24,7 @@ const schema = yup.object({
   url: yup.string().required(),
   check_interval: yup.number().integer().min(5).max(3600).required(),
   accepted_status_code: yup.number().min(100).max(600).integer().required(),
+  retries: yup.number().integer().min(0).max(10).required(),
   timeout: yup.number().integer().min(0).max(120).required(),
 }).required();
 
@@ -54,6 +56,7 @@ export function MonitorNewPage() {
       name: data.name,
       url: data.url,
       check_interval: data.check_interval,
+      retries: data.retries,
       accepted_status_code: data.accepted_status_code,
       timeout: data.timeout,
       notifications: notifications,
@@ -89,7 +92,7 @@ export function MonitorNewPage() {
           </div>
 
           <div className={(errors.check_interval) ? "form-element error" : "form-element"}>
-            <label htmlFor="check_interval">check interval</label>
+            <label htmlFor="check_interval">Check interval</label>
             <input
               type="number"
               {...register("check_interval", { required: 'Check interval is required' })}
@@ -113,6 +116,15 @@ export function MonitorNewPage() {
               {...register("accepted_status_code", { required: 'Accepted status code is required' })}
             />
             <div className="error-message">{errors.accepted_status_code?.message}</div>
+          </div>
+
+          <div className={(errors.retries) ? "form-element error" : "form-element"}>
+            <label htmlFor="retries">Retries</label>
+            <input
+              type="number"
+              {...register("retries", { required: 'Check interval is required' })}
+            />
+            <div className="error-message">{errors.retries?.message}</div>
           </div>
 
           <div className="form-element">

@@ -24,6 +24,7 @@ type Service struct {
 	Notifications      []Notification `gorm:"many2many:service_notifications;" json:"notifications"`
 	Timeout            int            `json:"timeout"`
 	CheckInterval      int            `json:"check_interval"`
+	Retries            int            `json:"retries"`
 	AcceptedStatusCode int            `json:"accepted_status_code"`
 }
 
@@ -39,6 +40,7 @@ type AddService struct {
 	Enabled            bool              `json:"enabled"`
 	Timeout            int               `json:"timeout"`
 	CheckInterval      int               `json:"check_interval"`
+	Retries            int               `json:"retries"`
 	AcceptedStatusCode int               `json:"accepted_status_code"`
 }
 
@@ -49,6 +51,7 @@ type UpdateService struct {
 	Notifications      *[]Notification `gorm:"many2many:service_notifications;" json:"notifications"`
 	Timeout            *int            `json:"timeout"`
 	CheckInterval      *int            `json:"check_interval"`
+	Retries            *int            `json:"retries"`
 	AcceptedStatusCode *int            `json:"accepted_status_code"`
 }
 

@@ -138,6 +138,10 @@ func (h *Handler) UpdateService(c echo.Context) error {
 		service.CheckInterval = *updateService.CheckInterval
 	}
 
+	if updateService.Retries != nil {
+		service.Retries = *updateService.Retries
+	}
+
 	if updateService.Notifications != nil {
 		service.Notifications = *updateService.Notifications
 	}

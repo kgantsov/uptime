@@ -1,8 +1,10 @@
 package monitor
 
 import (
+	"fmt"
 	"time"
 
+	"github.com/avast/retry-go"
 	"github.com/sirupsen/logrus"
 
 	"github.com/kgantsov/uptime/app/model"
@@ -62,7 +64,32 @@ func (m *Monitor) Start() {
 		case t := <-ticker.C:
 			start := time.Now()
 
-			statusCode, status := m.checker.Check()
+			var statusCode int
+
+			var status string
+
+			m.logger.Debugf("Check attempt %d %s", m.service.ID, m.service.URL)
+
+			retry.Do(
+				func() error {
+					statusCode, status = m.checker.Check()
+
+					if status == StatusUp {
+						return nil
+					}
+
+					if failing {
+						return nil
+					}
+
+					m.logger.Debugf("Failed will retry %d %s %d %s %s", m.service.ID, m.service.URL, statusCode, status, time.Now())
+
+					return fmt.Errorf("server is not up. Status code %d", statusCode)
+				},
+				retry.Delay(time.Duration(1000)*time.Millisecond),
+				retry.MaxDelay(time.Duration(8)*time.Second),
+				retry.Attempts(uint(m.service.Retries+1)),
+			)
 
 			elapsed := time.Since(start)
 

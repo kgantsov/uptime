@@ -15,12 +15,14 @@ type Inputs = {
   check_interval: number,
   accepted_status_code: number,
   timeout: number,
+  retries: number,
 };
 
 const schema = yup.object({
   name: yup.string().required(),
   url: yup.string().required(),
   check_interval: yup.number().integer().min(5).max(3600).required(),
+  retries: yup.number().integer().min(0).max(10).required(),
   accepted_status_code: yup.number().min(100).max(600).integer().required(),
   timeout: yup.number().integer().min(0).max(120).required(),
 }).required();
@@ -57,6 +59,7 @@ export function MonitorEditPage() {
       setValue('name', data.name);
       setValue('url', data.url);
       setValue('check_interval', data.check_interval);
+      setValue('retries', data.retries);
       setValue('accepted_status_code', data.accepted_status_code);
       setValue('timeout', data.timeout);
       setNotifications(data.notifications.map((notification: { name: any; }) => {
@@ -71,6 +74,7 @@ export function MonitorEditPage() {
       name: data.name,
       url: data.url,
       check_interval: data.check_interval,
+      retries: data.retries,
       timeout: data.timeout,
       accepted_status_code: data.accepted_status_code,
       notifications: notifications,
@@ -103,7 +107,7 @@ export function MonitorEditPage() {
           </div>
 
           <div className={(errors.check_interval) ? "form-element error" : "form-element"}>
-            <label htmlFor="check_interval">check interval</label>
+            <label htmlFor="check_interval">Check interval</label>
             <input
               type="number"
               {...register("check_interval", { required: 'Check interval is required' })}
@@ -127,6 +131,15 @@ export function MonitorEditPage() {
               {...register("accepted_status_code", { required: 'Accepted status code is required' })}
             />
             <div className="error-message">{errors.accepted_status_code?.message}</div>
+          </div>
+
+          <div className={(errors.retries) ? "form-element error" : "form-element"}>
+            <label htmlFor="retries">Retries</label>
+            <input
+              type="number"
+              {...register("retries", { required: 'Check retries is required' })}
+            />
+            <div className="error-message">{errors.retries?.message}</div>
           </div>
 
           <div className="form-element">
