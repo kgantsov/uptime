@@ -29,6 +29,15 @@ body {
   height: 100vh;
   background-color: var(--body-color);
   transition: var(--tran-02);
+
+  --body-color: #001e1d;
+  --sidebar-color: #004643;
+  --primary-color: #004643;
+  --primary-color-light: #f9bc60;
+  --secondary-color: #f9bc60;
+  --toggle-color: #def2f1;
+  --text-color: #fffffe;
+  --text-color-dark: #001e1d;
 }
 
 body:has(.dark) {
