@@ -62,7 +62,9 @@ func (m *Monitor) Start() {
 			m.logger.Infof("Stop monitoring for '%s' %s\n", m.service.Name, m.service.URL)
 			return
 		case t := <-ticker.C:
-			start := time.Now()
+			var start time.Time
+
+			var elapsed time.Duration
 
 			var statusCode int
 
@@ -72,6 +74,11 @@ func (m *Monitor) Start() {
 
 			retry.Do(
 				func() error {
+					start = time.Now()
+					defer func(start time.Time) {
+						elapsed = time.Since(start)
+					}(start)
+
 					statusCode, status = m.checker.Check()
 
 					if status == StatusUp {
@@ -90,8 +97,6 @@ func (m *Monitor) Start() {
 				retry.MaxDelay(time.Duration(8)*time.Second),
 				retry.Attempts(uint(m.service.Retries+1)),
 			)
-
-			elapsed := time.Since(start)
 
 			m.logger.Debugf(
 				"Service check %d %s %d %s %t", m.service.ID, m.service.URL, statusCode, status, failing,
