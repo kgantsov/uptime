@@ -15,6 +15,11 @@ build:
 	go test ./... -cover
 	cd app/cmd/uptime/; swag init --pd true; rice embed-go; go build
 
+build_linux:
+	cd frontend; npm run build
+	go test ./... -cover
+	cd app/cmd/uptime/; GOOS=linux GOARCH=amd64 swag init --pd true; GOOS=linux GOARCH=amd64 rice embed-go; GOOS=linux GOARCH=amd64 go build
+
 test:
 	go test ./... -cover
 
