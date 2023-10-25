@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"io/fs"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -113,6 +114,8 @@ func main() {
 	h.RegisterRoutes(e)
 	InitStaticServer(e)
 
+	go cleanupOldHeartbeats(db, log)
+
 	go func() {
 		e.Logger.Fatal(e.Start(":1323"))
 	}()
@@ -163,4 +166,21 @@ func createUser(db *gorm.DB, firstName, lastName, email, password string) {
 		Password:  h,
 	}
 	db.Create(user)
+}
+
+func cleanupOldHeartbeats(db *gorm.DB, logger *logrus.Logger) {
+	ticker := time.NewTicker(time.Duration(60) * time.Second)
+
+	for {
+		select {
+		case <-ticker.C:
+			thresholdDate := time.Now().AddDate(0, 0, -30)
+			logger.Infof("Deleting heartbeats older than %s", thresholdDate)
+
+			result := db.Where("created_at < ?", thresholdDate).Delete(&model.Heartbeat{})
+			if result.Error != nil {
+				log.Fatal(result.Error)
+			}
+		}
+	}
 }
