@@ -124,19 +124,13 @@ func (h *Handler) GetHeartbeatStats(c echo.Context) error {
 
 	heartbeatStatsPoints := []model.HeartbeatStatsPoint{}
 
-	err = h.DB.Raw(
-		`
-		SELECT
-			service_id,
-			status,
-			count(1) as counter,
-			avg(response_time) as average_response_time
-		FROM heartbeats
-		WHERE created_at > DATE('now', ?)
-		GROUP BY service_id, status;
-		`,
-		fmt.Sprintf("-%d day", days),
-	).Scan(&heartbeatStatsPoints).Error
+	err = h.DB.Model(
+		&model.Heartbeat{},
+	).Select(
+		"service_id, status, count(1) as counter, avg(response_time) as average_response_time",
+	).Where(
+		"created_at > DATE('now', ?)", fmt.Sprintf("-%d days", days),
+	).Group("service_id, status").Find(&heartbeatStatsPoints).Error
 
 	if err != nil {
 		h.Logger.WithFields(logrus.Fields{
