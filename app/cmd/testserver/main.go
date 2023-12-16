@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/labstack/echo-contrib/echoprometheus"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/sirupsen/logrus"
@@ -34,6 +35,9 @@ func main() {
 			return nil
 		},
 	}))
+
+	e.Use(echoprometheus.NewMiddleware("testserver")) // adds middleware to gather metrics
+	e.GET("/metrics", echoprometheus.NewHandler())    // adds route to serve gathered metrics
 
 	rand.Seed(time.Now().UnixNano())
 

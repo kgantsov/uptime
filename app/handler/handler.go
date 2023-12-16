@@ -5,6 +5,7 @@ import (
 
 	"github.com/kgantsov/uptime/app/auth"
 	"github.com/kgantsov/uptime/app/monitor"
+	"github.com/labstack/echo-contrib/echoprometheus"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
@@ -111,4 +112,8 @@ func (h *Handler) ConfigureMiddleware(e *echo.Echo) {
 		Timeout: 30 * time.Second,
 	}))
 	e.Use(middleware.SecureWithConfig(middleware.DefaultSecureConfig))
+
+	e.Use(echoprometheus.NewMiddleware("uptime"))  // adds middleware to gather metrics
+	e.GET("/metrics", echoprometheus.NewHandler()) // adds route to serve gathered metrics
+
 }
