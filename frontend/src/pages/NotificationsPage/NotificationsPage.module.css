@@ -15,3 +15,41 @@
     gap: 5px;
     font-size: 1.1rem;
 }
+
+/* Mobile Responsive Styles */
+@media screen and (max-width: 768px) {
+    .notificationsList td {
+        padding: 0.75rem 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .notificationsList td a {
+        font-size: 1rem;
+        gap: 0.5rem;
+    }
+
+    .notificationsList .name {
+        width: 60%;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .notificationsList td {
+        padding: 0.5rem 0.25rem;
+        font-size: 0.85rem;
+        word-break: break-word;
+    }
+
+    .notificationsList td a {
+        font-size: 0.9rem;
+        flex-wrap: wrap;
+    }
+
+    .notificationsList .name {
+        width: 100%;
+    }
+
+    .notificationsList thead td {
+        font-size: 0.85rem;
+    }
+}

@@ -1,290 +1,364 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Poppins:wght@300;400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Poppins:wght@300;400;500;600;700&display=swap");
 
 * {
-  font-family: 'Poppins', sans-serif;
-  color: var(--text-color);
-  box-sizing: border-box;
-  list-style-type: none;
-  margin: 0;
-  padding: 0;
-  text-decoration: none;
+    font-family: "Poppins", sans-serif;
+    color: var(--text-color);
+    box-sizing: border-box;
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    text-decoration: none;
 }
 
 :root {
-  --body-color: #E4E9F7;
-  --sidebar-color: #FFF;
-  --primary-color: #695CFE;
-  --primary-color-light: #F6F5FF;
-  --toggle-color: #DDD;
-  --text-color: #707070;
+    --body-color: #e4e9f7;
+    --sidebar-color: #fff;
+    --primary-color: #695cfe;
+    --primary-color-light: #f6f5ff;
+    --toggle-color: #ddd;
+    --text-color: #707070;
 
-  --tran-02: all 0.2s ease;
-  --tran-03: all 0.3s ease;
-  --tran-04: all 0.4s ease;
-  --tran-05: all 0.5s ease;
+    --tran-02: all 0.2s ease;
+    --tran-03: all 0.3s ease;
+    --tran-04: all 0.4s ease;
+    --tran-05: all 0.5s ease;
 }
 
-
 body {
-  height: 100vh;
-  background-color: var(--body-color);
-  transition: var(--tran-02);
+    height: 100vh;
+    background-color: var(--body-color);
+    transition: var(--tran-02);
 
-  --body-color: #001e1d;
-  --sidebar-color: #004643;
-  --primary-color: #004643;
-  --primary-color-light: #f9bc60;
-  --secondary-color: #f9bc60;
-  --toggle-color: #def2f1;
-  --text-color: #fffffe;
-  --text-color-dark: #001e1d;
+    --body-color: #001e1d;
+    --sidebar-color: #004643;
+    --primary-color: #004643;
+    --primary-color-light: #f9bc60;
+    --secondary-color: #f9bc60;
+    --toggle-color: #def2f1;
+    --text-color: #fffffe;
+    --text-color-dark: #001e1d;
 }
 
 body:has(.dark) {
-  --body-color: #3aafa9;
-  --sidebar-color: #2b7a78;
-  --primary-color: #2b7a78;
-  --primary-color-light: #3aafa9;
-  --secondary-color: #17252a;
-  --toggle-color: #def2f1;
-  --text-color: #feffff;
+    --body-color: #3aafa9;
+    --sidebar-color: #2b7a78;
+    --primary-color: #2b7a78;
+    --primary-color-light: #3aafa9;
+    --secondary-color: #17252a;
+    --toggle-color: #def2f1;
+    --text-color: #feffff;
 }
 
 body:has(.dark2) {
-  --body-color: #001e1d;
-  --sidebar-color: #004643;
-  --primary-color: #004643;
-  --primary-color-light: #f9bc60;
-  --secondary-color: #f9bc60;
-  --toggle-color: #def2f1;
-  --text-color: #fffffe;
-  --text-color-dark: #001e1d;
+    --body-color: #001e1d;
+    --sidebar-color: #004643;
+    --primary-color: #004643;
+    --primary-color-light: #f9bc60;
+    --secondary-color: #f9bc60;
+    --toggle-color: #def2f1;
+    --text-color: #fffffe;
+    --text-color-dark: #001e1d;
 }
 
 .center {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
 }
 
 .login-form-wrapper {
-  background-color: var(--primary-color);
-  border-radius: 10px;
-  padding: 2rem;
-  display: block;
+    background-color: var(--primary-color);
+    border-radius: 10px;
+    padding: 2rem;
+    display: block;
 }
 
 .login-form-wrapper input {
-  border: 1px solid #ced4da;
-  font-size: 1.3rem;
-  height: 3rem;
-  padding: 0.5rem;
-  width: 100%;
-  background-color: var(--body-color);
-  border-radius: 4px;
+    border: 1px solid #ced4da;
+    font-size: 1.3rem;
+    height: 3rem;
+    padding: 0.5rem;
+    width: 100%;
+    background-color: var(--body-color);
+    border-radius: 4px;
 }
 
 .block {
-  background-color: var(--primary-color);
-  border-radius: 10px;
-  padding: 1rem;
-  display: block;
-  margin-bottom: 1rem;
+    background-color: var(--primary-color);
+    border-radius: 10px;
+    padding: 1rem;
+    display: block;
+    margin-bottom: 1rem;
 }
 
 .block > .tr-mt-2 {
-  margin: 0;
+    margin: 0;
 }
 
 .form-element {
-  display: block;
-  /* margin-bottom: 1.5rem; */
-  margin: 0.5rem 0rem 1.5rem 0;
+    display: block;
+    /* margin-bottom: 1.5rem; */
+    margin: 0.5rem 0rem 1.5rem 0;
 }
 
 .form-element label {
-  width: 100%;
-  margin-bottom: 1rem;
+    width: 100%;
+    margin-bottom: 1rem;
 }
 
-.form-element input[type=password],
-.form-element input[type=text],
-.form-element input[type=number],
+.form-element input[type="password"],
+.form-element input[type="text"],
+.form-element input[type="number"],
 .form-element textarea {
-  border: 1px solid #ced4da;
-  font-size: 1.3rem;
-  height: 3rem;
-  padding: 0.5rem;
-  width: 100%;
-  background-color: var(--body-color);
-  border-radius: 4px;
+    border: 1px solid #ced4da;
+    font-size: 1.3rem;
+    height: 3rem;
+    padding: 0.5rem;
+    width: 100%;
+    background-color: var(--body-color);
+    border-radius: 4px;
 }
 
-input[type=submit], button {
-  background: #3d6edc;
-  background: var(--active);
-  border: none;
-  border-radius: 4px;
-  color: #fffffe;
-  color: var(--text-color-dark);
-  cursor: pointer;
-  font-size: 1rem;
-  outline: none;
-  padding: 6px 12px;
+input[type="submit"],
+button {
+    background: #3d6edc;
+    background: var(--active);
+    border: none;
+    border-radius: 4px;
+    color: #fffffe;
+    color: var(--text-color-dark);
+    cursor: pointer;
+    font-size: 1rem;
+    outline: none;
+    padding: 6px 12px;
 
-  --tw-bg-opacity: 1;
-  background-color: var(--secondary-color);
-  color: #fffffe;
-  color: var(--text-color-dark);
-  font-size: 1rem;
-  padding: 12px 24px;
+    --tw-bg-opacity: 1;
+    background-color: var(--secondary-color);
+    color: #fffffe;
+    color: var(--text-color-dark);
+    font-size: 1rem;
+    padding: 12px 24px;
 }
 
-.form-element input[type=submit], .form-element button {
-  --tw-bg-opacity: 1;
-  /* background-color: var(--secondary-color); */
-  color: #fffffe;
-  color: var(--text-color-dark);
-  font-size: 1rem;
-  padding: 12px 24px;
+.form-element input[type="submit"],
+.form-element button {
+    --tw-bg-opacity: 1;
+    /* background-color: var(--secondary-color); */
+    color: #fffffe;
+    color: var(--text-color-dark);
+    font-size: 1rem;
+    padding: 12px 24px;
 }
 
-input[type=submit]:hover, button:hover {
-  --tw-bg-opacity: 0.9;
-  opacity: 0.9;
-  background-color: var(--secondary-color);
+input[type="submit"]:hover,
+button:hover {
+    --tw-bg-opacity: 0.9;
+    opacity: 0.9;
+    background-color: var(--secondary-color);
 }
 
 .form-element .submit-wrapper {
-  display: flex;
-  justify-content: space-between;
+    display: flex;
+    justify-content: space-between;
 }
 
 .form-element .submit {
-
 }
 
-.tr-text-green-500, .tr-text-green-700 {
-  background-color: rgb(16 185 129 / var(--tw-bg-opacity));
-  color: var(--text-color-dark);
+.tr-text-green-500,
+.tr-text-green-700 {
+    background-color: rgb(16 185 129 / var(--tw-bg-opacity));
+    color: var(--text-color-dark);
 }
 
-.tr-text-orange-500, .tr-text-orange-700, .tr-text-rose-700 {
-  background-color: var(--secondary-color);
-  color: var(--text-color-dark);
+.tr-text-orange-500,
+.tr-text-orange-700,
+.tr-text-rose-700 {
+    background-color: var(--secondary-color);
+    color: var(--text-color-dark);
 }
 
-.badge .tr-text-gray-500, .badge .tr-text-gray-700 {
-  background-color: rgb(107 114 128 / var(--tw-bg-opacity));
+.badge .tr-text-gray-500,
+.badge .tr-text-gray-700 {
+    background-color: rgb(107 114 128 / var(--tw-bg-opacity));
 }
 
-.tr-text-rose-500, .tr-bg-rose-500 {
-  background-color: #e16162;
+.tr-text-rose-500,
+.tr-bg-rose-500 {
+    background-color: #e16162;
 }
 
-.tr-bg-orange-500, .tr-bg-orange-700 {
-  --tw-bg-opacity: 1;
-  background-color: var(--secondary-color);
-  color: var(--text-color-dark);
+.tr-bg-orange-500,
+.tr-bg-orange-700 {
+    --tw-bg-opacity: 1;
+    background-color: var(--secondary-color);
+    color: var(--text-color-dark);
 }
 
-.tr-bg-orange-500:hover, .tr-bg-orange-700:hover {
-  --tw-bg-opacity: 0.9;
-  background-color: var(--secondary-color);
-  color: var(--text-color-dark);
+.tr-bg-orange-500:hover,
+.tr-bg-orange-700:hover {
+    --tw-bg-opacity: 0.9;
+    background-color: var(--secondary-color);
+    color: var(--text-color-dark);
 }
 
-.tr-bg-green-100, .tr-bg-green-500 {
-  --tw-bg-opacity: 1;
-  background-color: rgb(16 185 129 / var(--tw-bg-opacity));
-  color: var(--text-color-dark);
+.tr-bg-green-100,
+.tr-bg-green-500 {
+    --tw-bg-opacity: 1;
+    background-color: rgb(16 185 129 / var(--tw-bg-opacity));
+    color: var(--text-color-dark);
 }
 
-.tr-bg-green-100:hover, .tr-bg-green-100:hover {
-  --tw-bg-opacity: 0.9;
-  background-color: rgb(16 185 129 / var(--tw-bg-opacity));
-  color: var(--text-color-dark);
+.tr-bg-green-100:hover,
+.tr-bg-green-100:hover {
+    --tw-bg-opacity: 0.9;
+    background-color: rgb(16 185 129 / var(--tw-bg-opacity));
+    color: var(--text-color-dark);
 }
 
-.tremor-base :is( *, ::before, ::after ) tspan {
-  fill: var(--secondary-color);
+.tremor-base :is(*, ::before, ::after) tspan {
+    fill: var(--secondary-color);
 }
 
 .pageHeader {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1rem;
 }
 
 .pageControls {
-
 }
 
 .react-select-container {
-  margin: 0.5rem 0rem 1.5rem 0;
+    margin: 0.5rem 0rem 1.5rem 0;
 }
 
 .react-select-container .react-select__control {
-  background-color: var(--body-color);
-  color: var(--text-color);
+    background-color: var(--body-color);
+    color: var(--text-color);
 }
 
 .react-select-container .css-6j8wv5-Input {
-  color: var(--text-color);
+    color: var(--text-color);
 }
 
 .react-select-container .css-1n7v3ny-option {
-  background-color: var(--primary-color-light);
-  color: var(--text-color);
+    background-color: var(--primary-color-light);
+    color: var(--text-color);
 }
 
 .react-select-container .css-4ljt47-MenuList {
-  background-color: var(--body-color);
-  color: var(--text-color);
+    background-color: var(--body-color);
+    color: var(--text-color);
 }
 
 .react-select-container .css-1rhbuit-multiValue {
-  background-color: var(--primary-color-light);
-  color: var(--text-color);
+    background-color: var(--primary-color-light);
+    color: var(--text-color);
 }
 
 .react-select-container .css-12jo7m5 {
-  padding: 0.4rem;
+    padding: 0.4rem;
 }
 
 .cards {
-  display: grid;
-  gap: 1rem;
-  grid-template-columns: 1fr 1fr 1fr;
-  margin: 1rem 0;
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    margin: 1rem 0;
 }
 
 .cards .tr-bg-white {
-  background-color: var(--primary-color);
-  --tw-ring-shadow: none;
+    background-color: var(--primary-color);
+    --tw-ring-shadow: none;
 }
 
 .cards .tr-text-gray-500 {
-  opacity: 0.6;
-  color: var(--primary-color-light);
+    opacity: 0.6;
+    color: var(--primary-color-light);
 }
 
 .cards .tr-text-gray-700 {
-  color: var(--primary-color-light);
+    color: var(--primary-color-light);
 }
 
 .cards .tr-text-3xl {
-  font-size: 1.5rem;
-  line-height: 2.25rem;
+    font-size: 1.5rem;
+    line-height: 2.25rem;
 }
 
-.form-element.error input{
-  border: 1px solid #e16162;
+.form-element.error input {
+    border: 1px solid #e16162;
 }
 
 .form-element.error .error-message {
-  margin-top: 5px;
-  color: #e16162;
-  font-size: 0.9rem;
+    margin-top: 5px;
+    color: #e16162;
+    font-size: 0.9rem;
+}
+
+/* Responsive Styles for Mobile */
+@media screen and (max-width: 768px) {
+    .pageHeader {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .pageControls {
+        width: 100%;
+    }
+
+    .pageControls button {
+        width: 100%;
+    }
+
+    .cards {
+        grid-template-columns: 1fr;
+    }
+
+    .login-form-wrapper {
+        padding: 1rem;
+        margin: 0 1rem;
+    }
+
+    .block {
+        padding: 0.5rem;
+        overflow-x: auto;
+    }
+
+    .form-element input[type="password"],
+    .form-element input[type="text"],
+    .form-element input[type="number"],
+    .form-element textarea {
+        font-size: 16px; /* Prevents zoom on iOS */
+    }
+
+    .form-element .submit-wrapper {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .form-element .submit-wrapper button {
+        width: 100%;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .cards {
+        gap: 0.5rem;
+    }
+
+    .block {
+        margin-bottom: 0.5rem;
+    }
+
+    h1 {
+        font-size: 1.5rem;
+    }
+
+    h2 {
+        font-size: 1.3rem;
+    }
 }

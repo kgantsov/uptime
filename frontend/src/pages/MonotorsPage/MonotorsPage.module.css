@@ -1,15 +1,19 @@
-
-.monitorList {
+.tableWrapper {
     background-color: var(--primary-color);
     border-radius: 10px;
     padding: 1rem;
+    overflow-x: auto;
+    width: 100%;
+}
+
+.monitorList {
     display: block;
+    width: 100%;
 }
 
 .monitorList td {
     padding: 1rem;
 }
-
 
 .monitorList thead td {
     font-weight: 600;
@@ -28,4 +32,67 @@
 
 .monitorList .heartbeats {
     min-width: 250px;
+}
+
+/* Mobile Responsive Styles */
+@media screen and (max-width: 768px) {
+    .tableWrapper {
+        padding: 0.5rem;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .monitorList td {
+        padding: 0.5rem;
+        white-space: nowrap;
+    }
+
+    .monitorList .title {
+        min-width: 200px;
+    }
+
+    .name {
+        font-size: 1.1rem;
+    }
+
+    .url {
+        font-size: 0.8rem;
+        white-space: normal;
+        word-break: break-all;
+    }
+
+    .monitorList .heartbeats {
+        min-width: 200px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .tableWrapper {
+        padding: 0.25rem;
+    }
+
+    .monitorList td {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .monitorList thead td {
+        font-size: 0.85rem;
+    }
+
+    .monitorList .title {
+        min-width: 150px;
+    }
+
+    .name {
+        font-size: 1rem;
+    }
+
+    .url {
+        font-size: 0.75rem;
+    }
+
+    .monitorList .heartbeats {
+        min-width: 150px;
+    }
 }

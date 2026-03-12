@@ -1,1 +1,50 @@
+/* Global styles for better mobile experience */
+html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    scroll-behavior: smooth;
+}
 
+body {
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Better scrolling on mobile */
+* {
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Ensure minimum touch target size on mobile */
+@media screen and (max-width: 768px) {
+    button,
+    a,
+    input[type="submit"],
+    input[type="button"],
+    input[type="checkbox"],
+    input[type="radio"],
+    select {
+        min-height: 44px;
+        min-width: 44px;
+    }
+
+    /* Prevent text size adjustment on mobile */
+    html {
+        -webkit-text-size-adjust: 100%;
+        -ms-text-size-adjust: 100%;
+    }
+
+    /* Prevent double-tap zoom on buttons */
+    button,
+    a {
+        touch-action: manipulation;
+    }
+}
+
+/* Improve focus visibility for accessibility */
+*:focus-visible {
+    outline: 2px solid var(--secondary-color, #f9bc60);
+    outline-offset: 2px;
+}
