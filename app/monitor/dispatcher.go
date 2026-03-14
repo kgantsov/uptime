@@ -3,23 +3,24 @@ package monitor
 import (
 	"sync"
 
-	"github.com/kgantsov/uptime/app/model"
+	"github.com/kgantsov/uptime/app/repository"
 	"github.com/sirupsen/logrus"
-	"gorm.io/gorm"
 )
 
 type Dispatcher struct {
-	DB       *gorm.DB
-	monitors map[uint]*Monitor
-	mux      sync.Mutex
-	logger   *logrus.Logger
+	serviceRepo   repository.ServiceRepository
+	heartbeatRepo repository.HeartbeatRepository
+	monitors      map[uint]*Monitor
+	mux           sync.Mutex
+	logger        *logrus.Logger
 }
 
-func NewDispatcher(db *gorm.DB, logger *logrus.Logger) *Dispatcher {
+func NewDispatcher(serviceRepo repository.ServiceRepository, heartbeatRepo repository.HeartbeatRepository, logger *logrus.Logger) *Dispatcher {
 	d := &Dispatcher{
-		DB:       db,
-		monitors: make(map[uint]*Monitor),
-		logger:   logger,
+		serviceRepo:   serviceRepo,
+		heartbeatRepo: heartbeatRepo,
+		monitors:      make(map[uint]*Monitor),
+		logger:        logger,
 	}
 
 	d.init()
@@ -28,7 +29,11 @@ func NewDispatcher(db *gorm.DB, logger *logrus.Logger) *Dispatcher {
 }
 
 func (d *Dispatcher) init() {
-	services := d.getServices()
+	services, err := d.serviceRepo.GetAll()
+	if err != nil {
+		d.logger.Errorf("Failed to load services: %s", err)
+		return
+	}
 
 	d.mux.Lock()
 	defer d.mux.Unlock()
@@ -39,32 +44,18 @@ func (d *Dispatcher) init() {
 		service := services[i]
 
 		if service.Enabled {
-			m := NewMonitor(d.DB, d.logger, &service)
+			m := NewMonitor(d.heartbeatRepo, d.logger, &service)
 			d.monitors[service.ID] = m
 		}
 	}
 }
 
-func (d *Dispatcher) getServices() []model.Service {
-	var services []model.Service
-
-	err := d.DB.Model(&model.Service{}).Preload("Notifications").Order("id desc").Find(&services).Error
-
-	if err != nil {
-		return services
-	}
-
-	return services
-}
-
 func (d *Dispatcher) AddService(serviceID uint) {
 	d.logger.Infof("AddService %d", serviceID)
 
-	var service model.Service
-
-	err := d.DB.Model(&model.Service{}).Preload("Notifications").Order("id desc").First(&service).Error
-
+	service, err := d.serviceRepo.GetByID(serviceID)
 	if err != nil {
+		d.logger.Errorf("AddService: service %d not found: %s", serviceID, err)
 		return
 	}
 
@@ -72,7 +63,7 @@ func (d *Dispatcher) AddService(serviceID uint) {
 	defer d.mux.Unlock()
 
 	if service.Enabled {
-		m := NewMonitor(d.DB, d.logger, &service)
+		m := NewMonitor(d.heartbeatRepo, d.logger, service)
 		go m.Start()
 		d.monitors[service.ID] = m
 	}

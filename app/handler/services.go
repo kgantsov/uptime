@@ -20,10 +20,7 @@ import (
 // @Security     HttpBearer
 // @Router       /API/v1/services [get]
 func (h *Handler) GetServices(c echo.Context) error {
-	services := []model.Service{}
-
-	err := h.DB.Model(&model.Service{}).Preload("Notifications").Order("id desc").Find(&services).Error
-
+	services, err := h.ServiceService.GetServices()
 	if err != nil {
 		return &echo.HTTPError{Code: http.StatusNotFound, Message: err}
 	}
@@ -46,15 +43,11 @@ func (h *Handler) GetServices(c echo.Context) error {
 func (h *Handler) GetService(c echo.Context) error {
 	id := c.Param("service_id")
 	serviceID, err := strconv.Atoi(id)
-
 	if err != nil {
 		return &echo.HTTPError{Code: http.StatusBadRequest, Message: err}
 	}
 
-	service := &model.Service{}
-
-	err = h.DB.Model(&model.Service{}).Preload("Notifications").First(&service, serviceID).Error
-
+	service, err := h.ServiceService.GetService(uint(serviceID))
 	if err != nil {
 		return &echo.HTTPError{Code: http.StatusBadRequest, Message: err}
 	}
@@ -81,11 +74,12 @@ func (h *Handler) CreateService(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, err)
 	}
 
-	h.DB.Create(service)
+	created, err := h.ServiceService.CreateService(service)
+	if err != nil {
+		return &echo.HTTPError{Code: http.StatusInternalServerError, Message: err}
+	}
 
-	h.Dispatcher.AddService(service.ID)
-
-	return c.JSON(http.StatusOK, service)
+	return c.JSON(http.StatusOK, created)
 }
 
 // UpdateService godoc
@@ -104,77 +98,21 @@ func (h *Handler) CreateService(c echo.Context) error {
 func (h *Handler) UpdateService(c echo.Context) error {
 	id := c.Param("service_id")
 	serviceID, err := strconv.Atoi(id)
-
 	if err != nil {
 		return &echo.HTTPError{Code: http.StatusBadRequest, Message: err}
 	}
 
-	service := &model.Service{}
 	updateService := &model.UpdateService{}
-
 	if err = c.Bind(updateService); err != nil {
 		return c.JSON(http.StatusBadRequest, err)
 	}
 
-	err = h.DB.Model(&model.Service{}).Preload("Notifications").First(&service, serviceID).Error
-
+	updated, err := h.ServiceService.UpdateService(uint(serviceID), updateService)
 	if err != nil {
 		return &echo.HTTPError{Code: http.StatusBadRequest, Message: err}
 	}
 
-	if updateService.Name != nil {
-		service.Name = *updateService.Name
-	}
-
-	if updateService.URL != nil {
-		service.URL = *updateService.URL
-	}
-
-	if updateService.Enabled != nil {
-		service.Enabled = *updateService.Enabled
-	}
-
-	if updateService.CheckInterval != nil {
-		service.CheckInterval = *updateService.CheckInterval
-	}
-
-	if updateService.Retries != nil {
-		service.Retries = *updateService.Retries
-	}
-
-	if updateService.Notifications != nil {
-		service.Notifications = *updateService.Notifications
-	}
-
-	if updateService.Timeout != nil {
-		service.Timeout = *updateService.Timeout
-	}
-
-	if updateService.AcceptedStatusCode != nil {
-		service.AcceptedStatusCode = *updateService.AcceptedStatusCode
-	}
-
-	err = h.DB.Where("service_id = ?", serviceID).Delete(&model.ServiceNotification{}).Error
-	if err != nil {
-		return &echo.HTTPError{Code: http.StatusBadRequest, Message: err}
-	}
-
-	if updateService.Notifications != nil {
-		for _, notification := range *updateService.Notifications {
-			serviceNotification := &model.ServiceNotification{
-				ServiceID:        int(service.ID),
-				NotificationName: notification.Name,
-			}
-
-			h.DB.Create(serviceNotification)
-		}
-	}
-
-	h.DB.Save(service)
-
-	h.Dispatcher.RestartService(service.ID)
-
-	return c.JSON(http.StatusOK, updateService)
+	return c.JSON(http.StatusOK, updated)
 }
 
 // DeleteService godoc
@@ -192,18 +130,13 @@ func (h *Handler) UpdateService(c echo.Context) error {
 func (h *Handler) DeleteService(c echo.Context) error {
 	serviceIDStr := c.Param("service_id")
 	serviceID, err := strconv.Atoi(serviceIDStr)
-
 	if err != nil {
 		return &echo.HTTPError{Code: http.StatusBadRequest, Message: err}
 	}
 
-	err = h.DB.Delete(&model.Service{}, serviceID).Error
-
-	if err != nil {
+	if err := h.ServiceService.DeleteService(uint(serviceID)); err != nil {
 		return &echo.HTTPError{Code: http.StatusBadRequest, Message: err}
 	}
-
-	h.Dispatcher.RemoveService(uint(serviceID))
 
 	return c.NoContent(http.StatusNoContent)
 }
@@ -224,36 +157,18 @@ func (h *Handler) DeleteService(c echo.Context) error {
 func (h *Handler) ServiceAddNotification(c echo.Context) error {
 	id := c.Param("service_id")
 	notificationName := c.Param("notification_name")
+
 	serviceID, err := strconv.Atoi(id)
-
 	if err != nil {
 		return &echo.HTTPError{Code: http.StatusBadRequest, Message: err}
 	}
 
-	service := &model.Service{}
-
-	err = h.DB.Model(&model.Service{}).Preload("Notifications").First(&service, serviceID).Error
-
+	sn, err := h.ServiceService.AddNotification(uint(serviceID), notificationName)
 	if err != nil {
 		return &echo.HTTPError{Code: http.StatusBadRequest, Message: err}
 	}
 
-	notification := &model.Notification{}
-
-	err = h.DB.Model(&model.Notification{}).Where("name = ?", notificationName).First(&notification).Error
-
-	if err != nil {
-		return &echo.HTTPError{Code: http.StatusBadRequest, Message: err}
-	}
-
-	serviceNotification := &model.ServiceNotification{
-		ServiceID:        int(service.ID),
-		NotificationName: notification.Name,
-	}
-
-	h.DB.Create(serviceNotification)
-
-	return c.JSON(http.StatusOK, serviceNotification)
+	return c.JSON(http.StatusOK, sn)
 }
 
 // ServiceDeleteNotification godoc
@@ -272,17 +187,13 @@ func (h *Handler) ServiceAddNotification(c echo.Context) error {
 func (h *Handler) ServiceDeleteNotification(c echo.Context) error {
 	id := c.Param("service_id")
 	notificationName := c.Param("notification_name")
-	serviceID, err := strconv.Atoi(id)
 
+	serviceID, err := strconv.Atoi(id)
 	if err != nil {
 		return &echo.HTTPError{Code: http.StatusBadRequest, Message: err}
 	}
 
-	err = h.DB.Where(
-		"service_id = ? AND notification_name = ?", serviceID, notificationName,
-	).Delete(&model.ServiceNotification{}).Error
-
-	if err != nil {
+	if err := h.ServiceService.DeleteNotification(uint(serviceID), notificationName); err != nil {
 		return &echo.HTTPError{Code: http.StatusBadRequest, Message: err}
 	}
 

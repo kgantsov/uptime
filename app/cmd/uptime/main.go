@@ -22,6 +22,8 @@ import (
 	"github.com/kgantsov/uptime/app/handler"
 	"github.com/kgantsov/uptime/app/model"
 	"github.com/kgantsov/uptime/app/monitor"
+	"github.com/kgantsov/uptime/app/repository"
+	"github.com/kgantsov/uptime/app/service"
 
 	_ "github.com/kgantsov/uptime/app/cmd/uptime/docs"
 )
@@ -82,12 +84,23 @@ func main() {
 		return
 	}
 
-	dispatcher := monitor.NewDispatcher(db, log)
+	serviceRepo := repository.NewServiceRepository(db)
+	heartbeatRepo := repository.NewHeartbeatRepository(db)
+	notifRepo := repository.NewNotificationRepository(db)
+	tokenRepo := repository.NewTokenRepository(db)
+	userRepo := repository.NewUserRepository(db)
+
+	dispatcher := monitor.NewDispatcher(serviceRepo, heartbeatRepo, log)
 	dispatcher.Start()
 
 	e := echo.New()
 
-	h := handler.NewHandler(log, db, dispatcher)
+	heartbeatSvc := service.NewHeartbeatService(heartbeatRepo)
+	serviceSvc := service.NewServiceService(serviceRepo, notifRepo, dispatcher)
+	notifSvc := service.NewNotificationService(notifRepo, dispatcher)
+	tokenSvc := service.NewTokenService(userRepo, tokenRepo, handler.Key)
+
+	h := handler.NewHandler(log, heartbeatSvc, serviceSvc, notifSvc, tokenSvc)
 
 	done := make(chan struct{})
 	sigs := make(chan os.Signal, 1)
@@ -108,13 +121,13 @@ func main() {
 
 	model.MigrateDB(db)
 
-	initUser(db)
+	initUser(userRepo)
 
 	h.ConfigureMiddleware(e)
 	h.RegisterRoutes(e)
 	InitStaticServer(e)
 
-	go cleanupOldHeartbeats(db, log)
+	go cleanupOldHeartbeats(heartbeatRepo, log)
 
 	go func() {
 		e.Logger.Fatal(e.Start(":1323"))
@@ -127,10 +140,8 @@ func main() {
 	e.Logger.Info("Stopped monitoring")
 }
 
-func initUser(db *gorm.DB) {
-	var count int64
-
-	err := db.Model(&model.User{}).Count(&count).Error
+func initUser(userRepo repository.UserRepository) {
+	count, err := userRepo.Count()
 
 	if err == nil && count > 0 {
 		return
@@ -154,10 +165,10 @@ func initUser(db *gorm.DB) {
 	scanner.Scan()
 	password := scanner.Text()
 
-	createUser(db, firstName, lastName, email, password)
+	createUser(userRepo, firstName, lastName, email, password)
 }
 
-func createUser(db *gorm.DB, firstName, lastName, email, password string) {
+func createUser(userRepo repository.UserRepository, firstName, lastName, email, password string) {
 	h, _ := auth.HashPassword(password)
 	user := &model.User{
 		FirstName: firstName,
@@ -165,10 +176,10 @@ func createUser(db *gorm.DB, firstName, lastName, email, password string) {
 		Email:     email,
 		Password:  h,
 	}
-	db.Create(user)
+	userRepo.Create(user)
 }
 
-func cleanupOldHeartbeats(db *gorm.DB, logger *logrus.Logger) {
+func cleanupOldHeartbeats(heartbeatRepo repository.HeartbeatRepository, logger *logrus.Logger) {
 	ticker := time.NewTicker(time.Duration(60) * time.Second)
 
 	for {
@@ -177,9 +188,8 @@ func cleanupOldHeartbeats(db *gorm.DB, logger *logrus.Logger) {
 			thresholdDate := time.Now().AddDate(0, 0, -30)
 			logger.Infof("Deleting heartbeats older than %s", thresholdDate)
 
-			result := db.Where("created_at < ?", thresholdDate).Delete(&model.Heartbeat{})
-			if result.Error != nil {
-				log.Fatal(result.Error)
+			if err := heartbeatRepo.DeleteOlderThan(thresholdDate); err != nil {
+				log.Fatal(err)
 			}
 		}
 	}

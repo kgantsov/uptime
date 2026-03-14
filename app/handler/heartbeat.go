@@ -1,11 +1,9 @@
 package handler
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 
-	"github.com/kgantsov/uptime/app/model"
 	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
 )
@@ -24,8 +22,6 @@ import (
 // @Security     HttpBearer
 // @Router       /API/v1/heartbeats/latencies [get]
 func (h *Handler) GetHeartbeatsLatencies(c echo.Context) error {
-	var err error
-
 	serviceID := c.QueryParam("service_id")
 	sizeStr := c.QueryParam("size")
 
@@ -34,18 +30,11 @@ func (h *Handler) GetHeartbeatsLatencies(c echo.Context) error {
 	}
 
 	size, err := strconv.Atoi(sizeStr)
-
 	if err != nil {
 		return &echo.HTTPError{Code: http.StatusBadRequest, Message: err}
 	}
 
-	heartbeats := []model.Heartbeat{}
-	if serviceID != "" {
-		err = h.DB.Order("id desc").Where("service_id = ?", serviceID).Limit(size).Find(&heartbeats).Error
-	} else {
-		err = h.DB.Order("id desc").Limit(size).Find(&heartbeats).Error
-	}
-
+	heartbeats, err := h.HeartbeatService.GetLatencies(serviceID, size)
 	if err != nil {
 		return &echo.HTTPError{Code: http.StatusNotFound, Message: err}
 	}
@@ -70,27 +59,13 @@ func (h *Handler) GetHeartbeatsLastLatencies(c echo.Context) error {
 	if s == "" {
 		s = "3"
 	}
-	size, err := strconv.Atoi(s)
 
+	size, err := strconv.Atoi(s)
 	if err != nil {
 		return &echo.HTTPError{Code: http.StatusBadRequest, Message: err}
 	}
 
-	heartbeats := []model.Heartbeat{}
-
-	err = h.DB.Raw(
-		`
-		SELECT * FROM
-		(
-			SELECT id, service_id, status, created_at, response_time, status_code,
-			ROW_NUMBER() OVER (PARTITION BY service_id Order by created_at DESC) AS size
-			FROM heartbeats
-		) RNK
-		WHERE size <= ?
-		`,
-		size,
-	).Scan(&heartbeats).Error
-
+	heartbeats, err := h.HeartbeatService.GetLastLatencies(size)
 	if err != nil {
 		h.Logger.WithFields(logrus.Fields{
 			"RequestID": c.Get(echo.HeaderXRequestID),
@@ -117,25 +92,16 @@ func (h *Handler) GetHeartbeatsLastLatencies(c echo.Context) error {
 func (h *Handler) GetHeartbeatStats(c echo.Context) error {
 	_days := c.Param("days")
 	days, err := strconv.Atoi(_days)
-
 	if err != nil {
 		return &echo.HTTPError{Code: http.StatusBadRequest, Message: err}
 	}
 
-	heartbeatStatsPoints := []model.HeartbeatStatsPoint{}
-
-	err = h.DB.Model(
-		&model.Heartbeat{},
-	).Select(
-		"service_id, status, count(1) as counter, avg(response_time) as average_response_time",
-	).Where(
-		"created_at > DATE('now', ?)", fmt.Sprintf("-%d days", days),
-	).Group("service_id, status").Find(&heartbeatStatsPoints).Error
-
+	heartbeatStatsPoints, err := h.HeartbeatService.GetStats(days)
 	if err != nil {
 		h.Logger.WithFields(logrus.Fields{
 			"RequestID": c.Get(echo.HeaderXRequestID),
 		}).Infof("Got an error getting latencies stats %s", err)
+
 		return &echo.HTTPError{Code: http.StatusNotFound, Message: err}
 	}
 

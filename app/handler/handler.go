@@ -4,31 +4,23 @@ import (
 	"time"
 
 	"github.com/kgantsov/uptime/app/auth"
+	"github.com/kgantsov/uptime/app/service"
 	"github.com/labstack/echo-contrib/echoprometheus"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
 	"github.com/sirupsen/logrus"
-	"gorm.io/gorm"
 
 	echoSwagger "github.com/swaggo/echo-swagger"
 )
 
-// DispatcherInterface defines the methods used by Handler so the dispatcher
-// can be replaced with a mock in tests.
-type DispatcherInterface interface {
-	AddService(serviceID uint)
-	RemoveService(serviceID uint)
-	RestartService(serviceID uint)
-	Start()
-	Stop()
-}
-
 type (
 	Handler struct {
-		DB         *gorm.DB
-		Dispatcher DispatcherInterface
-		Logger     *logrus.Logger
+		HeartbeatService    service.HeartbeatService
+		ServiceService      service.ServiceService
+		NotificationService service.NotificationService
+		TokenService        service.TokenService
+		Logger              *logrus.Logger
 	}
 )
 
@@ -37,10 +29,20 @@ const (
 	Key = "secret"
 )
 
-func NewHandler(logger *logrus.Logger, db *gorm.DB, dispatcher DispatcherInterface) *Handler {
-	h := &Handler{Logger: logger, DB: db, Dispatcher: dispatcher}
-
-	return h
+func NewHandler(
+	logger *logrus.Logger,
+	heartbeatService service.HeartbeatService,
+	serviceService service.ServiceService,
+	notificationService service.NotificationService,
+	tokenService service.TokenService,
+) *Handler {
+	return &Handler{
+		Logger:              logger,
+		HeartbeatService:    heartbeatService,
+		ServiceService:      serviceService,
+		NotificationService: notificationService,
+		TokenService:        tokenService,
+	}
 }
 
 func (h *Handler) RegisterRoutes(e *echo.Echo) {
@@ -88,7 +90,7 @@ func (h *Handler) ConfigureMiddleware(e *echo.Echo) {
 
 		Skipper: auth.AuthSkipperFunc,
 	}))
-	e.Use(auth.CheckTokenMiddleware(h.DB, h.Logger))
+	e.Use(auth.CheckTokenMiddleware(h.TokenService, h.Logger))
 
 	e.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
 		LogMethod:    true,
@@ -109,7 +111,6 @@ func (h *Handler) ConfigureMiddleware(e *echo.Echo) {
 
 	e.Use(middleware.RecoverWithConfig(middleware.RecoverConfig{
 		StackSize: 1 << 10, // 1 KB
-		// LogLevel:  log.Lvl,
 	}))
 
 	e.Use(middleware.TimeoutWithConfig(middleware.TimeoutConfig{
@@ -124,5 +125,4 @@ func (h *Handler) ConfigureMiddleware(e *echo.Echo) {
 
 	e.Use(echoprometheus.NewMiddleware("uptime"))  // adds middleware to gather metrics
 	e.GET("/metrics", echoprometheus.NewHandler()) // adds route to serve gathered metrics
-
 }

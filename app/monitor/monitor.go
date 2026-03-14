@@ -8,20 +8,20 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/kgantsov/uptime/app/model"
+	"github.com/kgantsov/uptime/app/repository"
 	"github.com/kyokomi/emoji"
-	"gorm.io/gorm"
 )
 
 type Monitor struct {
-	DB        *gorm.DB
-	done      chan struct{}
-	checker   Checker
-	notifiers []Notifier
-	service   *model.Service
-	logger    *logrus.Logger
+	heartbeatRepo repository.HeartbeatRepository
+	done          chan struct{}
+	checker       Checker
+	notifiers     []Notifier
+	service       *model.Service
+	logger        *logrus.Logger
 }
 
-func NewMonitor(db *gorm.DB, logger *logrus.Logger, service *model.Service) *Monitor {
+func NewMonitor(heartbeatRepo repository.HeartbeatRepository, logger *logrus.Logger, service *model.Service) *Monitor {
 	logger.Infof("NewMonitor %d", service.ID)
 
 	notifiers := []Notifier{}
@@ -37,12 +37,12 @@ func NewMonitor(db *gorm.DB, logger *logrus.Logger, service *model.Service) *Mon
 	)
 
 	m := &Monitor{
-		DB:        db,
-		service:   service,
-		done:      make(chan struct{}),
-		notifiers: notifiers,
-		checker:   checker,
-		logger:    logger,
+		heartbeatRepo: heartbeatRepo,
+		service:       service,
+		done:          make(chan struct{}),
+		notifiers:     notifiers,
+		checker:       checker,
+		logger:        logger,
 	}
 
 	return m
@@ -102,7 +102,7 @@ func (m *Monitor) Start() {
 				"Service check %d %s %d %s %t", m.service.ID, m.service.URL, statusCode, status, failing,
 			)
 
-			m.DB.Create(
+			m.heartbeatRepo.Create(
 				&model.Heartbeat{
 					ServiceID:    m.service.ID,
 					Status:       status,

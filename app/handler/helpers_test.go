@@ -11,6 +11,8 @@ import (
 	"github.com/glebarez/sqlite"
 	"github.com/golang-jwt/jwt"
 	"github.com/kgantsov/uptime/app/model"
+	"github.com/kgantsov/uptime/app/repository"
+	"github.com/kgantsov/uptime/app/service"
 	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/mock"
@@ -22,7 +24,7 @@ import (
 // MockDispatcher
 // ---------------------------------------------------------------------------
 
-// MockDispatcher is a testify/mock implementation of DispatcherInterface.
+// MockDispatcher is a testify/mock implementation of service.DispatcherInterface.
 type MockDispatcher struct {
 	mock.Mock
 }
@@ -76,9 +78,21 @@ func newTestLogger() *logrus.Logger {
 	return l
 }
 
-// newTestHandler creates a Handler wired to the supplied DB and dispatcher.
-func newTestHandler(db *gorm.DB, dispatcher DispatcherInterface) *Handler {
-	return NewHandler(newTestLogger(), db, dispatcher)
+// newTestHandler creates a Handler wired to the supplied DB and dispatcher by
+// building the full repository → service → handler stack.
+func newTestHandler(db *gorm.DB, dispatcher service.DispatcherInterface) *Handler {
+	heartbeatRepo := repository.NewHeartbeatRepository(db)
+	serviceRepo := repository.NewServiceRepository(db)
+	notifRepo := repository.NewNotificationRepository(db)
+	tokenRepo := repository.NewTokenRepository(db)
+	userRepo := repository.NewUserRepository(db)
+
+	heartbeatSvc := service.NewHeartbeatService(heartbeatRepo)
+	serviceSvc := service.NewServiceService(serviceRepo, notifRepo, dispatcher)
+	notifSvc := service.NewNotificationService(notifRepo, dispatcher)
+	tokenSvc := service.NewTokenService(userRepo, tokenRepo, Key)
+
+	return NewHandler(newTestLogger(), heartbeatSvc, serviceSvc, notifSvc, tokenSvc)
 }
 
 // echoCtx builds a minimal echo.Context around a plain HTTP request/recorder

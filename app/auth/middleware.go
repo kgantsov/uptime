@@ -4,11 +4,15 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/kgantsov/uptime/app/model"
 	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
-	"gorm.io/gorm"
 )
+
+// TokenLookup is the minimal interface the middleware needs to verify that
+// a token ID extracted from a JWT actually exists in the backing store.
+type TokenLookup interface {
+	ValidateToken(id uint) error
+}
 
 func AuthSkipperFunc(c echo.Context) bool {
 	// Skip authentication for non API requests and for login API request
@@ -24,7 +28,7 @@ func AuthSkipperFunc(c echo.Context) bool {
 	return false
 }
 
-func CheckTokenMiddleware(db *gorm.DB, logger *logrus.Logger) echo.MiddlewareFunc {
+func CheckTokenMiddleware(tokenLookup TokenLookup, logger *logrus.Logger) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			if AuthSkipperFunc(c) {
@@ -37,10 +41,7 @@ func CheckTokenMiddleware(db *gorm.DB, logger *logrus.Logger) echo.MiddlewareFun
 				return &echo.HTTPError{Code: http.StatusBadRequest, Message: err}
 			}
 
-			token := &model.Token{}
-			err = db.Model(&model.Token{}).First(&token, tokenID).Error
-
-			if err != nil {
+			if err := tokenLookup.ValidateToken(tokenID); err != nil {
 				logger.WithFields(logrus.Fields{
 					"RequestID": c.Get(echo.HeaderXRequestID),
 				}).Infof("TOKEN WAS NOT FOUND %s", err)

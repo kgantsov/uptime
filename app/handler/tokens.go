@@ -2,16 +2,13 @@ package handler
 
 import (
 	"net/http"
-	"time"
 
-	"github.com/golang-jwt/jwt"
 	"github.com/kgantsov/uptime/app/auth"
-	"github.com/kgantsov/uptime/app/model"
 	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
 )
 
-// CreateService godoc
+// CreateToken godoc
 // @Summary      Create an auth token
 // @Description  Create an auth token
 // @Tags         tokens
@@ -23,43 +20,21 @@ import (
 // @Failure      500  {object}  echo.HTTPError
 // @Router       /API/v1/tokens [post]
 func (h *Handler) CreateToken(c echo.Context) (err error) {
-	t := new(model.CreateToken)
-	user := new(model.User)
+	req := struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}{}
 
-	if err := c.Bind(t); err != nil {
+	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, err)
 	}
 
-	err = h.DB.Model(&model.User{}).Where("email = ?", t.Email).First(&user).Error
+	token, err := h.TokenService.CreateToken(req.Email, req.Password)
 	if err != nil {
 		return &echo.HTTPError{
-			Code: http.StatusBadRequest, Message: "Email or password is incorrect",
+			Code:    http.StatusBadRequest,
+			Message: "Email or password is incorrect",
 		}
-	}
-
-	if !auth.CheckPasswordHash(t.Password, user.Password) {
-		return &echo.HTTPError{
-			Code: http.StatusBadRequest, Message: "Email or password is incorrect",
-		}
-	}
-
-	token := &model.Token{
-		UserID:   user.ID,
-		ExpireAt: time.Now().Add(time.Hour * 72),
-	}
-	h.DB.Create(token)
-
-	jwtToken := jwt.New(jwt.SigningMethodHS256)
-
-	// Set claims
-	claims := jwtToken.Claims.(jwt.MapClaims)
-	claims["id"] = token.ID
-	claims["exp"] = token.ExpireAt.Unix()
-
-	// Generate encoded token and send it as response
-	token.Token, err = jwtToken.SignedString([]byte(Key))
-	if err != nil {
-		return err
 	}
 
 	return c.JSON(http.StatusOK, token)
@@ -77,17 +52,15 @@ func (h *Handler) CreateToken(c echo.Context) (err error) {
 // @Security     HttpBearer
 // @Router       /API/v1/tokens [delete]
 func (h *Handler) DeleteToken(c echo.Context) (err error) {
-	tokenId, _ := auth.GetCurrentTokenID(c)
+	tokenID, _ := auth.GetCurrentTokenID(c)
 
 	h.Logger.WithFields(logrus.Fields{
 		"RequestID": c.Get(echo.HeaderXRequestID),
-	}).Infof("FOUND USER ID %+v", tokenId)
+	}).Infof("FOUND USER ID %+v", tokenID)
 
-	err = h.DB.Delete(&model.Token{}, tokenId).Error
-
-	if err != nil {
+	if err := h.TokenService.DeleteToken(tokenID); err != nil {
 		return &echo.HTTPError{Code: http.StatusBadRequest, Message: err}
 	}
 
-	return c.JSON(http.StatusNoContent, &model.Token{})
+	return c.JSON(http.StatusNoContent, struct{}{})
 }

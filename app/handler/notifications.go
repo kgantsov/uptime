@@ -20,10 +20,7 @@ import (
 // @Security     HttpBearer
 // @Router       /API/v1/notifications [get]
 func (h *Handler) GetNotifications(c echo.Context) error {
-	notifications := []model.Notification{}
-
-	err := h.DB.Model(&model.Notification{}).Order("created_at desc").Find(&notifications).Error
-
+	notifications, err := h.NotificationService.GetNotifications()
 	if err != nil {
 		h.Logger.WithFields(logrus.Fields{
 			"RequestID": c.Get(echo.HeaderXRequestID),
@@ -50,10 +47,7 @@ func (h *Handler) GetNotifications(c echo.Context) error {
 func (h *Handler) GetNotification(c echo.Context) error {
 	notificationName := c.Param("notification_name")
 
-	notification := &model.Notification{}
-
-	err := h.DB.Model(&model.Notification{}).Where("name = ?", notificationName).First(&notification).Error
-
+	notification, err := h.NotificationService.GetNotification(notificationName)
 	if err != nil {
 		h.Logger.WithFields(logrus.Fields{
 			"RequestID": c.Get(echo.HeaderXRequestID),
@@ -84,9 +78,12 @@ func (h *Handler) CreateNotification(c echo.Context) error {
 		return c.String(http.StatusBadRequest, "bad request")
 	}
 
-	h.DB.Create(notification)
+	created, err := h.NotificationService.CreateNotification(notification)
+	if err != nil {
+		return &echo.HTTPError{Code: http.StatusInternalServerError, Message: err}
+	}
 
-	return c.JSON(http.StatusOK, notification)
+	return c.JSON(http.StatusOK, created)
 }
 
 // UpdateNotification godoc
@@ -105,35 +102,15 @@ func (h *Handler) CreateNotification(c echo.Context) error {
 func (h *Handler) UpdateNotification(c echo.Context) error {
 	notificationName := c.Param("notification_name")
 
-	notification := &model.Notification{}
 	updateNotification := &model.UpdateNotification{}
-
 	if err := c.Bind(updateNotification); err != nil {
 		return c.String(http.StatusBadRequest, "bad request")
 	}
 
-	err := h.DB.Model(&model.Notification{}).Where("name = ?", notificationName).First(&notification).Error
-
+	notification, err := h.NotificationService.UpdateNotification(notificationName, updateNotification)
 	if err != nil {
 		return &echo.HTTPError{Code: http.StatusBadRequest, Message: err}
 	}
-
-	if updateNotification.Callback != nil {
-		notification.Callback = *updateNotification.Callback
-	}
-
-	if updateNotification.CallbackChatID != nil {
-		notification.CallbackChatID = *updateNotification.CallbackChatID
-	}
-
-	if updateNotification.CallbackType != nil {
-		notification.CallbackType = *updateNotification.CallbackType
-	}
-
-	h.DB.Save(notification)
-
-	h.Dispatcher.Stop()
-	h.Dispatcher.Start()
 
 	return c.JSON(http.StatusOK, notification)
 }
@@ -145,7 +122,7 @@ func (h *Handler) UpdateNotification(c echo.Context) error {
 // @Accept       json
 // @Produce      json
 // @Param        notification_name    path     string  true  "Delete by notification_name"
-// @Success      200  {object}  model.Notification
+// @Success      204  {object}  model.Notification
 // @Failure      404  {object}  echo.HTTPError
 // @Failure      500  {object}  echo.HTTPError
 // @Security     HttpBearer
@@ -153,9 +130,7 @@ func (h *Handler) UpdateNotification(c echo.Context) error {
 func (h *Handler) DeleteNotification(c echo.Context) error {
 	notificationName := c.Param("notification_name")
 
-	err := h.DB.Where("name = ?", notificationName).Delete(&model.Notification{}).Error
-
-	if err != nil {
+	if err := h.NotificationService.DeleteNotification(notificationName); err != nil {
 		return &echo.HTTPError{Code: http.StatusBadRequest, Message: err}
 	}
 
