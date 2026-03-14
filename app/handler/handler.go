@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/kgantsov/uptime/app/auth"
-	"github.com/kgantsov/uptime/app/monitor"
 	"github.com/labstack/echo-contrib/echoprometheus"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -15,10 +14,20 @@ import (
 	echoSwagger "github.com/swaggo/echo-swagger"
 )
 
+// DispatcherInterface defines the methods used by Handler so the dispatcher
+// can be replaced with a mock in tests.
+type DispatcherInterface interface {
+	AddService(serviceID uint)
+	RemoveService(serviceID uint)
+	RestartService(serviceID uint)
+	Start()
+	Stop()
+}
+
 type (
 	Handler struct {
 		DB         *gorm.DB
-		Dispatcher *monitor.Dispatcher
+		Dispatcher DispatcherInterface
 		Logger     *logrus.Logger
 	}
 )
@@ -28,7 +37,7 @@ const (
 	Key = "secret"
 )
 
-func NewHandler(logger *logrus.Logger, db *gorm.DB, dispatcher *monitor.Dispatcher) *Handler {
+func NewHandler(logger *logrus.Logger, db *gorm.DB, dispatcher DispatcherInterface) *Handler {
 	h := &Handler{Logger: logger, DB: db, Dispatcher: dispatcher}
 
 	return h
