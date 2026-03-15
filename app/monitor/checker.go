@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 )
 
 const StatusTimeout string = "TIMEOUT"
@@ -22,7 +22,6 @@ type HTTPCHecker struct {
 	URL                string
 	Name               string
 	AcceptedStatusCode int
-	logger             zerolog.Logger
 }
 
 func NewHTTPCHecker(name, url string, timeout, acceptedStatusCode int) *HTTPCHecker {
@@ -42,7 +41,7 @@ func (c *HTTPCHecker) Check() (int, string) {
 	resp, err := c.client.Get(c.URL)
 
 	if err != nil {
-		c.logger.Info().Msgf("Error checking '%s' %s %s\n", c.Name, c.URL, err)
+		log.Info().Msgf("Error checking '%s' %s %s\n", c.Name, c.URL, err)
 	}
 
 	if err, ok := err.(net.Error); ok && err.Timeout() {

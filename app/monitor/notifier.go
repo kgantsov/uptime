@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/kgantsov/uptime/app/model"
-	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 )
 
 const TelegramNotifierTimeout int = 10
@@ -19,7 +19,6 @@ type Notifier interface {
 type TelegramNotifier struct {
 	notification *model.Notification
 	client       http.Client
-	logger       zerolog.Logger
 }
 
 func NewTelegramNotifier(notification *model.Notification) *TelegramNotifier {
@@ -34,7 +33,7 @@ func NewTelegramNotifier(notification *model.Notification) *TelegramNotifier {
 }
 
 func (n *TelegramNotifier) Notify(message string) {
-	n.logger.Info().Msgf("Sending telegram message: %s to %s", message, n.notification.CallbackChatID)
+	log.Info().Msgf("Sending telegram message: %s to %s", message, n.notification.CallbackChatID)
 
 	bodyParams := map[string]interface{}{
 		"chat_id":              n.notification.CallbackChatID,
@@ -48,7 +47,7 @@ func (n *TelegramNotifier) Notify(message string) {
 		"POST", n.notification.Callback, bytes.NewBuffer(jsonBody),
 	)
 	if err != nil {
-		n.logger.Info().Msgf("Failed to notify telegram %s", err)
+		log.Info().Msgf("Failed to notify telegram %s", err)
 		return
 	}
 
@@ -56,7 +55,7 @@ func (n *TelegramNotifier) Notify(message string) {
 
 	response, err := n.client.Do(request)
 	if err != nil {
-		n.logger.Info().Msgf("Failed to notify telegram %s", err)
+		log.Info().Msgf("Failed to notify telegram %s", err)
 		return
 	}
 
