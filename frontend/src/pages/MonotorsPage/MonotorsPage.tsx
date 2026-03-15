@@ -91,8 +91,8 @@ export function MonotorsPage() {
               <td>Status</td>
               <td>Service</td>
               <td>Health</td>
-              <td>Heartbeats</td>
               <td>Response&nbsp;time</td>
+              <td>Heartbeats</td>
             </tr>
           </thead>
           <tbody>
@@ -156,6 +156,7 @@ export function MonotorsPage() {
                       marginTop="mt-0"
                     />
                   </td>
+                  <td>{lastHeartbeats.response_time} ms</td>
                   <td className={styles.heartbeats}>
                     <Tracking marginTop="mt-2">
                       {heartbeats.map((heartbeat) => {
@@ -169,7 +170,6 @@ export function MonotorsPage() {
                       })}
                     </Tracking>
                   </td>
-                  <td>{lastHeartbeats.response_time} ms</td>
                 </tr>
               );
             })}
