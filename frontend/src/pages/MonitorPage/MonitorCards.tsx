@@ -90,7 +90,7 @@ export function MonitorCards({ monitorId }: Props): JSX.Element {
           {Math.round(statsDay["UP"]?.average_response_time || 0)} ms
         </Title>
         <Text>Uptime</Text>
-        <Title>{calcPercentage(statsDay).toFixed(2)}%</Title>
+        <Title>{calcPercentage(statsDay).toFixed(3)}%</Title>
       </Card>
       <Card decoration="top" decorationColor="orange">
         <Metric>7 days</Metric>
@@ -99,7 +99,7 @@ export function MonitorCards({ monitorId }: Props): JSX.Element {
           {Math.round(statsWeek["UP"]?.average_response_time || 0)} ms
         </Title>
         <Text>Uptime</Text>
-        <Title>{calcPercentage(statsWeek).toFixed(2)}%</Title>
+        <Title>{calcPercentage(statsWeek).toFixed(3)}%</Title>
       </Card>
       <Card decoration="top" decorationColor="orange">
         <Metric>30 days</Metric>
@@ -108,7 +108,7 @@ export function MonitorCards({ monitorId }: Props): JSX.Element {
           {Math.round(statsMonth["UP"]?.average_response_time || 0)} ms
         </Title>
         <Text>Uptime</Text>
-        <Title>{calcPercentage(statsMonth).toFixed(2)}%</Title>
+        <Title>{calcPercentage(statsMonth).toFixed(3)}%</Title>
       </Card>
     </div>
   );
