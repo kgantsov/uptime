@@ -16,20 +16,23 @@ type ServiceService interface {
 }
 
 type serviceService struct {
-	serviceRepo repository.ServiceRepository
-	notifRepo   repository.NotificationRepository
-	dispatcher  DispatcherInterface
+	serviceRepo   repository.ServiceRepository
+	notifRepo     repository.NotificationRepository
+	heartbeatRepo repository.HeartbeatRepository
+	dispatcher    DispatcherInterface
 }
 
 func NewServiceService(
 	serviceRepo repository.ServiceRepository,
 	notifRepo repository.NotificationRepository,
+	heartbeatRepo repository.HeartbeatRepository,
 	dispatcher DispatcherInterface,
 ) ServiceService {
 	return &serviceService{
-		serviceRepo: serviceRepo,
-		notifRepo:   notifRepo,
-		dispatcher:  dispatcher,
+		serviceRepo:   serviceRepo,
+		notifRepo:     notifRepo,
+		heartbeatRepo: heartbeatRepo,
+		dispatcher:    dispatcher,
 	}
 }
 
@@ -110,6 +113,14 @@ func (s *serviceService) UpdateService(id uint, update *model.UpdateService) (*m
 }
 
 func (s *serviceService) DeleteService(id uint) error {
+	if err := s.serviceRepo.DeleteServiceNotifications(int(id)); err != nil {
+		return err
+	}
+
+	if err := s.heartbeatRepo.DeleteByServiceID(id); err != nil {
+		return err
+	}
+
 	if err := s.serviceRepo.Delete(id); err != nil {
 		return err
 	}

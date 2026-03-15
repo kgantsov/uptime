@@ -79,7 +79,7 @@ func main() {
 	dispatcher.Start()
 
 	heartbeatSvc := service.NewHeartbeatService(heartbeatRepo)
-	serviceSvc := service.NewServiceService(serviceRepo, notifRepo, dispatcher)
+	serviceSvc := service.NewServiceService(serviceRepo, notifRepo, heartbeatRepo, dispatcher)
 	notifSvc := service.NewNotificationService(notifRepo, dispatcher)
 	jwtSecret := handler.JWTSecret()
 	tokenSvc := service.NewTokenService(userRepo, tokenRepo, jwtSecret)

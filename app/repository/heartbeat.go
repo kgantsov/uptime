@@ -14,6 +14,7 @@ type HeartbeatRepository interface {
 	GetStats(days int) ([]model.HeartbeatStatsPoint, error)
 	Create(heartbeat *model.Heartbeat) error
 	DeleteOlderThan(threshold time.Time) error
+	DeleteByServiceID(serviceID uint) error
 }
 
 type heartbeatRepository struct {
@@ -76,4 +77,8 @@ func (r *heartbeatRepository) Create(heartbeat *model.Heartbeat) error {
 
 func (r *heartbeatRepository) DeleteOlderThan(threshold time.Time) error {
 	return r.db.Where("created_at < ?", threshold).Delete(&model.Heartbeat{}).Error
+}
+
+func (r *heartbeatRepository) DeleteByServiceID(serviceID uint) error {
+	return r.db.Where("service_id = ?", serviceID).Delete(&model.Heartbeat{}).Error
 }

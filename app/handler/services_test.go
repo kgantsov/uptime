@@ -249,6 +249,7 @@ func TestDeleteService(t *testing.T) {
 		name           string
 		serviceIDParam string
 		seedService    *model.Service
+		seedHeartbeats bool
 		expectedStatus int
 	}{
 		{
@@ -256,6 +257,7 @@ func TestDeleteService(t *testing.T) {
 			serviceIDParam: "1",
 			seedService:    &model.Service{Name: "to-delete", URL: "https://del.example.com"},
 			expectedStatus: http.StatusNoContent,
+			seedHeartbeats: true,
 		},
 		{
 			name:           "invalid id",
@@ -270,6 +272,24 @@ func TestDeleteService(t *testing.T) {
 			db := newTestDB()
 			if tc.seedService != nil {
 				require.NoError(t, db.Create(tc.seedService).Error)
+			}
+
+			if tc.seedHeartbeats && tc.seedService != nil {
+				heartbeats := []model.Heartbeat{
+					{ServiceID: tc.seedService.ID, Status: "up", ResponseTime: 100},
+					{ServiceID: tc.seedService.ID, Status: "up", ResponseTime: 120},
+				}
+				for i := range heartbeats {
+					require.NoError(t, db.Create(&heartbeats[i]).Error)
+				}
+
+				notif := &model.Notification{Name: "slack", CallbackType: "slack", Callback: "https://hooks.slack.com/xxx"}
+				require.NoError(t, db.Create(notif).Error)
+				sn := &model.ServiceNotification{
+					ServiceID:        int(tc.seedService.ID),
+					NotificationName: notif.Name,
+				}
+				require.NoError(t, db.Create(sn).Error)
 			}
 
 			dispatcher := new(MockDispatcher)
@@ -288,6 +308,14 @@ func TestDeleteService(t *testing.T) {
 				var svc model.Service
 				dbErr := db.First(&svc, tc.seedService.ID).Error
 				assert.Error(t, dbErr, "service should be deleted from the database")
+
+				var heartbeatCount int64
+				db.Model(&model.Heartbeat{}).Where("service_id = ?", tc.seedService.ID).Count(&heartbeatCount)
+				assert.Equal(t, int64(0), heartbeatCount, "heartbeats should be deleted when service is deleted")
+
+				var snCount int64
+				db.Model(&model.ServiceNotification{}).Where("service_id = ?", tc.seedService.ID).Count(&snCount)
+				assert.Equal(t, int64(0), snCount, "service notifications should be deleted when service is deleted")
 			}
 		})
 	}

@@ -9,6 +9,7 @@ type HeartbeatService interface {
 	GetLatencies(serviceID string, size int) ([]model.Heartbeat, error)
 	GetLastLatencies(size int) ([]model.Heartbeat, error)
 	GetStats(days int) ([]model.HeartbeatStatsPoint, error)
+	DeleteByServiceID(serviceID uint) error
 }
 
 type heartbeatService struct {
@@ -29,4 +30,8 @@ func (s *heartbeatService) GetLastLatencies(size int) ([]model.Heartbeat, error)
 
 func (s *heartbeatService) GetStats(days int) ([]model.HeartbeatStatsPoint, error) {
 	return s.repo.GetStats(days)
+}
+
+func (s *heartbeatService) DeleteByServiceID(serviceID uint) error {
+	return s.repo.DeleteByServiceID(serviceID)
 }

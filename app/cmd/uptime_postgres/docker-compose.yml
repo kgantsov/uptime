@@ -1,0 +1,38 @@
+version: '3'
+
+services:
+  # test_runner:
+  #   build: ./backend
+  #   command: poetry run pytest -x -vv
+  #   depends_on:
+  #     - postgres
+  #   networks:
+  #     - backend
+  #   volumes:
+  #     - ./backend:/usr/src/app
+  #   environment:
+  #     DATABASE_URL: postgresql://uptime:q3k8AtGC4SAxRdyL4v6iQpTHn@postgres/uptime
+  #     TESTING: "True"
+  postgres:
+    image: postgres:14.1-alpine
+    environment:
+      POSTGRES_USER: uptime
+      POSTGRES_DB: uptime
+      POSTGRES_PASSWORD: q3k8AtGC4SAxRdyL4v6iQpTHn
+      TESTING: "True"
+    volumes:
+      - ./pgdata_tests:/var/lib/postgresql/data/
+    ports:
+      - "5432:5432"
+    expose:
+      - "5432"
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "uptime -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+networks:
+  backend:

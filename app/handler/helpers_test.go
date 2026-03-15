@@ -85,7 +85,7 @@ func newTestHandler(db *gorm.DB, dispatcher service.DispatcherInterface) *Handle
 	userRepo := repository.NewUserRepository(db)
 
 	heartbeatSvc := service.NewHeartbeatService(heartbeatRepo)
-	serviceSvc := service.NewServiceService(serviceRepo, notifRepo, dispatcher)
+	serviceSvc := service.NewServiceService(serviceRepo, notifRepo, heartbeatRepo, dispatcher)
 	notifSvc := service.NewNotificationService(notifRepo, dispatcher)
 	tokenSvc := service.NewTokenService(userRepo, tokenRepo, testJWTKey)
 
