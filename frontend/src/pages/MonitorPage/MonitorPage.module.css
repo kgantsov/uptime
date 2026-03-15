@@ -30,13 +30,8 @@
     }
 
     .controls {
-        width: 100%;
+        flex-wrap: wrap;
         justify-content: flex-start;
-    }
-
-    .controls button {
-        flex: 1;
-        min-width: 80px;
     }
 }
 
@@ -50,11 +45,7 @@
     }
 
     .controls {
-        flex-direction: column;
+        flex-wrap: wrap;
         gap: 0.5rem;
-    }
-
-    .controls button {
-        width: 100%;
     }
 }

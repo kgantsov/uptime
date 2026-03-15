@@ -307,11 +307,13 @@ button:hover {
     }
 
     .pageControls {
-        width: 100%;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
     }
 
     .pageControls button {
-        width: 100%;
+        flex: 0 1 auto;
     }
 
     .cards {
