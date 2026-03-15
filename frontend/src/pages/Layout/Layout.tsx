@@ -7,7 +7,6 @@ import {
   FaTimes,
 } from "react-icons/fa";
 import { BsStack } from "react-icons/bs";
-import { Icon } from "@tremor/react";
 import { useState, useEffect } from "react";
 
 import styles from "./Layout.module.css";
@@ -44,9 +43,24 @@ export function Layout() {
 
   return (
     <div className="dark2">
+      {/* Overlay for mobile when sidebar is open */}
       {isMobile && sidebarOpen && (
         <div className={styles.overlay} onClick={() => setSidebarOpen(false)} />
       )}
+
+      {/* Sticky top bar shown only on mobile — contains the hamburger */}
+      {isMobile && (
+        <div className={styles.mobileHeader}>
+          <span
+            className={styles.mobileMenuBtn}
+            onClick={handleToggle}
+            aria-label="Open menu"
+          >
+            <FaBars size={"18px"} />
+          </span>
+        </div>
+      )}
+
       <nav
         className={
           sidebarOpen ? `${styles.sidebar} ${styles.open}` : styles.sidebar
@@ -60,18 +74,26 @@ export function Layout() {
           <div className={styles.logoText}>
             <span className="name">Uptime</span>
           </div>
-          <span className={styles.toggle} onClick={handleToggle}>
-            {isMobile ? (
-              sidebarOpen ? (
-                <FaTimes size={"20px"} />
-              ) : (
-                <FaBars size={"20px"} />
-              )
-            ) : (
+
+          {/* Desktop: chevron toggle */}
+          {!isMobile && (
+            <span className={styles.toggle} onClick={handleToggle}>
               <FaChevronRight size={"20px"} />
-            )}
-          </span>
+            </span>
+          )}
+
+          {/* Mobile: close button inside the sidebar logo row */}
+          {isMobile && sidebarOpen && (
+            <span
+              className={styles.mobileCloseBtn}
+              onClick={() => setSidebarOpen(false)}
+              aria-label="Close menu"
+            >
+              <FaTimes size={"18px"} />
+            </span>
+          )}
         </div>
+
         <div className={styles.sidebarMenu}>
           <ul className={styles.menuLinks}>
             <li className={styles.navLink}>
@@ -97,6 +119,7 @@ export function Layout() {
           </ul>
         </div>
       </nav>
+
       <main className={sidebarOpen && !isMobile ? styles.open : ""}>
         <div className={styles.main}>
           <Outlet />
