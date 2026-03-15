@@ -177,6 +177,28 @@ main {
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     }
 
+    .mobileHeaderBrand {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        text-decoration: none;
+        flex-shrink: 0;
+    }
+
+    .mobileHeaderLogo {
+        display: flex;
+        align-items: center;
+        color: var(--secondary-color);
+        flex-shrink: 0;
+    }
+
+    .mobileHeaderTitle {
+        color: var(--secondary-color);
+        font-weight: 600;
+        font-size: 1.2rem;
+        letter-spacing: 0.02em;
+    }
+
     .sidebar {
         width: 0;
         overflow: hidden;

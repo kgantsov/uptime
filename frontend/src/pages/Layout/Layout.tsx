@@ -1,4 +1,4 @@
-import { Outlet, NavLink } from "react-router-dom";
+import { Outlet, NavLink, Link } from "react-router-dom";
 import {
   FaHeartbeat,
   FaChevronRight,
@@ -58,6 +58,12 @@ export function Layout() {
           >
             <FaBars size={"18px"} />
           </span>
+          <Link to="/" className={styles.mobileHeaderBrand}>
+            <span className={styles.mobileHeaderLogo}>
+              <FaHeartbeat size={"22px"} />
+            </span>
+            <span className={styles.mobileHeaderTitle}>Uptime</span>
+          </Link>
         </div>
       )}
 
