@@ -1,201 +1,158 @@
 package handler
 
 import (
+	"context"
 	"net/http"
-	"strconv"
 
+	"github.com/danielgtaylor/huma/v2"
 	"github.com/kgantsov/uptime/app/model"
-	"github.com/labstack/echo/v4"
 )
 
-// GetServices godoc
-// @Summary      Get all services
-// @Description  Returns all services
-// @Tags         services
-// @Accept       json
-// @Produce      json
-// @Success      200  {object}  []model.Service
-// @Failure      404  {object}  echo.HTTPError
-// @Failure      500  {object}  echo.HTTPError
-// @Security     HttpBearer
-// @Router       /API/v1/services [get]
-func (h *Handler) GetServices(c echo.Context) error {
+// ── Input / Output types ──────────────────────────────────────────────────────
+
+type GetServicesOutput struct {
+	Body []model.Service
+}
+
+type GetServiceInput struct {
+	ServiceID int `path:"service_id" doc:"Service ID"`
+}
+
+type GetServiceOutput struct {
+	Body *model.Service
+}
+
+type CreateServiceInput struct {
+	Body model.AddService
+}
+
+type CreateServiceOutput struct {
+	Body *model.Service
+}
+
+type UpdateServiceInput struct {
+	ServiceID int `path:"service_id" doc:"Service ID"`
+	Body      model.UpdateService
+}
+
+type UpdateServiceOutput struct {
+	Body *model.UpdateService
+}
+
+type DeleteServiceInput struct {
+	ServiceID int `path:"service_id" doc:"Service ID"`
+}
+
+type ServiceNotificationInput struct {
+	ServiceID        int    `path:"service_id"        doc:"Service ID"`
+	NotificationName string `path:"notification_name" doc:"Notification name"`
+}
+
+type ServiceNotificationOutput struct {
+	Body *model.ServiceNotification
+}
+
+// ── Handlers ──────────────────────────────────────────────────────────────────
+
+// GetServices returns every service in the system.
+func (h *Handler) GetServices(
+	ctx context.Context,
+	input *struct{},
+) (*GetServicesOutput, error) {
 	services, err := h.ServiceService.GetServices()
 	if err != nil {
-		return &echo.HTTPError{Code: http.StatusNotFound, Message: err}
+		return nil, huma.NewError(http.StatusNotFound, "failed to retrieve services", err)
 	}
 
-	return c.JSON(http.StatusOK, services)
+	if services == nil {
+		services = []model.Service{}
+	}
+
+	return &GetServicesOutput{Body: services}, nil
 }
 
-// GetService godoc
-// @Summary      Get a service
-// @Description  Gets a service by its ID
-// @Tags         services
-// @Accept       json
-// @Produce      json
-// @Param        service_id    path     string  true  "Gets service by service_id"
-// @Success      200  {object}  model.Service
-// @Failure      404  {object}  echo.HTTPError
-// @Failure      500  {object}  echo.HTTPError
-// @Security     HttpBearer
-// @Router       /API/v1/services/{service_id} [get]
-func (h *Handler) GetService(c echo.Context) error {
-	id := c.Param("service_id")
-	serviceID, err := strconv.Atoi(id)
+// GetService returns a single service by its ID.
+func (h *Handler) GetService(
+	ctx context.Context,
+	input *GetServiceInput,
+) (*GetServiceOutput, error) {
+	svc, err := h.ServiceService.GetService(uint(input.ServiceID))
 	if err != nil {
-		return &echo.HTTPError{Code: http.StatusBadRequest, Message: err}
+		return nil, huma.NewError(http.StatusBadRequest, "service not found", err)
 	}
 
-	service, err := h.ServiceService.GetService(uint(serviceID))
-	if err != nil {
-		return &echo.HTTPError{Code: http.StatusBadRequest, Message: err}
-	}
-
-	return c.JSON(http.StatusOK, service)
+	return &GetServiceOutput{Body: svc}, nil
 }
 
-// CreateService godoc
-// @Summary      Create a new service
-// @Description  Creates a new service and starts monitor it
-// @Tags         services
-// @Accept       json
-// @Produce      json
-// @Param        body  body      model.AddService  true  "Add service"
-// @Success      200  {object}  model.Service
-// @Failure      404  {object}  echo.HTTPError
-// @Failure      500  {object}  echo.HTTPError
-// @Security     HttpBearer
-// @Router       /API/v1/services [post]
-func (h *Handler) CreateService(c echo.Context) error {
-	service := new(model.Service)
-
-	if err := c.Bind(service); err != nil {
-		return c.JSON(http.StatusBadRequest, err)
+// CreateService creates a new service and starts monitoring it.
+func (h *Handler) CreateService(
+	ctx context.Context,
+	input *CreateServiceInput,
+) (*CreateServiceOutput, error) {
+	svc := &model.Service{
+		Name:               input.Body.Name,
+		URL:                input.Body.URL,
+		Enabled:            input.Body.Enabled,
+		Timeout:            input.Body.Timeout,
+		CheckInterval:      input.Body.CheckInterval,
+		Retries:            input.Body.Retries,
+		AcceptedStatusCode: input.Body.AcceptedStatusCode,
 	}
 
-	created, err := h.ServiceService.CreateService(service)
+	created, err := h.ServiceService.CreateService(svc)
 	if err != nil {
-		return &echo.HTTPError{Code: http.StatusInternalServerError, Message: err}
+		return nil, huma.NewError(http.StatusInternalServerError, "failed to create service", err)
 	}
 
-	return c.JSON(http.StatusOK, created)
+	return &CreateServiceOutput{Body: created}, nil
 }
 
-// UpdateService godoc
-// @Summary      Update a service
-// @Description  Updates an existing service and restarts monitoring for it
-// @Tags         services
-// @Accept       json
-// @Produce      json
-// @Param        service_id    path     string  true  "Updates by service_id"
-// @Param        body  body      model.UpdateService  true  "Update service"
-// @Success      200  {object}  model.Service
-// @Failure      404  {object}  echo.HTTPError
-// @Failure      500  {object}  echo.HTTPError
-// @Security     HttpBearer
-// @Router       /API/v1/services/{service_id} [patch]
-func (h *Handler) UpdateService(c echo.Context) error {
-	id := c.Param("service_id")
-	serviceID, err := strconv.Atoi(id)
+// UpdateService updates an existing service and restarts monitoring for it.
+func (h *Handler) UpdateService(
+	ctx context.Context,
+	input *UpdateServiceInput,
+) (*UpdateServiceOutput, error) {
+	updated, err := h.ServiceService.UpdateService(uint(input.ServiceID), &input.Body)
 	if err != nil {
-		return &echo.HTTPError{Code: http.StatusBadRequest, Message: err}
+		return nil, huma.NewError(http.StatusBadRequest, "failed to update service", err)
 	}
 
-	updateService := &model.UpdateService{}
-	if err = c.Bind(updateService); err != nil {
-		return c.JSON(http.StatusBadRequest, err)
-	}
-
-	updated, err := h.ServiceService.UpdateService(uint(serviceID), updateService)
-	if err != nil {
-		return &echo.HTTPError{Code: http.StatusBadRequest, Message: err}
-	}
-
-	return c.JSON(http.StatusOK, updated)
+	return &UpdateServiceOutput{Body: updated}, nil
 }
 
-// DeleteService godoc
-// @Summary      Delete a service
-// @Description  Stops a service monitoring and deletes it
-// @Tags         services
-// @Accept       json
-// @Produce      json
-// @Param        service_id    path     string  true  "Delete by service_id"
-// @Success      204  {object}  model.Service
-// @Failure      404  {object}  echo.HTTPError
-// @Failure      500  {object}  echo.HTTPError
-// @Security     HttpBearer
-// @Router       /API/v1/services/{service_id} [delete]
-func (h *Handler) DeleteService(c echo.Context) error {
-	serviceIDStr := c.Param("service_id")
-	serviceID, err := strconv.Atoi(serviceIDStr)
-	if err != nil {
-		return &echo.HTTPError{Code: http.StatusBadRequest, Message: err}
+// DeleteService stops monitoring and removes a service.
+func (h *Handler) DeleteService(
+	ctx context.Context,
+	input *DeleteServiceInput,
+) (*struct{}, error) {
+	if err := h.ServiceService.DeleteService(uint(input.ServiceID)); err != nil {
+		return nil, huma.NewError(http.StatusBadRequest, "failed to delete service", err)
 	}
 
-	if err := h.ServiceService.DeleteService(uint(serviceID)); err != nil {
-		return &echo.HTTPError{Code: http.StatusBadRequest, Message: err}
-	}
-
-	return c.NoContent(http.StatusNoContent)
+	return nil, nil
 }
 
-// ServiceAddNotification godoc
-// @Summary      Add a notification to a service
-// @Description  Adds a notification to a service
-// @Tags         services
-// @Accept       json
-// @Produce      json
-// @Param        service_id    path     string  true  "service_id"
-// @Param        notification_name    path     string  true  "notification_name"
-// @Success      200  {object}  model.ServiceNotification
-// @Failure      404  {object}  echo.HTTPError
-// @Failure      500  {object}  echo.HTTPError
-// @Security     HttpBearer
-// @Router       /API/v1/services/{service_id}/notifications/{notification_name} [post]
-func (h *Handler) ServiceAddNotification(c echo.Context) error {
-	id := c.Param("service_id")
-	notificationName := c.Param("notification_name")
-
-	serviceID, err := strconv.Atoi(id)
+// ServiceAddNotification links a notification channel to a service.
+func (h *Handler) ServiceAddNotification(
+	ctx context.Context,
+	input *ServiceNotificationInput,
+) (*ServiceNotificationOutput, error) {
+	sn, err := h.ServiceService.AddNotification(uint(input.ServiceID), input.NotificationName)
 	if err != nil {
-		return &echo.HTTPError{Code: http.StatusBadRequest, Message: err}
+		return nil, huma.NewError(http.StatusBadRequest, "failed to add notification", err)
 	}
 
-	sn, err := h.ServiceService.AddNotification(uint(serviceID), notificationName)
-	if err != nil {
-		return &echo.HTTPError{Code: http.StatusBadRequest, Message: err}
-	}
-
-	return c.JSON(http.StatusOK, sn)
+	return &ServiceNotificationOutput{Body: sn}, nil
 }
 
-// ServiceDeleteNotification godoc
-// @Summary      Delete a notification to a service
-// @Description  Deletes a notification to a service
-// @Tags         services
-// @Accept       json
-// @Produce      json
-// @Param        service_id    path     string  true  "service_id"
-// @Param        notification_name    path     string  true  "notification_name"
-// @Success      204  {object}  model.ServiceNotification
-// @Failure      404  {object}  echo.HTTPError
-// @Failure      500  {object}  echo.HTTPError
-// @Security     HttpBearer
-// @Router       /API/v1/services/{service_id}/notifications/{notification_name} [delete]
-func (h *Handler) ServiceDeleteNotification(c echo.Context) error {
-	id := c.Param("service_id")
-	notificationName := c.Param("notification_name")
-
-	serviceID, err := strconv.Atoi(id)
-	if err != nil {
-		return &echo.HTTPError{Code: http.StatusBadRequest, Message: err}
+// ServiceDeleteNotification removes a notification channel from a service.
+func (h *Handler) ServiceDeleteNotification(
+	ctx context.Context,
+	input *ServiceNotificationInput,
+) (*struct{}, error) {
+	if err := h.ServiceService.DeleteNotification(uint(input.ServiceID), input.NotificationName); err != nil {
+		return nil, huma.NewError(http.StatusBadRequest, "failed to remove notification", err)
 	}
 
-	if err := h.ServiceService.DeleteNotification(uint(serviceID), notificationName); err != nil {
-		return &echo.HTTPError{Code: http.StatusBadRequest, Message: err}
-	}
-
-	return c.JSON(http.StatusNoContent, &model.ServiceNotification{})
+	return nil, nil
 }

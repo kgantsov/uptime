@@ -1,10 +1,9 @@
 package auth
 
 import (
-	"net/http"
 	"strings"
 
-	"github.com/labstack/echo/v4"
+	"github.com/gofiber/fiber/v2"
 	"github.com/sirupsen/logrus"
 )
 
@@ -14,42 +13,42 @@ type TokenLookup interface {
 	ValidateToken(id uint) error
 }
 
-func AuthSkipperFunc(c echo.Context) bool {
-	// Skip authentication for non API requests and for login API request
-
-	if !strings.HasPrefix(c.Path(), "/API/") {
+// AuthSkipperFunc returns true when JWT authentication should be skipped.
+// It skips all non-API routes and the token creation endpoint.
+func AuthSkipperFunc(c *fiber.Ctx) bool {
+	if !strings.HasPrefix(strings.ToLower(c.Path()), "/api/") {
 		return true
 	}
 
-	if c.Path() == "/API/v1/tokens" && c.Request().Method == "POST" {
+	if strings.ToLower(c.Path()) == "/api/v1/tokens" && c.Method() == fiber.MethodPost {
 		return true
 	}
 
 	return false
 }
 
-func CheckTokenMiddleware(tokenLookup TokenLookup, logger *logrus.Logger) echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			if AuthSkipperFunc(c) {
-				return next(c)
-			}
-
-			tokenID, err := GetCurrentTokenID(c)
-
-			if err != nil {
-				return &echo.HTTPError{Code: http.StatusBadRequest, Message: err}
-			}
-
-			if err := tokenLookup.ValidateToken(tokenID); err != nil {
-				logger.WithFields(logrus.Fields{
-					"RequestID": c.Get(echo.HeaderXRequestID),
-				}).Infof("TOKEN WAS NOT FOUND %s", err)
-
-				return &echo.HTTPError{Code: http.StatusBadRequest, Message: err}
-			}
-
-			return next(c)
+// CheckTokenMiddleware returns a Fiber middleware that validates the token ID
+// (extracted from the JWT by the upstream JWT middleware) against the backing
+// store, ensuring that tokens that have been explicitly deleted are rejected.
+func CheckTokenMiddleware(tokenLookup TokenLookup, logger *logrus.Logger) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		if AuthSkipperFunc(c) {
+			return c.Next()
 		}
+
+		tokenID, err := GetCurrentTokenID(c)
+		if err != nil {
+			return fiber.NewError(fiber.StatusUnauthorized, err.Error())
+		}
+
+		if err := tokenLookup.ValidateToken(tokenID); err != nil {
+			logger.WithFields(logrus.Fields{
+				"RequestID": c.Locals("requestid"),
+			}).Infof("TOKEN WAS NOT FOUND %s", err)
+
+			return fiber.NewError(fiber.StatusUnauthorized, "token not found or expired")
+		}
+
+		return c.Next()
 	}
 }

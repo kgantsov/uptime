@@ -1,21 +1,25 @@
 package handler
 
 import (
+	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"testing"
 	"time"
 
-	"fmt"
-
+	"github.com/danielgtaylor/huma/v2"
+	"github.com/danielgtaylor/huma/v2/adapters/humafiber"
 	"github.com/glebarez/sqlite"
-	"github.com/golang-jwt/jwt"
+	"github.com/gofiber/fiber/v2"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/kgantsov/uptime/app/model"
 	"github.com/kgantsov/uptime/app/repository"
 	"github.com/kgantsov/uptime/app/service"
-	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
@@ -67,7 +71,7 @@ func newTestDB() *gorm.DB {
 }
 
 // ---------------------------------------------------------------------------
-// Handler / Echo helpers
+// Handler / Fiber helpers
 // ---------------------------------------------------------------------------
 
 // newTestLogger returns a logrus logger whose level is set to Panic so that
@@ -95,28 +99,51 @@ func newTestHandler(db *gorm.DB, dispatcher service.DispatcherInterface) *Handle
 	return NewHandler(newTestLogger(), heartbeatSvc, serviceSvc, notifSvc, tokenSvc)
 }
 
-// echoCtx builds a minimal echo.Context around a plain HTTP request/recorder
-// pair. body may be an empty string for requests that carry no payload.
-func echoCtx(method, path, body, contentType string) (echo.Context, *httptest.ResponseRecorder) {
-	e := echo.New()
+// newTestApp creates a bare Fiber+Huma application with routes registered but
+// without any auth middleware, making it suitable for handler-level unit tests.
+func newTestApp(t *testing.T, db *gorm.DB, dispatcher service.DispatcherInterface) *fiber.App {
+	t.Helper()
+
+	app := fiber.New(fiber.Config{DisableStartupMessage: true})
+	api := humafiber.New(app, huma.DefaultConfig("Test API", "1.0.0"))
+
+	h := newTestHandler(db, dispatcher)
+	h.RegisterRoutes(api)
+
+	return app
+}
+
+// doRequest sends an HTTP request to the test Fiber app and returns the
+// *http.Response.  body may be an empty string for requests without a payload.
+func doRequest(t *testing.T, app *fiber.App, method, path, body string, headers ...map[string]string) *http.Response {
+	t.Helper()
+
 	var req *http.Request
 	if body != "" {
 		req = httptest.NewRequest(method, path, strings.NewReader(body))
 	} else {
 		req = httptest.NewRequest(method, path, nil)
 	}
-	if contentType != "" {
-		req.Header.Set(echo.HeaderContentType, contentType)
+	req.Header.Set("Content-Type", "application/json")
+
+	for _, h := range headers {
+		for k, v := range h {
+			req.Header.Set(k, v)
+		}
 	}
-	rec := httptest.NewRecorder()
-	c := e.NewContext(req, rec)
-	return c, rec
+
+	resp, err := app.Test(req, -1)
+	require.NoError(t, err)
+	return resp
 }
 
-// echoCtxJSON is a convenience wrapper that sets Content-Type to
-// application/json.
-func echoCtxJSON(method, path, body string) (echo.Context, *httptest.ResponseRecorder) {
-	return echoCtx(method, path, body, echo.MIMEApplicationJSON)
+// readBody is a convenience helper that reads and returns the entire response
+// body as a byte slice.
+func readBody(t *testing.T, resp *http.Response) []byte {
+	t.Helper()
+	b, err := io.ReadAll(resp.Body)
+	require.NoError(t, err)
+	return b
 }
 
 // ---------------------------------------------------------------------------
@@ -126,10 +153,10 @@ func echoCtxJSON(method, path, body string) (echo.Context, *httptest.ResponseRec
 // makeJWTToken signs a HS256 token that contains the given tokenID and returns
 // the raw token string.
 func makeJWTToken(tokenID uint) string {
-	t := jwt.New(jwt.SigningMethodHS256)
-	claims := t.Claims.(jwt.MapClaims)
-	claims["id"] = float64(tokenID)
-	claims["exp"] = time.Now().Add(time.Hour).Unix()
+	t := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"id":  float64(tokenID),
+		"exp": time.Now().Add(time.Hour).Unix(),
+	})
 	signed, err := t.SignedString([]byte(Key))
 	if err != nil {
 		panic(fmt.Sprintf("failed to sign test JWT: %v", err))
@@ -137,15 +164,9 @@ func makeJWTToken(tokenID uint) string {
 	return signed
 }
 
-// setJWTContext parses a signed token string and stores the resulting
-// *jwt.Token in the echo.Context under the "token" key, mimicking what the
-// JWT middleware does at runtime.
-func setJWTContext(c echo.Context, tokenStr string) {
-	parsed, err := jwt.Parse(tokenStr, func(t *jwt.Token) (interface{}, error) {
-		return []byte(Key), nil
-	})
-	if err != nil {
-		panic(fmt.Sprintf("failed to parse test JWT: %v", err))
+// bearerHeader returns an Authorization header map for use with doRequest.
+func bearerHeader(tokenStr string) map[string]string {
+	return map[string]string{
+		"Authorization": "Bearer " + tokenStr,
 	}
-	c.Set("token", parsed)
 }

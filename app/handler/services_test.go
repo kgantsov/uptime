@@ -6,13 +6,12 @@ import (
 	"testing"
 
 	"github.com/kgantsov/uptime/app/model"
-	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 // ---------------------------------------------------------------------------
-// GET /services
+// GET /API/v1/services
 // ---------------------------------------------------------------------------
 
 func TestGetServices(t *testing.T) {
@@ -55,23 +54,20 @@ func TestGetServices(t *testing.T) {
 				require.NoError(t, db.Create(&tc.seedServices[i]).Error)
 			}
 
-			h := newTestHandler(db, nil)
-			c, rec := echoCtxJSON(http.MethodGet, "/API/v1/services", "")
+			app := newTestApp(t, db, nil)
+			resp := doRequest(t, app, http.MethodGet, "/API/v1/services", "")
 
-			err := h.GetServices(c)
-			require.NoError(t, err)
-
-			assert.Equal(t, tc.expectedStatus, rec.Code)
+			assert.Equal(t, tc.expectedStatus, resp.StatusCode)
 
 			var services []model.Service
-			require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &services))
+			require.NoError(t, json.Unmarshal(readBody(t, resp), &services))
 			assert.Len(t, services, tc.expectedCount)
 		})
 	}
 }
 
 // ---------------------------------------------------------------------------
-// GET /services/:service_id
+// GET /API/v1/services/:service_id
 // ---------------------------------------------------------------------------
 
 func TestGetService(t *testing.T) {
@@ -97,7 +93,7 @@ func TestGetService(t *testing.T) {
 			name:           "invalid id – not a number",
 			serviceIDParam: "abc",
 			seedService:    nil,
-			expectedStatus: http.StatusBadRequest,
+			expectedStatus: http.StatusUnprocessableEntity,
 		},
 	}
 
@@ -108,32 +104,22 @@ func TestGetService(t *testing.T) {
 				require.NoError(t, db.Create(tc.seedService).Error)
 			}
 
-			h := newTestHandler(db, nil)
-			c, rec := echoCtxJSON(http.MethodGet, "/API/v1/services/"+tc.serviceIDParam, "")
-			c.SetParamNames("service_id")
-			c.SetParamValues(tc.serviceIDParam)
+			app := newTestApp(t, db, nil)
+			resp := doRequest(t, app, http.MethodGet, "/API/v1/services/"+tc.serviceIDParam, "")
 
-			err := h.GetService(c)
+			assert.Equal(t, tc.expectedStatus, resp.StatusCode)
+
 			if tc.expectedStatus == http.StatusOK {
-				require.NoError(t, err)
-				assert.Equal(t, tc.expectedStatus, rec.Code)
-
-				var service model.Service
-				require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &service))
-				assert.Equal(t, tc.seedService.Name, service.Name)
-			} else {
-				// Handler returns echo.HTTPError for error cases
-				var he *echo.HTTPError
-				if assert.ErrorAs(t, err, &he) {
-					assert.Equal(t, tc.expectedStatus, he.Code)
-				}
+				var svc model.Service
+				require.NoError(t, json.Unmarshal(readBody(t, resp), &svc))
+				assert.Equal(t, tc.seedService.Name, svc.Name)
 			}
 		})
 	}
 }
 
 // ---------------------------------------------------------------------------
-// POST /services
+// POST /API/v1/services
 // ---------------------------------------------------------------------------
 
 func TestCreateService(t *testing.T) {
@@ -163,24 +149,22 @@ func TestCreateService(t *testing.T) {
 			dispatcher := new(MockDispatcher)
 			dispatcher.On("AddService", uint(1)).Return()
 
-			h := newTestHandler(db, dispatcher)
-			c, rec := echoCtxJSON(http.MethodPost, "/API/v1/services", tc.body)
+			app := newTestApp(t, db, dispatcher)
+			resp := doRequest(t, app, http.MethodPost, "/API/v1/services", tc.body)
 
-			err := h.CreateService(c)
-			require.NoError(t, err)
-			assert.Equal(t, tc.expectedStatus, rec.Code)
+			assert.Equal(t, tc.expectedStatus, resp.StatusCode)
 
-			var service model.Service
-			require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &service))
-			assert.Equal(t, tc.expectedName, service.Name)
+			var svc model.Service
+			require.NoError(t, json.Unmarshal(readBody(t, resp), &svc))
+			assert.Equal(t, tc.expectedName, svc.Name)
 
-			dispatcher.AssertCalled(t, "AddService", service.ID)
+			dispatcher.AssertCalled(t, "AddService", svc.ID)
 		})
 	}
 }
 
 // ---------------------------------------------------------------------------
-// PATCH /services/:service_id
+// PATCH /API/v1/services/:service_id
 // ---------------------------------------------------------------------------
 
 func TestUpdateService(t *testing.T) {
@@ -226,7 +210,7 @@ func TestUpdateService(t *testing.T) {
 			serviceIDParam: "not-a-number",
 			body:           `{"name":"x"}`,
 			seedService:    nil,
-			expectedStatus: http.StatusBadRequest,
+			expectedStatus: http.StatusUnprocessableEntity,
 		},
 	}
 
@@ -242,32 +226,22 @@ func TestUpdateService(t *testing.T) {
 				dispatcher.On("RestartService", tc.seedService.ID).Return()
 			}
 
-			h := newTestHandler(db, dispatcher)
-			c, rec := echoCtxJSON(http.MethodPatch, "/API/v1/services/"+tc.serviceIDParam, tc.body)
-			c.SetParamNames("service_id")
-			c.SetParamValues(tc.serviceIDParam)
+			app := newTestApp(t, db, dispatcher)
+			resp := doRequest(t, app, http.MethodPatch, "/API/v1/services/"+tc.serviceIDParam, tc.body)
 
-			err := h.UpdateService(c)
-			if tc.expectedStatus == http.StatusOK {
-				require.NoError(t, err)
-				assert.Equal(t, tc.expectedStatus, rec.Code)
-				if tc.expectedName != "" {
-					var update model.UpdateService
-					require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &update))
-					assert.Equal(t, tc.expectedName, *update.Name)
-				}
-			} else {
-				var he *echo.HTTPError
-				if assert.ErrorAs(t, err, &he) {
-					assert.Equal(t, tc.expectedStatus, he.Code)
-				}
+			assert.Equal(t, tc.expectedStatus, resp.StatusCode)
+
+			if tc.expectedStatus == http.StatusOK && tc.expectedName != "" {
+				var update model.UpdateService
+				require.NoError(t, json.Unmarshal(readBody(t, resp), &update))
+				assert.Equal(t, tc.expectedName, *update.Name)
 			}
 		})
 	}
 }
 
 // ---------------------------------------------------------------------------
-// DELETE /services/:service_id
+// DELETE /API/v1/services/:service_id
 // ---------------------------------------------------------------------------
 
 func TestDeleteService(t *testing.T) {
@@ -287,7 +261,7 @@ func TestDeleteService(t *testing.T) {
 			name:           "invalid id",
 			serviceIDParam: "xyz",
 			seedService:    nil,
-			expectedStatus: http.StatusBadRequest,
+			expectedStatus: http.StatusUnprocessableEntity,
 		},
 	}
 
@@ -303,32 +277,24 @@ func TestDeleteService(t *testing.T) {
 				dispatcher.On("RemoveService", tc.seedService.ID).Return()
 			}
 
-			h := newTestHandler(db, dispatcher)
-			c, _ := echoCtxJSON(http.MethodDelete, "/API/v1/services/"+tc.serviceIDParam, "")
-			c.SetParamNames("service_id")
-			c.SetParamValues(tc.serviceIDParam)
+			app := newTestApp(t, db, dispatcher)
+			resp := doRequest(t, app, http.MethodDelete, "/API/v1/services/"+tc.serviceIDParam, "")
 
-			err := h.DeleteService(c)
+			assert.Equal(t, tc.expectedStatus, resp.StatusCode)
+
 			if tc.expectedStatus == http.StatusNoContent {
-				require.NoError(t, err)
 				dispatcher.AssertCalled(t, "RemoveService", tc.seedService.ID)
 
-				// Confirm the record is gone
 				var svc model.Service
 				dbErr := db.First(&svc, tc.seedService.ID).Error
 				assert.Error(t, dbErr, "service should be deleted from the database")
-			} else {
-				var he *echo.HTTPError
-				if assert.ErrorAs(t, err, &he) {
-					assert.Equal(t, tc.expectedStatus, he.Code)
-				}
 			}
 		})
 	}
 }
 
 // ---------------------------------------------------------------------------
-// POST /services/:service_id/notifications/:notification_name
+// POST /API/v1/services/:service_id/notifications/:notification_name
 // ---------------------------------------------------------------------------
 
 func TestServiceAddNotification(t *testing.T) {
@@ -370,7 +336,7 @@ func TestServiceAddNotification(t *testing.T) {
 			notifNameParam:   "slack",
 			seedService:      nil,
 			seedNotification: nil,
-			expectedStatus:   http.StatusBadRequest,
+			expectedStatus:   http.StatusUnprocessableEntity,
 		},
 	}
 
@@ -384,35 +350,23 @@ func TestServiceAddNotification(t *testing.T) {
 				require.NoError(t, db.Create(tc.seedNotification).Error)
 			}
 
-			h := newTestHandler(db, nil)
-			c, rec := echoCtxJSON(
-				http.MethodPost,
-				"/API/v1/services/"+tc.serviceIDParam+"/notifications/"+tc.notifNameParam,
-				"",
-			)
-			c.SetParamNames("service_id", "notification_name")
-			c.SetParamValues(tc.serviceIDParam, tc.notifNameParam)
+			app := newTestApp(t, db, nil)
+			path := "/API/v1/services/" + tc.serviceIDParam + "/notifications/" + tc.notifNameParam
+			resp := doRequest(t, app, http.MethodPost, path, "")
 
-			err := h.ServiceAddNotification(c)
+			assert.Equal(t, tc.expectedStatus, resp.StatusCode)
+
 			if tc.expectedStatus == http.StatusOK {
-				require.NoError(t, err)
-				assert.Equal(t, tc.expectedStatus, rec.Code)
-
 				var sn model.ServiceNotification
-				require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &sn))
+				require.NoError(t, json.Unmarshal(readBody(t, resp), &sn))
 				assert.Equal(t, tc.notifNameParam, sn.NotificationName)
-			} else {
-				var he *echo.HTTPError
-				if assert.ErrorAs(t, err, &he) {
-					assert.Equal(t, tc.expectedStatus, he.Code)
-				}
 			}
 		})
 	}
 }
 
 // ---------------------------------------------------------------------------
-// DELETE /services/:service_id/notifications/:notification_name
+// DELETE /API/v1/services/:service_id/notifications/:notification_name
 // ---------------------------------------------------------------------------
 
 func TestServiceDeleteNotification(t *testing.T) {
@@ -441,7 +395,7 @@ func TestServiceDeleteNotification(t *testing.T) {
 			seedService:      nil,
 			seedNotification: nil,
 			seedLink:         false,
-			expectedStatus:   http.StatusBadRequest,
+			expectedStatus:   http.StatusUnprocessableEntity,
 		},
 	}
 
@@ -462,29 +416,18 @@ func TestServiceDeleteNotification(t *testing.T) {
 				require.NoError(t, db.Create(sn).Error)
 			}
 
-			h := newTestHandler(db, nil)
-			c, _ := echoCtxJSON(
-				http.MethodDelete,
-				"/API/v1/services/"+tc.serviceIDParam+"/notifications/"+tc.notifNameParam,
-				"",
-			)
-			c.SetParamNames("service_id", "notification_name")
-			c.SetParamValues(tc.serviceIDParam, tc.notifNameParam)
+			app := newTestApp(t, db, nil)
+			path := "/API/v1/services/" + tc.serviceIDParam + "/notifications/" + tc.notifNameParam
+			resp := doRequest(t, app, http.MethodDelete, path, "")
 
-			err := h.ServiceDeleteNotification(c)
+			assert.Equal(t, tc.expectedStatus, resp.StatusCode)
+
 			if tc.expectedStatus == http.StatusNoContent {
-				require.NoError(t, err)
-
 				var count int64
 				db.Model(&model.ServiceNotification{}).
 					Where("service_id = ? AND notification_name = ?", tc.seedService.ID, tc.notifNameParam).
 					Count(&count)
 				assert.Equal(t, int64(0), count)
-			} else {
-				var he *echo.HTTPError
-				if assert.ErrorAs(t, err, &he) {
-					assert.Equal(t, tc.expectedStatus, he.Code)
-				}
 			}
 		})
 	}

@@ -7,13 +7,12 @@ import (
 	"time"
 
 	"github.com/kgantsov/uptime/app/model"
-	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 // ---------------------------------------------------------------------------
-// GET /heartbeats/latencies
+// GET /API/v1/heartbeats/latencies
 // ---------------------------------------------------------------------------
 
 func TestGetHeartbeatsLatencies(t *testing.T) {
@@ -68,7 +67,7 @@ func TestGetHeartbeatsLatencies(t *testing.T) {
 			name:           "invalid size returns bad request",
 			queryParams:    map[string]string{"size": "not-a-number"},
 			seedHeartbeats: nil,
-			expectedStatus: http.StatusBadRequest,
+			expectedStatus: http.StatusUnprocessableEntity,
 		},
 	}
 
@@ -79,36 +78,36 @@ func TestGetHeartbeatsLatencies(t *testing.T) {
 				require.NoError(t, db.Create(&tc.seedHeartbeats[i]).Error)
 			}
 
-			h := newTestHandler(db, nil)
-			c, rec := echoCtxJSON(http.MethodGet, "/API/v1/heartbeats/latencies", "")
+			app := newTestApp(t, db, nil)
 
-			// Attach query params via the underlying request's URL
-			q := c.Request().URL.Query()
-			for k, v := range tc.queryParams {
-				q.Set(k, v)
-			}
-			c.Request().URL.RawQuery = q.Encode()
-
-			err := h.GetHeartbeatsLatencies(c)
-			if tc.expectedStatus == http.StatusOK {
-				require.NoError(t, err)
-				assert.Equal(t, tc.expectedStatus, rec.Code)
-
-				var heartbeats []model.Heartbeat
-				require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &heartbeats))
-				assert.Len(t, heartbeats, tc.expectedCount)
-			} else {
-				var he *echo.HTTPError
-				if assert.ErrorAs(t, err, &he) {
-					assert.Equal(t, tc.expectedStatus, he.Code)
+			path := "/API/v1/heartbeats/latencies"
+			if len(tc.queryParams) > 0 {
+				path += "?"
+				first := true
+				for k, v := range tc.queryParams {
+					if !first {
+						path += "&"
+					}
+					path += k + "=" + v
+					first = false
 				}
+			}
+
+			resp := doRequest(t, app, http.MethodGet, path, "")
+
+			assert.Equal(t, tc.expectedStatus, resp.StatusCode)
+
+			if tc.expectedStatus == http.StatusOK {
+				var heartbeats []model.Heartbeat
+				require.NoError(t, json.Unmarshal(readBody(t, resp), &heartbeats))
+				assert.Len(t, heartbeats, tc.expectedCount)
 			}
 		})
 	}
 }
 
 // ---------------------------------------------------------------------------
-// GET /heartbeats/latencies/last
+// GET /API/v1/heartbeats/latencies/last
 // ---------------------------------------------------------------------------
 
 func TestGetHeartbeatsLastLatencies(t *testing.T) {
@@ -159,7 +158,7 @@ func TestGetHeartbeatsLastLatencies(t *testing.T) {
 			name:           "invalid size returns bad request",
 			queryParams:    map[string]string{"size": "abc"},
 			seedHeartbeats: nil,
-			expectedStatus: http.StatusBadRequest,
+			expectedStatus: http.StatusUnprocessableEntity,
 		},
 	}
 
@@ -170,35 +169,36 @@ func TestGetHeartbeatsLastLatencies(t *testing.T) {
 				require.NoError(t, db.Create(&tc.seedHeartbeats[i]).Error)
 			}
 
-			h := newTestHandler(db, nil)
-			c, rec := echoCtxJSON(http.MethodGet, "/API/v1/heartbeats/latencies/last", "")
+			app := newTestApp(t, db, nil)
 
-			q := c.Request().URL.Query()
-			for k, v := range tc.queryParams {
-				q.Set(k, v)
-			}
-			c.Request().URL.RawQuery = q.Encode()
-
-			err := h.GetHeartbeatsLastLatencies(c)
-			if tc.expectedStatus == http.StatusOK {
-				require.NoError(t, err)
-				assert.Equal(t, tc.expectedStatus, rec.Code)
-
-				var heartbeats []model.Heartbeat
-				require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &heartbeats))
-				assert.LessOrEqual(t, len(heartbeats), tc.maxExpectedCount)
-			} else {
-				var he *echo.HTTPError
-				if assert.ErrorAs(t, err, &he) {
-					assert.Equal(t, tc.expectedStatus, he.Code)
+			path := "/API/v1/heartbeats/latencies/last"
+			if len(tc.queryParams) > 0 {
+				path += "?"
+				first := true
+				for k, v := range tc.queryParams {
+					if !first {
+						path += "&"
+					}
+					path += k + "=" + v
+					first = false
 				}
+			}
+
+			resp := doRequest(t, app, http.MethodGet, path, "")
+
+			assert.Equal(t, tc.expectedStatus, resp.StatusCode)
+
+			if tc.expectedStatus == http.StatusOK {
+				var heartbeats []model.Heartbeat
+				require.NoError(t, json.Unmarshal(readBody(t, resp), &heartbeats))
+				assert.LessOrEqual(t, len(heartbeats), tc.maxExpectedCount)
 			}
 		})
 	}
 }
 
 // ---------------------------------------------------------------------------
-// GET /heartbeats/stats/:days
+// GET /API/v1/heartbeats/stats/:days
 // ---------------------------------------------------------------------------
 
 func TestGetHeartbeatStats(t *testing.T) {
@@ -242,7 +242,7 @@ func TestGetHeartbeatStats(t *testing.T) {
 			name:           "invalid days param",
 			daysParam:      "not-a-number",
 			seedHeartbeats: nil,
-			expectedStatus: http.StatusBadRequest,
+			expectedStatus: http.StatusUnprocessableEntity,
 		},
 	}
 
@@ -253,24 +253,15 @@ func TestGetHeartbeatStats(t *testing.T) {
 				require.NoError(t, db.Create(&tc.seedHeartbeats[i]).Error)
 			}
 
-			h := newTestHandler(db, nil)
-			c, rec := echoCtxJSON(http.MethodGet, "/API/v1/heartbeats/stats/"+tc.daysParam, "")
-			c.SetParamNames("days")
-			c.SetParamValues(tc.daysParam)
+			app := newTestApp(t, db, nil)
+			resp := doRequest(t, app, http.MethodGet, "/API/v1/heartbeats/stats/"+tc.daysParam, "")
 
-			err := h.GetHeartbeatStats(c)
+			assert.Equal(t, tc.expectedStatus, resp.StatusCode)
+
 			if tc.expectedStatus == http.StatusOK {
-				require.NoError(t, err)
-				assert.Equal(t, tc.expectedStatus, rec.Code)
-
 				var stats []model.HeartbeatStatsPoint
-				require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &stats))
+				require.NoError(t, json.Unmarshal(readBody(t, resp), &stats))
 				assert.Len(t, stats, tc.expectedCount)
-			} else {
-				var he *echo.HTTPError
-				if assert.ErrorAs(t, err, &he) {
-					assert.Equal(t, tc.expectedStatus, he.Code)
-				}
 			}
 		})
 	}

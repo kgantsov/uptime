@@ -4,16 +4,19 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
-	"io/fs"
 	"log"
+
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
+	"net/http"
+
 	rice "github.com/GeertJohan/go.rice"
 	"github.com/glebarez/sqlite"
-	"github.com/labstack/echo/v4"
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/filesystem"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -24,57 +27,48 @@ import (
 	"github.com/kgantsov/uptime/app/monitor"
 	"github.com/kgantsov/uptime/app/repository"
 	"github.com/kgantsov/uptime/app/service"
-
-	_ "github.com/kgantsov/uptime/app/cmd/uptime/docs"
 )
 
-type HTTPBox struct {
+// riceHTTPBox wraps *rice.Box so that its Open method satisfies http.FileSystem.
+// rice.Box.Open returns *rice.File which implements http.File, but the return
+// type mismatch prevents the compiler from accepting *rice.Box directly as an
+// http.FileSystem value.
+type riceHTTPBox struct {
 	*rice.Box
 }
 
-func (hb *HTTPBox) Open(name string) (fs.File, error) {
-	return hb.Box.Open(name)
+func (b *riceHTTPBox) Open(name string) (http.File, error) {
+	return b.Box.Open(name)
 }
 
-func InitStaticServer(e *echo.Echo) {
+func InitStaticServer(app *fiber.App) {
 	appStaticBox, err := rice.FindBox("../../../frontend/build/static/")
 	if err != nil {
-		e.Logger.Fatal(err)
+		log.Fatal(err)
 	}
 
 	appIndexBox, err := rice.FindBox("../../../frontend/build/")
 	if err != nil {
-		e.Logger.Fatal(err)
+		log.Fatal(err)
 	}
 
-	e.StaticFS("/static/", &HTTPBox{appStaticBox})
-	e.GET("/*", echo.StaticFileHandler("index.html", &HTTPBox{appIndexBox}))
+	app.Use("/static", filesystem.New(filesystem.Config{
+		Root: &riceHTTPBox{appStaticBox},
+	}))
+
+	app.Use("/", filesystem.New(filesystem.Config{
+		Root:         &riceHTTPBox{appIndexBox},
+		Index:        "index.html",
+		NotFoundFile: "index.html",
+	}))
 }
 
-// @title Swagger Example API
-// @version 1.0
-// @description This is a sample server Petstore server.
-// @termsOfService http://swagger.io/terms/
-
-// @contact.name API Support
-// @contact.url http://www.swagger.io/support
-// @contact.email support@swagger.io
-
-// @license.name Apache 2.0
-// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
-
-// @BasePath /
-// @securityDefinitions.apikey  HttpBearer
-// @in                          header
-// @name                        Authorization
-// @description                 Description for what is this security definition being used
 func main() {
 	dbPathPtr := flag.String("db-path", "./test.db", "A path to a DB file")
 	flag.Parse()
 
 	log := logrus.New()
 	log.SetLevel(logrus.DebugLevel)
-	// log.SetFormatter(new(handler.StackdriverFormatter))
 
 	db, err := gorm.Open(sqlite.Open(*dbPathPtr), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Error),
@@ -93,8 +87,6 @@ func main() {
 	dispatcher := monitor.NewDispatcher(serviceRepo, heartbeatRepo, log)
 	dispatcher.Start()
 
-	e := echo.New()
-
 	heartbeatSvc := service.NewHeartbeatService(heartbeatRepo)
 	serviceSvc := service.NewServiceService(serviceRepo, notifRepo, dispatcher)
 	notifSvc := service.NewNotificationService(notifRepo, dispatcher)
@@ -102,19 +94,23 @@ func main() {
 
 	h := handler.NewHandler(log, heartbeatSvc, serviceSvc, notifSvc, tokenSvc)
 
+	app, _ := handler.NewFiberApp(h)
+
 	done := make(chan struct{})
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
 		sig := <-sigs
-		e.Logger.Infof("Got signal: %s", sig)
-
-		h.Logger.Info("Stopping monitoring")
+		log.Infof("Got signal: %s", sig)
+		log.Info("Stopping monitoring")
 
 		dispatcher.Stop()
-
 		time.Sleep(100 * time.Millisecond)
+
+		if err := app.Shutdown(); err != nil {
+			log.Errorf("Error shutting down fiber: %s", err)
+		}
 
 		done <- struct{}{}
 	}()
@@ -123,21 +119,21 @@ func main() {
 
 	initUser(userRepo)
 
-	h.ConfigureMiddleware(e)
-	h.RegisterRoutes(e)
-	InitStaticServer(e)
+	InitStaticServer(app)
 
 	go cleanupOldHeartbeats(heartbeatRepo, log)
 
 	go func() {
-		e.Logger.Fatal(e.Start(":1323"))
+		if err := app.Listen(":1323"); err != nil {
+			log.Fatalf("Fiber listen error: %s", err)
+		}
 	}()
 
-	e.Logger.Infof("Started uptime monitor")
+	log.Infof("Started uptime monitor")
 
 	<-done
 
-	e.Logger.Info("Stopped monitoring")
+	log.Info("Stopped monitoring")
 }
 
 func initUser(userRepo repository.UserRepository) {
@@ -147,7 +143,7 @@ func initUser(userRepo repository.UserRepository) {
 		return
 	}
 
-	scanner := bufio.NewScanner((os.Stdin))
+	scanner := bufio.NewScanner(os.Stdin)
 
 	fmt.Println("Enter your First Name: ")
 	scanner.Scan()

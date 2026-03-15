@@ -1,66 +1,59 @@
 package handler
 
 import (
+	"context"
 	"net/http"
 
+	"github.com/danielgtaylor/huma/v2"
 	"github.com/kgantsov/uptime/app/auth"
-	"github.com/labstack/echo/v4"
-	"github.com/sirupsen/logrus"
+	"github.com/kgantsov/uptime/app/model"
 )
 
-// CreateToken godoc
-// @Summary      Create an auth token
-// @Description  Create an auth token
-// @Tags         tokens
-// @Accept       json
-// @Produce      json
-// @Param        body  body     model.CreateToken  true  "Create an auth token"
-// @Success      200  {object}  model.Token
-// @Failure      404  {object}  echo.HTTPError
-// @Failure      500  {object}  echo.HTTPError
-// @Router       /API/v1/tokens [post]
-func (h *Handler) CreateToken(c echo.Context) (err error) {
-	req := struct {
-		Email    string `json:"email"`
-		Password string `json:"password"`
-	}{}
+// ── Input / Output types ──────────────────────────────────────────────────────
 
-	if err := c.Bind(&req); err != nil {
-		return c.JSON(http.StatusBadRequest, err)
-	}
-
-	token, err := h.TokenService.CreateToken(req.Email, req.Password)
-	if err != nil {
-		return &echo.HTTPError{
-			Code:    http.StatusBadRequest,
-			Message: "Email or password is incorrect",
-		}
-	}
-
-	return c.JSON(http.StatusOK, token)
+type CreateTokenInput struct {
+	Body model.CreateToken
 }
 
-// DeleteToken godoc
-// @Summary      Delete an auth token
-// @Description  Delete an auth token
-// @Tags         tokens
-// @Accept       json
-// @Produce      json
-// @Success      204  {object}  model.Token
-// @Failure      404  {object}  echo.HTTPError
-// @Failure      500  {object}  echo.HTTPError
-// @Security     HttpBearer
-// @Router       /API/v1/tokens [delete]
-func (h *Handler) DeleteToken(c echo.Context) (err error) {
-	tokenID, _ := auth.GetCurrentTokenID(c)
+type CreateTokenOutput struct {
+	Body *model.Token
+}
 
-	h.Logger.WithFields(logrus.Fields{
-		"RequestID": c.Get(echo.HeaderXRequestID),
-	}).Infof("FOUND USER ID %+v", tokenID)
+type DeleteTokenInput struct {
+	Authorization string `header:"Authorization" doc:"Bearer token used to identify the session to invalidate" required:"true"`
+}
 
-	if err := h.TokenService.DeleteToken(tokenID); err != nil {
-		return &echo.HTTPError{Code: http.StatusBadRequest, Message: err}
+// ── Handlers ──────────────────────────────────────────────────────────────────
+
+// CreateToken authenticates with email/password and returns a signed JWT.
+func (h *Handler) CreateToken(
+	ctx context.Context,
+	input *CreateTokenInput,
+) (*CreateTokenOutput, error) {
+	token, err := h.TokenService.CreateToken(input.Body.Email, input.Body.Password)
+	if err != nil {
+		return nil, huma.NewError(http.StatusBadRequest, "email or password is incorrect")
 	}
 
-	return c.JSON(http.StatusNoContent, struct{}{})
+	return &CreateTokenOutput{Body: token}, nil
+}
+
+// DeleteToken invalidates the currently authenticated token.
+func (h *Handler) DeleteToken(
+	ctx context.Context,
+	input *DeleteTokenInput,
+) (*struct{}, error) {
+	tokenID, err := auth.ParseTokenIDFromHeader(input.Authorization, Key)
+	if err != nil {
+		h.Logger.Infof("DeleteToken: could not parse token ID: %s", err)
+		return nil, huma.NewError(http.StatusBadRequest, "invalid authorization token")
+	}
+
+	h.Logger.Infof("DeleteToken: invalidating token ID %d", tokenID)
+
+	if err := h.TokenService.DeleteToken(tokenID); err != nil {
+		return nil, huma.NewError(http.StatusBadRequest, "failed to delete token", err)
+	}
+
+	return nil, nil
 }

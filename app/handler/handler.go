@@ -3,29 +3,29 @@ package handler
 import (
 	"time"
 
+	fiberprometheus "github.com/ansrivas/fiberprometheus/v2"
+	"github.com/danielgtaylor/huma/v2"
+	"github.com/danielgtaylor/huma/v2/adapters/humafiber"
+	jwtware "github.com/gofiber/contrib/jwt"
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/recover"
+	"github.com/gofiber/fiber/v2/middleware/requestid"
 	"github.com/kgantsov/uptime/app/auth"
 	"github.com/kgantsov/uptime/app/service"
-	"github.com/labstack/echo-contrib/echoprometheus"
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
-	"github.com/labstack/gommon/log"
 	"github.com/sirupsen/logrus"
-
-	echoSwagger "github.com/swaggo/echo-swagger"
 )
 
-type (
-	Handler struct {
-		HeartbeatService    service.HeartbeatService
-		ServiceService      service.ServiceService
-		NotificationService service.NotificationService
-		TokenService        service.TokenService
-		Logger              *logrus.Logger
-	}
-)
+type Handler struct {
+	HeartbeatService    service.HeartbeatService
+	ServiceService      service.ServiceService
+	NotificationService service.NotificationService
+	TokenService        service.TokenService
+	Logger              *logrus.Logger
+}
 
 const (
-	// Key (Should come from somewhere else).
+	// Key is the HMAC signing secret for JWTs.
+	// In production this should come from configuration / environment.
 	Key = "secret"
 )
 
@@ -45,84 +45,212 @@ func NewHandler(
 	}
 }
 
-func (h *Handler) RegisterRoutes(e *echo.Echo) {
-	v1 := e.Group("/API/v1")
+// NewFiberApp creates and returns a configured Fiber application together with
+// the Huma API instance mounted on it.  Callers are responsible for adding
+// static-file routes and calling app.Listen.
+func NewFiberApp(h *Handler) (*fiber.App, huma.API) {
+	app := fiber.New(fiber.Config{
+		DisableStartupMessage: true,
+		ReadTimeout:           30 * time.Second,
+		WriteTimeout:          30 * time.Second,
+	})
 
-	v1.POST("/tokens", h.CreateToken)
-	v1.DELETE("/tokens", h.DeleteToken)
+	// ── Prometheus ────────────────────────────────────────────────────────────
+	prometheus := fiberprometheus.New("uptime")
+	prometheus.RegisterAt(app, "/metrics")
+	app.Use(prometheus.Middleware)
 
-	v1.GET("/heartbeats/latencies", h.GetHeartbeatsLatencies)
-	v1.GET("/heartbeats/latencies/last", h.GetHeartbeatsLastLatencies)
-	v1.GET("/heartbeats/stats/:days", h.GetHeartbeatStats)
+	// ── Basic middleware ───────────────────────────────────────────────────────
+	app.Use(recover.New())
+	app.Use(requestid.New())
 
-	v1.GET("/services", h.GetServices)
-	v1.POST("/services", h.CreateService)
-	v1.GET("/services/:service_id", h.GetService)
-	v1.PATCH("/services/:service_id", h.UpdateService)
-	v1.DELETE("/services/:service_id", h.DeleteService)
-	v1.POST("/services/:service_id/notifications/:notification_name", h.ServiceAddNotification)
-	v1.DELETE("/services/:service_id/notifications/:notification_name", h.ServiceDeleteNotification)
+	// ── Request logger ────────────────────────────────────────────────────────
+	app.Use(func(c *fiber.Ctx) error {
+		err := c.Next()
+		h.Logger.WithFields(logrus.Fields{
+			"RequestID": c.Locals("requestid"),
+		}).Infof("%s %s %d", c.Method(), c.Path(), c.Response().StatusCode())
+		return err
+	})
 
-	v1.GET("/notifications", h.GetNotifications)
-	v1.POST("/notifications", h.CreateNotification)
-	v1.GET("/notifications/:notification_name", h.GetNotification)
-	v1.PATCH("/notifications/:notification_name", h.UpdateNotification)
-	v1.DELETE("/notifications/:notification_name", h.DeleteNotification)
+	// ── JWT authentication ────────────────────────────────────────────────────
+	app.Use(jwtware.New(jwtware.Config{
+		SigningKey: jwtware.SigningKey{Key: []byte(Key)},
+		Filter:     auth.AuthSkipperFunc,
+		ErrorHandler: func(c *fiber.Ctx, err error) error {
+			return fiber.NewError(fiber.StatusUnauthorized, "invalid or missing token")
+		},
+		ContextKey: "user",
+	}))
 
-	e.GET("/docs/*", echoSwagger.WrapHandler)
+	// ── Token-in-DB validation ────────────────────────────────────────────────
+	app.Use(auth.CheckTokenMiddleware(h.TokenService, h.Logger))
+
+	// ── Huma API (OpenAPI 3.1, auto-generated docs at /docs) ─────────────────
+	config := huma.DefaultConfig("Uptime API", "1.0.0")
+	config.Info.Description = "Uptime monitoring REST API"
+	config.Components = &huma.Components{
+		SecuritySchemes: map[string]*huma.SecurityScheme{
+			"HttpBearer": {
+				Type:   "http",
+				Scheme: "bearer",
+			},
+		},
+	}
+
+	api := humafiber.New(app, config)
+
+	h.RegisterRoutes(api)
+
+	return app, api
 }
 
-func (h *Handler) ConfigureMiddleware(e *echo.Echo) {
-	e.HideBanner = true
-	e.Logger.SetLevel(log.DEBUG)
+// RegisterRoutes registers all API operations with the given Huma API instance.
+func (h *Handler) RegisterRoutes(api huma.API) {
+	secBearer := []map[string][]string{{"HttpBearer": {}}}
 
-	e.Use(middleware.RequestID())
+	// ── Tokens ────────────────────────────────────────────────────────────────
+	huma.Register(api, huma.Operation{
+		Method:      "POST",
+		Path:        "/API/v1/tokens",
+		Summary:     "Create an auth token",
+		Description: "Authenticate with email/password and receive a signed JWT.",
+		Tags:        []string{"tokens"},
+	}, h.CreateToken)
 
-	e.Use(middleware.RequestIDWithConfig(middleware.RequestIDConfig{
-		RequestIDHandler: func(c echo.Context, rid string) {
-			c.Set(echo.HeaderXRequestID, rid)
-		},
-	}))
+	huma.Register(api, huma.Operation{
+		Method:        "DELETE",
+		Path:          "/API/v1/tokens",
+		Summary:       "Delete an auth token",
+		Description:   "Invalidate the currently authenticated token.",
+		Tags:          []string{"tokens"},
+		Security:      secBearer,
+		DefaultStatus: 204,
+	}, h.DeleteToken)
 
-	e.Use(middleware.JWTWithConfig(middleware.JWTConfig{
-		SigningKey: []byte(Key),
-		ContextKey: "token",
+	// ── Heartbeats ────────────────────────────────────────────────────────────
+	huma.Register(api, huma.Operation{
+		Method:   "GET",
+		Path:     "/API/v1/heartbeats/latencies",
+		Summary:  "Get heartbeat latencies",
+		Tags:     []string{"heartbeats"},
+		Security: secBearer,
+	}, h.GetHeartbeatsLatencies)
 
-		Skipper: auth.AuthSkipperFunc,
-	}))
-	e.Use(auth.CheckTokenMiddleware(h.TokenService, h.Logger))
+	huma.Register(api, huma.Operation{
+		Method:   "GET",
+		Path:     "/API/v1/heartbeats/latencies/last",
+		Summary:  "Get last heartbeat latencies",
+		Tags:     []string{"heartbeats"},
+		Security: secBearer,
+	}, h.GetHeartbeatsLastLatencies)
 
-	e.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
-		LogMethod:    true,
-		LogURI:       true,
-		LogStatus:    true,
-		LogRequestID: true,
+	huma.Register(api, huma.Operation{
+		Method:   "GET",
+		Path:     "/API/v1/heartbeats/stats/{days}",
+		Summary:  "Get heartbeat stats",
+		Tags:     []string{"heartbeats"},
+		Security: secBearer,
+	}, h.GetHeartbeatStats)
 
-		LogValuesFunc: func(c echo.Context, values middleware.RequestLoggerValues) error {
-			h.Logger.WithFields(logrus.Fields{
-				"RequestID": values.RequestID,
-			}).Infof("%s %s %d", values.Method, values.URI, values.Status)
+	// ── Services ──────────────────────────────────────────────────────────────
+	huma.Register(api, huma.Operation{
+		Method:   "GET",
+		Path:     "/API/v1/services",
+		Summary:  "Get all services",
+		Tags:     []string{"services"},
+		Security: secBearer,
+	}, h.GetServices)
 
-			return nil
-		},
-	}))
+	huma.Register(api, huma.Operation{
+		Method:   "POST",
+		Path:     "/API/v1/services",
+		Summary:  "Create a service",
+		Tags:     []string{"services"},
+		Security: secBearer,
+	}, h.CreateService)
 
-	e.Pre(middleware.RemoveTrailingSlash())
+	huma.Register(api, huma.Operation{
+		Method:   "GET",
+		Path:     "/API/v1/services/{service_id}",
+		Summary:  "Get a service",
+		Tags:     []string{"services"},
+		Security: secBearer,
+	}, h.GetService)
 
-	e.Use(middleware.RecoverWithConfig(middleware.RecoverConfig{
-		StackSize: 1 << 10, // 1 KB
-	}))
+	huma.Register(api, huma.Operation{
+		Method:   "PATCH",
+		Path:     "/API/v1/services/{service_id}",
+		Summary:  "Update a service",
+		Tags:     []string{"services"},
+		Security: secBearer,
+	}, h.UpdateService)
 
-	e.Use(middleware.TimeoutWithConfig(middleware.TimeoutConfig{
-		OnTimeoutRouteErrorHandler: func(err error, c echo.Context) {
-			h.Logger.WithFields(logrus.Fields{
-				"RequestID": c.Get(echo.HeaderXRequestID),
-			}).Warn("GotTimeout")
-		},
-		Timeout: 30 * time.Second,
-	}))
-	e.Use(middleware.SecureWithConfig(middleware.DefaultSecureConfig))
+	huma.Register(api, huma.Operation{
+		Method:        "DELETE",
+		Path:          "/API/v1/services/{service_id}",
+		Summary:       "Delete a service",
+		Tags:          []string{"services"},
+		Security:      secBearer,
+		DefaultStatus: 204,
+	}, h.DeleteService)
 
-	e.Use(echoprometheus.NewMiddleware("uptime"))  // adds middleware to gather metrics
-	e.GET("/metrics", echoprometheus.NewHandler()) // adds route to serve gathered metrics
+	huma.Register(api, huma.Operation{
+		Method:   "POST",
+		Path:     "/API/v1/services/{service_id}/notifications/{notification_name}",
+		Summary:  "Add notification to a service",
+		Tags:     []string{"services"},
+		Security: secBearer,
+	}, h.ServiceAddNotification)
+
+	huma.Register(api, huma.Operation{
+		Method:        "DELETE",
+		Path:          "/API/v1/services/{service_id}/notifications/{notification_name}",
+		Summary:       "Remove notification from a service",
+		Tags:          []string{"services"},
+		Security:      secBearer,
+		DefaultStatus: 204,
+	}, h.ServiceDeleteNotification)
+
+	// ── Notifications ─────────────────────────────────────────────────────────
+	huma.Register(api, huma.Operation{
+		Method:   "GET",
+		Path:     "/API/v1/notifications",
+		Summary:  "Get all notifications",
+		Tags:     []string{"notifications"},
+		Security: secBearer,
+	}, h.GetNotifications)
+
+	huma.Register(api, huma.Operation{
+		Method:   "POST",
+		Path:     "/API/v1/notifications",
+		Summary:  "Create a notification",
+		Tags:     []string{"notifications"},
+		Security: secBearer,
+	}, h.CreateNotification)
+
+	huma.Register(api, huma.Operation{
+		Method:   "GET",
+		Path:     "/API/v1/notifications/{notification_name}",
+		Summary:  "Get a notification",
+		Tags:     []string{"notifications"},
+		Security: secBearer,
+	}, h.GetNotification)
+
+	huma.Register(api, huma.Operation{
+		Method:   "PATCH",
+		Path:     "/API/v1/notifications/{notification_name}",
+		Summary:  "Update a notification",
+		Tags:     []string{"notifications"},
+		Security: secBearer,
+	}, h.UpdateNotification)
+
+	huma.Register(api, huma.Operation{
+		Method:        "DELETE",
+		Path:          "/API/v1/notifications/{notification_name}",
+		Summary:       "Delete a notification",
+		Tags:          []string{"notifications"},
+		Security:      secBearer,
+		DefaultStatus: 204,
+	}, h.DeleteNotification)
 }

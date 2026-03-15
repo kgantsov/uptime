@@ -7,13 +7,12 @@ import (
 
 	"github.com/kgantsov/uptime/app/auth"
 	"github.com/kgantsov/uptime/app/model"
-	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 // ---------------------------------------------------------------------------
-// POST /tokens
+// POST /API/v1/tokens
 // ---------------------------------------------------------------------------
 
 func TestCreateToken(t *testing.T) {
@@ -46,11 +45,11 @@ func TestCreateToken(t *testing.T) {
 			expectedStatus: http.StatusBadRequest,
 		},
 		{
-			name:           "empty body",
+			name:           "empty body – Huma rejects missing required fields",
 			body:           `{}`,
 			seedEmail:      "user@example.com",
 			seedPassword:   "secret123",
-			expectedStatus: http.StatusBadRequest,
+			expectedStatus: http.StatusUnprocessableEntity,
 		},
 	}
 
@@ -69,60 +68,47 @@ func TestCreateToken(t *testing.T) {
 			}
 			require.NoError(t, db.Create(user).Error)
 
-			h := newTestHandler(db, nil)
-			c, rec := echoCtxJSON(http.MethodPost, "/API/v1/tokens", tc.body)
+			app := newTestApp(t, db, nil)
+			resp := doRequest(t, app, http.MethodPost, "/API/v1/tokens", tc.body)
 
-			err = h.CreateToken(c)
+			assert.Equal(t, tc.expectedStatus, resp.StatusCode)
+
 			if tc.expectedStatus == http.StatusOK {
-				require.NoError(t, err)
-				assert.Equal(t, tc.expectedStatus, rec.Code)
-
 				var token model.Token
-				require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &token))
+				require.NoError(t, json.Unmarshal(readBody(t, resp), &token))
 				assert.NotEmpty(t, token.Token, "JWT string should be present in the response")
 
 				// Token record must be persisted in the database.
 				var dbToken model.Token
 				require.NoError(t, db.First(&dbToken, token.ID).Error)
 				assert.Equal(t, user.ID, dbToken.UserID)
-			} else {
-				var he *echo.HTTPError
-				if assert.ErrorAs(t, err, &he) {
-					assert.Equal(t, tc.expectedStatus, he.Code)
-				}
 			}
 		})
 	}
 }
 
 // ---------------------------------------------------------------------------
-// DELETE /tokens
+// DELETE /API/v1/tokens
 // ---------------------------------------------------------------------------
 
 func TestDeleteToken(t *testing.T) {
-	// NOTE: DeleteToken silently discards the error from GetCurrentTokenID and
-	// relies on the JWT middleware (configured in ConfigureMiddleware) to reject
-	// unauthenticated requests before the handler is reached.  In unit tests we
-	// call the handler directly, bypassing middleware, so both cases below
-	// result in a 204 – the difference is only whether an actual token row was
-	// removed from the database.
 	tests := []struct {
 		name           string
-		seedToken      bool // whether to insert a Token row and inject its JWT
-		injectJWT      bool // whether to put a parsed JWT into the echo context
+		seedToken      bool // whether to insert a Token row and build a JWT for it
+		sendJWT        bool // whether to include the Authorization header
 		expectedStatus int
 	}{
 		{
 			name:           "valid token – successful deletion",
 			seedToken:      true,
-			injectJWT:      true,
+			sendJWT:        true,
 			expectedStatus: http.StatusNoContent,
 		},
 		{
-			name:           "no JWT in context – handler is a no-op (middleware guards in production)",
+			name:           "no JWT in request – Huma rejects missing required header with 422",
 			seedToken:      false,
-			injectJWT:      false,
-			expectedStatus: http.StatusNoContent,
+			sendJWT:        false,
+			expectedStatus: http.StatusUnprocessableEntity,
 		},
 	}
 
@@ -141,19 +127,20 @@ func TestDeleteToken(t *testing.T) {
 				tokenID = tok.ID
 			}
 
-			h := newTestHandler(db, nil)
-			c, rec := echoCtxJSON(http.MethodDelete, "/API/v1/tokens", "")
+			app := newTestApp(t, db, nil)
 
-			if tc.injectJWT && tokenID != 0 {
-				setJWTContext(c, makeJWTToken(tokenID))
+			var resp *http.Response
+			if tc.sendJWT && tokenID != 0 {
+				jwtStr := makeJWTToken(tokenID)
+				resp = doRequest(t, app, http.MethodDelete, "/API/v1/tokens", "", bearerHeader(jwtStr))
+			} else {
+				resp = doRequest(t, app, http.MethodDelete, "/API/v1/tokens", "")
 			}
 
-			err := h.DeleteToken(c)
-			require.NoError(t, err)
-			assert.Equal(t, tc.expectedStatus, rec.Code)
+			assert.Equal(t, tc.expectedStatus, resp.StatusCode)
 
-			if tc.seedToken && tokenID != 0 {
-				// The token row should be soft-deleted.
+			if tc.seedToken && tokenID != 0 && tc.expectedStatus == http.StatusNoContent {
+				// The token row should be soft-deleted (not visible without Unscoped).
 				var count int64
 				db.Model(&model.Token{}).Where("id = ?", tokenID).Count(&count)
 				assert.Equal(t, int64(0), count)

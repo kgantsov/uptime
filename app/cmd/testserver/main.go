@@ -7,9 +7,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/labstack/echo-contrib/echoprometheus"
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/sirupsen/logrus"
 )
 
@@ -21,56 +20,49 @@ func main() {
 	portPtr := flag.String("port", "1313", "A port for the server")
 	flag.Parse()
 
-	e := echo.New()
 	log := logrus.New()
-	e.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
-		LogURI:    true,
-		LogStatus: true,
-		LogValuesFunc: func(c echo.Context, values middleware.RequestLoggerValues) error {
-			log.WithFields(logrus.Fields{
-				"URI":    values.URI,
-				"status": values.Status,
-			}).Info("request")
 
-			return nil
+	app := fiber.New(fiber.Config{
+		DisableStartupMessage: true,
+	})
+
+	app.Use(logger.New(logger.Config{
+		Format: "${time} ${method} ${path} ${status}\n",
+		CustomTags: map[string]logger.LogFunc{
+			"time": func(output logger.Buffer, c *fiber.Ctx, data *logger.Data, extraParam string) (int, error) {
+				return output.WriteString(time.Now().Format(time.RFC3339))
+			},
 		},
+		Output: log.Writer(),
 	}))
 
-	e.Use(echoprometheus.NewMiddleware("testserver")) // adds middleware to gather metrics
-	e.GET("/metrics", echoprometheus.NewHandler())    // adds route to serve gathered metrics
+	rand.Seed(time.Now().UnixNano()) //nolint:staticcheck
 
-	rand.Seed(time.Now().UnixNano())
-
-	e.GET("/health", func(c echo.Context) error {
-		min := 0
-		max := 10
-		num := rand.Intn(max-min+1) + min
+	app.Get("/health", func(c *fiber.Ctx) error {
+		num := rand.Intn(11) //nolint:gosec
 
 		if num == 0 {
-			h := &Health{
-				Status: "Failed",
-			}
 			log.Info("-----> FAIL")
-			return c.JSON(http.StatusInternalServerError, h)
+			return c.Status(http.StatusInternalServerError).JSON(&Health{Status: "Failed"})
 		}
 
 		if num == 1 {
 			log.Info("-----> TIMEOUT")
-			time.Sleep(time.Second * time.Duration(2))
+			time.Sleep(2 * time.Second)
 		} else {
 			log.Info("-----> SUCCESS")
 		}
 
-		h := &Health{
-			Status: "OK",
-		}
+		delay := rand.Intn(1001) //nolint:gosec
+		time.Sleep(time.Duration(delay) * time.Millisecond)
 
-		smin := 0
-		smax := 1000
-		snum := rand.Intn(smax-smin+1) + smin
-		time.Sleep(time.Millisecond * time.Duration(snum))
-
-		return c.JSON(http.StatusOK, h)
+		return c.JSON(&Health{Status: "OK"})
 	})
-	e.Logger.Fatal(e.Start(fmt.Sprintf(":%s", *portPtr)))
+
+	addr := fmt.Sprintf(":%s", *portPtr)
+	log.Infof("Test server listening on %s", addr)
+
+	if err := app.Listen(addr); err != nil {
+		log.Fatalf("listen error: %s", err)
+	}
 }

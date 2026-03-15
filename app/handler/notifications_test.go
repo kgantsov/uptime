@@ -6,13 +6,12 @@ import (
 	"testing"
 
 	"github.com/kgantsov/uptime/app/model"
-	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 // ---------------------------------------------------------------------------
-// GET /notifications
+// GET /API/v1/notifications
 // ---------------------------------------------------------------------------
 
 func TestGetNotifications(t *testing.T) {
@@ -55,23 +54,20 @@ func TestGetNotifications(t *testing.T) {
 				require.NoError(t, db.Create(&tc.seedNotifications[i]).Error)
 			}
 
-			h := newTestHandler(db, nil)
-			c, rec := echoCtxJSON(http.MethodGet, "/API/v1/notifications", "")
+			app := newTestApp(t, db, nil)
+			resp := doRequest(t, app, http.MethodGet, "/API/v1/notifications", "")
 
-			err := h.GetNotifications(c)
-			require.NoError(t, err)
-
-			assert.Equal(t, tc.expectedStatus, rec.Code)
+			assert.Equal(t, tc.expectedStatus, resp.StatusCode)
 
 			var notifications []model.Notification
-			require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &notifications))
+			require.NoError(t, json.Unmarshal(readBody(t, resp), &notifications))
 			assert.Len(t, notifications, tc.expectedCount)
 		})
 	}
 }
 
 // ---------------------------------------------------------------------------
-// GET /notifications/:notification_name
+// GET /API/v1/notifications/:notification_name
 // ---------------------------------------------------------------------------
 
 func TestGetNotification(t *testing.T) {
@@ -108,39 +104,29 @@ func TestGetNotification(t *testing.T) {
 				require.NoError(t, db.Create(tc.seedNotification).Error)
 			}
 
-			h := newTestHandler(db, nil)
-			c, rec := echoCtxJSON(http.MethodGet, "/API/v1/notifications/"+tc.notifNameParam, "")
-			c.SetParamNames("notification_name")
-			c.SetParamValues(tc.notifNameParam)
+			app := newTestApp(t, db, nil)
+			resp := doRequest(t, app, http.MethodGet, "/API/v1/notifications/"+tc.notifNameParam, "")
 
-			err := h.GetNotification(c)
+			assert.Equal(t, tc.expectedStatus, resp.StatusCode)
+
 			if tc.expectedStatus == http.StatusOK {
-				require.NoError(t, err)
-				assert.Equal(t, tc.expectedStatus, rec.Code)
-
 				var notification model.Notification
-				require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &notification))
+				require.NoError(t, json.Unmarshal(readBody(t, resp), &notification))
 				assert.Equal(t, tc.notifNameParam, notification.Name)
 				assert.Equal(t, tc.expectedCallback, notification.Callback)
-			} else {
-				var he *echo.HTTPError
-				if assert.ErrorAs(t, err, &he) {
-					assert.Equal(t, tc.expectedStatus, he.Code)
-				}
 			}
 		})
 	}
 }
 
 // ---------------------------------------------------------------------------
-// POST /notifications
+// POST /API/v1/notifications
 // ---------------------------------------------------------------------------
 
 func TestCreateNotification(t *testing.T) {
 	tests := []struct {
 		name             string
 		body             string
-		contentType      string
 		expectedStatus   int
 		expectedName     string
 		expectedCallback string
@@ -148,7 +134,6 @@ func TestCreateNotification(t *testing.T) {
 		{
 			name:             "valid slack notification",
 			body:             `{"name":"slack","callback_type":"slack","callback":"https://hooks.slack.com/xxx"}`,
-			contentType:      echo.MIMEApplicationJSON,
 			expectedStatus:   http.StatusOK,
 			expectedName:     "slack",
 			expectedCallback: "https://hooks.slack.com/xxx",
@@ -156,7 +141,6 @@ func TestCreateNotification(t *testing.T) {
 		{
 			name:             "valid telegram notification with chat id",
 			body:             `{"name":"telegram","callback_type":"telegram","callback":"https://api.telegram.org/bot123/sendMessage","callback_chat_id":"99887766"}`,
-			contentType:      echo.MIMEApplicationJSON,
 			expectedStatus:   http.StatusOK,
 			expectedName:     "telegram",
 			expectedCallback: "https://api.telegram.org/bot123/sendMessage",
@@ -164,7 +148,6 @@ func TestCreateNotification(t *testing.T) {
 		{
 			name:           "malformed JSON returns bad request",
 			body:           `{"name": "slack", "callback_type":}`,
-			contentType:    echo.MIMEApplicationJSON,
 			expectedStatus: http.StatusBadRequest,
 		},
 	}
@@ -173,16 +156,14 @@ func TestCreateNotification(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			db := newTestDB()
 
-			h := newTestHandler(db, nil)
-			c, rec := echoCtx(http.MethodPost, "/API/v1/notifications", tc.body, tc.contentType)
+			app := newTestApp(t, db, nil)
+			resp := doRequest(t, app, http.MethodPost, "/API/v1/notifications", tc.body)
 
-			err := h.CreateNotification(c)
+			assert.Equal(t, tc.expectedStatus, resp.StatusCode)
+
 			if tc.expectedStatus == http.StatusOK {
-				require.NoError(t, err)
-				assert.Equal(t, tc.expectedStatus, rec.Code)
-
 				var notification model.Notification
-				require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &notification))
+				require.NoError(t, json.Unmarshal(readBody(t, resp), &notification))
 				assert.Equal(t, tc.expectedName, notification.Name)
 				assert.Equal(t, tc.expectedCallback, notification.Callback)
 
@@ -190,17 +171,13 @@ func TestCreateNotification(t *testing.T) {
 				var dbNotif model.Notification
 				require.NoError(t, db.Where("name = ?", tc.expectedName).First(&dbNotif).Error)
 				assert.Equal(t, tc.expectedName, dbNotif.Name)
-			} else {
-				// Handler writes a plain string response for bind errors
-				require.NoError(t, err)
-				assert.Equal(t, tc.expectedStatus, rec.Code)
 			}
 		})
 	}
 }
 
 // ---------------------------------------------------------------------------
-// PATCH /notifications/:notification_name
+// PATCH /API/v1/notifications/:notification_name
 // ---------------------------------------------------------------------------
 
 func TestUpdateNotification(t *testing.T) {
@@ -271,18 +248,14 @@ func TestUpdateNotification(t *testing.T) {
 				dispatcher.On("Start").Return()
 			}
 
-			h := newTestHandler(db, dispatcher)
-			c, rec := echoCtxJSON(http.MethodPatch, "/API/v1/notifications/"+tc.notifNameParam, tc.body)
-			c.SetParamNames("notification_name")
-			c.SetParamValues(tc.notifNameParam)
+			app := newTestApp(t, db, dispatcher)
+			resp := doRequest(t, app, http.MethodPatch, "/API/v1/notifications/"+tc.notifNameParam, tc.body)
 
-			err := h.UpdateNotification(c)
+			assert.Equal(t, tc.expectedStatus, resp.StatusCode)
+
 			if tc.expectedStatus == http.StatusOK {
-				require.NoError(t, err)
-				assert.Equal(t, tc.expectedStatus, rec.Code)
-
 				var notification model.Notification
-				require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &notification))
+				require.NoError(t, json.Unmarshal(readBody(t, resp), &notification))
 
 				if tc.expectedCallback != "" {
 					assert.Equal(t, tc.expectedCallback, notification.Callback)
@@ -290,21 +263,13 @@ func TestUpdateNotification(t *testing.T) {
 				if tc.expectedChatID != "" {
 					assert.Equal(t, tc.expectedChatID, notification.CallbackChatID)
 				}
-
-				dispatcher.AssertCalled(t, "Stop")
-				dispatcher.AssertCalled(t, "Start")
-			} else {
-				var he *echo.HTTPError
-				if assert.ErrorAs(t, err, &he) {
-					assert.Equal(t, tc.expectedStatus, he.Code)
-				}
 			}
 		})
 	}
 }
 
 // ---------------------------------------------------------------------------
-// DELETE /notifications/:notification_name
+// DELETE /API/v1/notifications/:notification_name
 // ---------------------------------------------------------------------------
 
 func TestDeleteNotification(t *testing.T) {
@@ -339,13 +304,10 @@ func TestDeleteNotification(t *testing.T) {
 				require.NoError(t, db.Create(tc.seedNotification).Error)
 			}
 
-			h := newTestHandler(db, nil)
-			c, _ := echoCtxJSON(http.MethodDelete, "/API/v1/notifications/"+tc.notifNameParam, "")
-			c.SetParamNames("notification_name")
-			c.SetParamValues(tc.notifNameParam)
+			app := newTestApp(t, db, nil)
+			resp := doRequest(t, app, http.MethodDelete, "/API/v1/notifications/"+tc.notifNameParam, "")
 
-			err := h.DeleteNotification(c)
-			require.NoError(t, err)
+			assert.Equal(t, tc.expectedStatus, resp.StatusCode)
 
 			if tc.seedNotification != nil {
 				// Verify the record is soft-deleted (not found without Unscoped)

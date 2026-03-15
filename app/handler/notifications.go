@@ -1,138 +1,123 @@
 package handler
 
 import (
+	"context"
 	"net/http"
 
+	"github.com/danielgtaylor/huma/v2"
 	"github.com/kgantsov/uptime/app/model"
-	"github.com/labstack/echo/v4"
-	"github.com/sirupsen/logrus"
 )
 
-// GetNotifications godoc
-// @Summary      Get notifications
-// @Description  Returns all notifications
-// @Tags         notifications
-// @Accept       json
-// @Produce      json
-// @Success      200  {object}  []model.Notification
-// @Failure      404  {object}  echo.HTTPError
-// @Failure      500  {object}  echo.HTTPError
-// @Security     HttpBearer
-// @Router       /API/v1/notifications [get]
-func (h *Handler) GetNotifications(c echo.Context) error {
+// ── Input / Output types ──────────────────────────────────────────────────────
+
+type GetNotificationsOutput struct {
+	Body []model.Notification
+}
+
+type GetNotificationInput struct {
+	NotificationName string `path:"notification_name" doc:"Notification name"`
+}
+
+type GetNotificationOutput struct {
+	Body *model.Notification
+}
+
+type CreateNotificationInput struct {
+	Body model.AddNotification
+}
+
+type CreateNotificationOutput struct {
+	Body *model.Notification
+}
+
+type UpdateNotificationInput struct {
+	NotificationName string `path:"notification_name" doc:"Notification name"`
+	Body             model.UpdateNotification
+}
+
+type UpdateNotificationOutput struct {
+	Body *model.Notification
+}
+
+type DeleteNotificationInput struct {
+	NotificationName string `path:"notification_name" doc:"Notification name"`
+}
+
+// ── Handlers ──────────────────────────────────────────────────────────────────
+
+// GetNotifications returns all notification channels.
+func (h *Handler) GetNotifications(
+	ctx context.Context,
+	input *struct{},
+) (*GetNotificationsOutput, error) {
 	notifications, err := h.NotificationService.GetNotifications()
 	if err != nil {
-		h.Logger.WithFields(logrus.Fields{
-			"RequestID": c.Get(echo.HeaderXRequestID),
-		}).Infof("Got an error getting notifications %s", err)
-
-		return &echo.HTTPError{Code: http.StatusInternalServerError, Message: err}
+		h.Logger.Infof("error getting notifications: %s", err)
+		return nil, huma.NewError(http.StatusInternalServerError, "failed to retrieve notifications", err)
 	}
 
-	return c.JSON(http.StatusOK, notifications)
+	if notifications == nil {
+		notifications = []model.Notification{}
+	}
+
+	return &GetNotificationsOutput{Body: notifications}, nil
 }
 
-// GetNotification godoc
-// @Summary      Get a notification
-// @Description  Returns a notification
-// @Tags         notifications
-// @Accept       json
-// @Produce      json
-// @Param        notification_name    path     string  true  "Get a notification by notification_name"
-// @Success      200  {object}  model.Notification
-// @Failure      404  {object}  echo.HTTPError
-// @Failure      500  {object}  echo.HTTPError
-// @Security     HttpBearer
-// @Router       /API/v1/notifications/{notification_name} [get]
-func (h *Handler) GetNotification(c echo.Context) error {
-	notificationName := c.Param("notification_name")
-
-	notification, err := h.NotificationService.GetNotification(notificationName)
+// GetNotification returns a single notification channel by name.
+func (h *Handler) GetNotification(
+	ctx context.Context,
+	input *GetNotificationInput,
+) (*GetNotificationOutput, error) {
+	notification, err := h.NotificationService.GetNotification(input.NotificationName)
 	if err != nil {
-		h.Logger.WithFields(logrus.Fields{
-			"RequestID": c.Get(echo.HeaderXRequestID),
-		}).Infof("Got an error getting a notification %s %s", notificationName, err)
-
-		return &echo.HTTPError{Code: http.StatusBadRequest, Message: err}
+		h.Logger.Infof("error getting notification %q: %s", input.NotificationName, err)
+		return nil, huma.NewError(http.StatusBadRequest, "notification not found", err)
 	}
 
-	return c.JSON(http.StatusOK, notification)
+	return &GetNotificationOutput{Body: notification}, nil
 }
 
-// CreateNotification godoc
-// @Summary      Create a new notification
-// @Description  Creates notifications
-// @Tags         notifications
-// @Accept       json
-// @Produce      json
-// @Param        body  body      model.AddNotification  true  "Add notification"
-// @Success      200  {object}  model.Notification
-// @Failure      404  {object}  echo.HTTPError
-// @Failure      500  {object}  echo.HTTPError
-// @Security     HttpBearer
-// @Router       /API/v1/notifications [post]
-func (h *Handler) CreateNotification(c echo.Context) error {
-	notification := new(model.Notification)
-
-	if err := c.Bind(notification); err != nil {
-		return c.String(http.StatusBadRequest, "bad request")
+// CreateNotification creates a new notification channel.
+func (h *Handler) CreateNotification(
+	ctx context.Context,
+	input *CreateNotificationInput,
+) (*CreateNotificationOutput, error) {
+	notification := &model.Notification{
+		Name:           input.Body.Name,
+		CallbackType:   input.Body.CallbackType,
+		CallbackChatID: input.Body.CallbackChatID,
+		Callback:       input.Body.Callback,
 	}
 
 	created, err := h.NotificationService.CreateNotification(notification)
 	if err != nil {
-		return &echo.HTTPError{Code: http.StatusInternalServerError, Message: err}
+		return nil, huma.NewError(http.StatusInternalServerError, "failed to create notification", err)
 	}
 
-	return c.JSON(http.StatusOK, created)
+	return &CreateNotificationOutput{Body: created}, nil
 }
 
-// UpdateNotification godoc
-// @Summary      Update a notification
-// @Description  Updates a notification
-// @Tags         notifications
-// @Accept       json
-// @Produce      json
-// @Param        notification_name    path     string  true  "Updates a notification by notification_name"
-// @Param        body  body      model.UpdateNotification  true  "Update notification"
-// @Success      200  {object}  model.Notification
-// @Failure      404  {object}  echo.HTTPError
-// @Failure      500  {object}  echo.HTTPError
-// @Security     HttpBearer
-// @Router       /API/v1/notifications/{notification_name} [patch]
-func (h *Handler) UpdateNotification(c echo.Context) error {
-	notificationName := c.Param("notification_name")
-
-	updateNotification := &model.UpdateNotification{}
-	if err := c.Bind(updateNotification); err != nil {
-		return c.String(http.StatusBadRequest, "bad request")
-	}
-
-	notification, err := h.NotificationService.UpdateNotification(notificationName, updateNotification)
+// UpdateNotification updates an existing notification channel.
+func (h *Handler) UpdateNotification(
+	ctx context.Context,
+	input *UpdateNotificationInput,
+) (*UpdateNotificationOutput, error) {
+	notification, err := h.NotificationService.UpdateNotification(input.NotificationName, &input.Body)
 	if err != nil {
-		return &echo.HTTPError{Code: http.StatusBadRequest, Message: err}
+		return nil, huma.NewError(http.StatusBadRequest, "failed to update notification", err)
 	}
 
-	return c.JSON(http.StatusOK, notification)
+	return &UpdateNotificationOutput{Body: notification}, nil
 }
 
-// DeleteNotification godoc
-// @Summary      Delete a notification
-// @Description  Deletes notifications
-// @Tags         notifications
-// @Accept       json
-// @Produce      json
-// @Param        notification_name    path     string  true  "Delete by notification_name"
-// @Success      204  {object}  model.Notification
-// @Failure      404  {object}  echo.HTTPError
-// @Failure      500  {object}  echo.HTTPError
-// @Security     HttpBearer
-// @Router       /API/v1/notifications/{notification_name} [delete]
-func (h *Handler) DeleteNotification(c echo.Context) error {
-	notificationName := c.Param("notification_name")
-
-	if err := h.NotificationService.DeleteNotification(notificationName); err != nil {
-		return &echo.HTTPError{Code: http.StatusBadRequest, Message: err}
+// DeleteNotification removes a notification channel.
+func (h *Handler) DeleteNotification(
+	ctx context.Context,
+	input *DeleteNotificationInput,
+) (*struct{}, error) {
+	if err := h.NotificationService.DeleteNotification(input.NotificationName); err != nil {
+		return nil, huma.NewError(http.StatusBadRequest, "failed to delete notification", err)
 	}
 
-	return c.NoContent(http.StatusNoContent)
+	return nil, nil
 }
