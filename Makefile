@@ -16,9 +16,9 @@ build:
 	cd app/cmd/uptime/; go build
 
 build_linux:
-	cd frontend; npm run build
+	cd frontend; npm run build; cp -r ./build ../app/cmd/uptime
 	go test ./... -cover
-	cd app/cmd/uptime/; GOOS=linux GOARCH=amd64 rice embed-go; GOOS=linux GOARCH=amd64 go build
+	cd app/cmd/uptime/; GOOS=linux GOARCH=amd64 go build
 
 test:
 	go test ./... -cover
