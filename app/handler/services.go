@@ -89,6 +89,16 @@ func (h *Handler) CreateService(
 	ctx context.Context,
 	input *CreateServiceInput,
 ) (*CreateServiceOutput, error) {
+	notifications := make([]model.Notification, 0, len(input.Body.Notifications))
+	for _, n := range input.Body.Notifications {
+		notifications = append(notifications, model.Notification{
+			Name:           n.Name,
+			CallbackType:   n.CallbackType,
+			CallbackChatID: n.CallbackChatID,
+			Callback:       n.Callback,
+		})
+	}
+
 	svc := &model.Service{
 		Name:               input.Body.Name,
 		URL:                input.Body.URL,
@@ -97,6 +107,7 @@ func (h *Handler) CreateService(
 		CheckInterval:      input.Body.CheckInterval,
 		Retries:            input.Body.Retries,
 		AcceptedStatusCode: input.Body.AcceptedStatusCode,
+		Notifications:      notifications,
 	}
 
 	created, err := h.ServiceService.CreateService(svc)
