@@ -6,6 +6,7 @@ import (
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/kgantsov/uptime/app/model"
+	"github.com/rs/zerolog/log"
 )
 
 // ── Input / Output types ──────────────────────────────────────────────────────
@@ -52,7 +53,7 @@ func (h *Handler) GetNotifications(
 ) (*GetNotificationsOutput, error) {
 	notifications, err := h.NotificationService.GetNotifications()
 	if err != nil {
-		h.Logger.Infof("error getting notifications: %s", err)
+		log.Ctx(ctx).Info().Msgf("error getting notifications: %s", err)
 		return nil, huma.NewError(http.StatusInternalServerError, "failed to retrieve notifications", err)
 	}
 
@@ -70,7 +71,7 @@ func (h *Handler) GetNotification(
 ) (*GetNotificationOutput, error) {
 	notification, err := h.NotificationService.GetNotification(input.NotificationName)
 	if err != nil {
-		h.Logger.Infof("error getting notification %q: %s", input.NotificationName, err)
+		log.Ctx(ctx).Info().Msgf("error getting notification %q: %s", input.NotificationName, err)
 		return nil, huma.NewError(http.StatusBadRequest, "notification not found", err)
 	}
 

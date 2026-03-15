@@ -7,6 +7,7 @@ import (
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/kgantsov/uptime/app/auth"
 	"github.com/kgantsov/uptime/app/model"
+	"github.com/rs/zerolog/log"
 )
 
 // ── Input / Output types ──────────────────────────────────────────────────────
@@ -45,11 +46,11 @@ func (h *Handler) DeleteToken(
 ) (*struct{}, error) {
 	tokenID, err := auth.ParseTokenIDFromHeader(input.Authorization, Key)
 	if err != nil {
-		h.Logger.Infof("DeleteToken: could not parse token ID: %s", err)
+		log.Ctx(ctx).Info().Msgf("DeleteToken: could not parse token ID: %s", err)
 		return nil, huma.NewError(http.StatusBadRequest, "invalid authorization token")
 	}
 
-	h.Logger.Infof("DeleteToken: invalidating token ID %d", tokenID)
+	log.Ctx(ctx).Info().Msgf("DeleteToken: invalidating token ID %d", tokenID)
 
 	if err := h.TokenService.DeleteToken(tokenID); err != nil {
 		return nil, huma.NewError(http.StatusBadRequest, "failed to delete token", err)

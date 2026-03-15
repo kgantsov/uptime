@@ -8,13 +8,10 @@ import (
 	"testing"
 
 	"github.com/kgantsov/uptime/app/model"
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestTelegramNotifier(t *testing.T) {
-	log := logrus.New()
-
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		assert.Equal(t, "/fake/telegram/messages", req.URL.String())
 		assert.Equal(t, "POST", req.Method)
@@ -32,7 +29,6 @@ func TestTelegramNotifier(t *testing.T) {
 	}))
 
 	notifier := NewTelegramNotifier(
-		log,
 		&model.Notification{
 			CallbackType:   "telegram",
 			CallbackChatID: "909091231",

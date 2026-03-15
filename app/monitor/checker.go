@@ -5,8 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/sirupsen/logrus"
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog"
 )
 
 const StatusTimeout string = "TIMEOUT"
@@ -23,17 +22,17 @@ type HTTPCHecker struct {
 	URL                string
 	Name               string
 	AcceptedStatusCode int
-	logger             *logrus.Logger
+	logger             zerolog.Logger
 }
 
-func NewHTTPCHecker(logger *logrus.Logger, name, url string, timeout, acceptedStatusCode int) *HTTPCHecker {
+func NewHTTPCHecker(name, url string, timeout, acceptedStatusCode int) *HTTPCHecker {
 	client := http.Client{Timeout: time.Duration(timeout) * time.Second}
 
 	c := &HTTPCHecker{
 		client:             client,
 		URL:                url,
+		Name:               name,
 		AcceptedStatusCode: acceptedStatusCode,
-		logger:             logger,
 	}
 
 	return c
@@ -43,7 +42,7 @@ func (c *HTTPCHecker) Check() (int, string) {
 	resp, err := c.client.Get(c.URL)
 
 	if err != nil {
-		log.Infof("Error checking '%s' %s %s\n", c.Name, c.URL, err)
+		c.logger.Info().Msgf("Error checking '%s' %s %s\n", c.Name, c.URL, err)
 	}
 
 	if err, ok := err.(net.Error); ok && err.Timeout() {

@@ -5,8 +5,6 @@ import (
 	"embed"
 	"flag"
 	"fmt"
-	"log"
-
 	"os"
 	"os/signal"
 	"syscall"
@@ -17,16 +15,16 @@ import (
 	"github.com/glebarez/sqlite"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/filesystem"
-	"github.com/sirupsen/logrus"
-	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
-
 	"github.com/kgantsov/uptime/app/auth"
 	"github.com/kgantsov/uptime/app/handler"
 	"github.com/kgantsov/uptime/app/model"
 	"github.com/kgantsov/uptime/app/monitor"
 	"github.com/kgantsov/uptime/app/repository"
 	"github.com/kgantsov/uptime/app/service"
+	"github.com/rs/zerolog/log"
+
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 // Embed a single file
@@ -57,16 +55,17 @@ func InitStaticServer(app *fiber.App) {
 
 func main() {
 	dbPathPtr := flag.String("db-path", "./test.db", "A path to a DB file")
+	logModePtr := flag.String("log-mode", "", "Logging mode: STACKDRIVER or console (default)")
+	logLevelPtr := flag.String("log-level", "debug", "Logging level: debug, info, warn, error, fatal, panic")
 	flag.Parse()
 
-	log := logrus.New()
-	log.SetLevel(logrus.DebugLevel)
+	handler.ConfigureLogger(*logModePtr, *logLevelPtr)
 
 	db, err := gorm.Open(sqlite.Open(*dbPathPtr), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Error),
 	})
 	if err != nil {
-		log.Info("failed to connect database")
+		log.Info().Msg("failed to connect database")
 		return
 	}
 
@@ -76,7 +75,7 @@ func main() {
 	tokenRepo := repository.NewTokenRepository(db)
 	userRepo := repository.NewUserRepository(db)
 
-	dispatcher := monitor.NewDispatcher(serviceRepo, heartbeatRepo, log)
+	dispatcher := monitor.NewDispatcher(serviceRepo, heartbeatRepo)
 	dispatcher.Start()
 
 	heartbeatSvc := service.NewHeartbeatService(heartbeatRepo)
@@ -84,7 +83,7 @@ func main() {
 	notifSvc := service.NewNotificationService(notifRepo, dispatcher)
 	tokenSvc := service.NewTokenService(userRepo, tokenRepo, handler.Key)
 
-	h := handler.NewHandler(log, heartbeatSvc, serviceSvc, notifSvc, tokenSvc)
+	h := handler.NewHandler(heartbeatSvc, serviceSvc, notifSvc, tokenSvc)
 
 	app, _ := handler.NewFiberApp(h)
 
@@ -94,14 +93,14 @@ func main() {
 
 	go func() {
 		sig := <-sigs
-		log.Infof("Got signal: %s", sig)
-		log.Info("Stopping monitoring")
+		log.Info().Msgf("Got signal: %s", sig)
+		log.Info().Msg("Stopping monitoring")
 
 		dispatcher.Stop()
 		time.Sleep(100 * time.Millisecond)
 
 		if err := app.Shutdown(); err != nil {
-			log.Errorf("Error shutting down fiber: %s", err)
+			log.Error().Msgf("Error shutting down fiber: %s", err)
 		}
 
 		done <- struct{}{}
@@ -113,19 +112,19 @@ func main() {
 
 	InitStaticServer(app)
 
-	go cleanupOldHeartbeats(heartbeatRepo, log)
+	go cleanupOldHeartbeats(heartbeatRepo)
 
 	go func() {
 		if err := app.Listen(":1323"); err != nil {
-			log.Fatalf("Fiber listen error: %s", err)
+			log.Fatal().Msgf("Fiber listen error: %s", err)
 		}
 	}()
 
-	log.Infof("Started uptime monitor")
+	log.Info().Msg("Started uptime monitor")
 
 	<-done
 
-	log.Info("Stopped monitoring")
+	log.Info().Msg("Stopped monitoring")
 }
 
 func initUser(userRepo repository.UserRepository) {
@@ -167,17 +166,17 @@ func createUser(userRepo repository.UserRepository, firstName, lastName, email, 
 	userRepo.Create(user)
 }
 
-func cleanupOldHeartbeats(heartbeatRepo repository.HeartbeatRepository, logger *logrus.Logger) {
+func cleanupOldHeartbeats(heartbeatRepo repository.HeartbeatRepository) {
 	ticker := time.NewTicker(time.Duration(60) * time.Second)
 
 	for {
 		select {
 		case <-ticker.C:
 			thresholdDate := time.Now().AddDate(0, 0, -30)
-			logger.Infof("Deleting heartbeats older than %s", thresholdDate)
+			log.Info().Msgf("Deleting heartbeats older than %s", thresholdDate)
 
 			if err := heartbeatRepo.DeleteOlderThan(thresholdDate); err != nil {
-				log.Fatal(err)
+				log.Fatal().Msgf("Failed to delete old heartbeats: %s", err)
 			}
 		}
 	}

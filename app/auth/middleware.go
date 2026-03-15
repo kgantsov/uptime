@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 )
 
 // TokenLookup is the minimal interface the middleware needs to verify that
@@ -30,7 +30,7 @@ func AuthSkipperFunc(c *fiber.Ctx) bool {
 // CheckTokenMiddleware returns a Fiber middleware that validates the token ID
 // (extracted from the JWT by the upstream JWT middleware) against the backing
 // store, ensuring that tokens that have been explicitly deleted are rejected.
-func CheckTokenMiddleware(tokenLookup TokenLookup, logger *logrus.Logger) fiber.Handler {
+func CheckTokenMiddleware(tokenLookup TokenLookup) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		if AuthSkipperFunc(c) {
 			return c.Next()
@@ -42,9 +42,10 @@ func CheckTokenMiddleware(tokenLookup TokenLookup, logger *logrus.Logger) fiber.
 		}
 
 		if err := tokenLookup.ValidateToken(tokenID); err != nil {
-			logger.WithFields(logrus.Fields{
-				"RequestID": c.Locals("requestid"),
-			}).Infof("TOKEN WAS NOT FOUND %s", err)
+			requestID, _ := c.Locals("requestid").(string)
+			log.Info().
+				Str("request_id", requestID).
+				Msgf("TOKEN WAS NOT FOUND %s", err)
 
 			return fiber.NewError(fiber.StatusUnauthorized, "token not found or expired")
 		}

@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/avast/retry-go"
-	"github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 
 	"github.com/kgantsov/uptime/app/model"
 	"github.com/kgantsov/uptime/app/repository"
@@ -18,22 +18,21 @@ type Monitor struct {
 	checker       Checker
 	notifiers     []Notifier
 	service       *model.Service
-	logger        *logrus.Logger
 }
 
-func NewMonitor(heartbeatRepo repository.HeartbeatRepository, logger *logrus.Logger, service *model.Service) *Monitor {
-	logger.Infof("NewMonitor %d", service.ID)
+func NewMonitor(heartbeatRepo repository.HeartbeatRepository, service *model.Service) *Monitor {
+	log.Info().Msgf("NewMonitor %d", service.ID)
 
 	notifiers := []Notifier{}
 
 	for i := range service.Notifications {
 		notification := service.Notifications[i]
-		notifier := NewTelegramNotifier(logger, &notification)
+		notifier := NewTelegramNotifier(&notification)
 		notifiers = append(notifiers, notifier)
 	}
 
 	checker := NewHTTPCHecker(
-		logger, service.Name, service.URL, service.Timeout, service.AcceptedStatusCode,
+		service.Name, service.URL, service.Timeout, service.AcceptedStatusCode,
 	)
 
 	m := &Monitor{
@@ -42,14 +41,13 @@ func NewMonitor(heartbeatRepo repository.HeartbeatRepository, logger *logrus.Log
 		done:          make(chan struct{}),
 		notifiers:     notifiers,
 		checker:       checker,
-		logger:        logger,
 	}
 
 	return m
 }
 
 func (m *Monitor) Start() {
-	m.logger.Infof("Starting '%s' %s service monitoring\n", m.service.Name, m.service.URL)
+	log.Info().Msgf("Starting '%s' %s service monitoring", m.service.Name, m.service.URL)
 
 	failing := false
 	startedFailingAt := time.Time{}
@@ -59,7 +57,7 @@ func (m *Monitor) Start() {
 	for {
 		select {
 		case <-m.done:
-			m.logger.Infof("Stop monitoring for '%s' %s\n", m.service.Name, m.service.URL)
+			log.Info().Msgf("Stop monitoring for '%s' %s", m.service.Name, m.service.URL)
 			return
 		case t := <-ticker.C:
 			var start time.Time
@@ -70,7 +68,7 @@ func (m *Monitor) Start() {
 
 			var status string
 
-			m.logger.Debugf("Check attempt %d %s", m.service.ID, m.service.URL)
+			log.Debug().Msgf("Check attempt %d %s", m.service.ID, m.service.URL)
 
 			retry.Do(
 				func() error {
@@ -89,7 +87,7 @@ func (m *Monitor) Start() {
 						return nil
 					}
 
-					m.logger.Debugf("Failed will retry %d %s %d %s %s", m.service.ID, m.service.URL, statusCode, status, time.Now())
+					log.Debug().Msgf("Failed will retry %d %s %d %s %s", m.service.ID, m.service.URL, statusCode, status, time.Now())
 
 					return fmt.Errorf("server is not up. Status code %d", statusCode)
 				},
@@ -98,7 +96,7 @@ func (m *Monitor) Start() {
 				retry.Attempts(uint(m.service.Retries+1)),
 			)
 
-			m.logger.Debugf(
+			log.Debug().Msgf(
 				"Service check %d %s %d %s %t", m.service.ID, m.service.URL, statusCode, status, failing,
 			)
 
@@ -112,8 +110,8 @@ func (m *Monitor) Start() {
 			)
 
 			if status == StatusUp {
-				m.logger.Infof(
-					"Service %s %s is up and running: %d %s %t\n",
+				log.Info().Msgf(
+					"Service %s %s is up and running: %d %s %t",
 					t,
 					m.service.URL,
 					statusCode,
@@ -137,8 +135,8 @@ func (m *Monitor) Start() {
 					startedFailingAt = time.Time{}
 				}
 			} else {
-				m.logger.Infof(
-					"Failed to get %s url. Got status code: %d %s %t\n",
+				log.Info().Msgf(
+					"Failed to get %s url. Got status code: %d %s %t",
 					m.service.URL,
 					statusCode,
 					status,
@@ -166,5 +164,5 @@ func (m *Monitor) Start() {
 
 func (m *Monitor) Stop() {
 	m.done <- struct{}{}
-	m.logger.Infof("Stopping '%s'\n", m.service.Name)
+	log.Info().Msgf("Stopping '%s'", m.service.Name)
 }

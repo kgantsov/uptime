@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
-	"github.com/sirupsen/logrus"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 )
 
 type Health struct {
@@ -20,7 +22,8 @@ func main() {
 	portPtr := flag.String("port", "1313", "A port for the server")
 	flag.Parse()
 
-	log := logrus.New()
+	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
+	logger_ := log.Output(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339})
 
 	app := fiber.New(fiber.Config{
 		DisableStartupMessage: true,
@@ -33,7 +36,6 @@ func main() {
 				return output.WriteString(time.Now().Format(time.RFC3339))
 			},
 		},
-		Output: log.Writer(),
 	}))
 
 	rand.Seed(time.Now().UnixNano()) //nolint:staticcheck
@@ -42,15 +44,15 @@ func main() {
 		num := rand.Intn(11) //nolint:gosec
 
 		if num == 0 {
-			log.Info("-----> FAIL")
+			logger_.Info().Msg("-----> FAIL")
 			return c.Status(http.StatusInternalServerError).JSON(&Health{Status: "Failed"})
 		}
 
 		if num == 1 {
-			log.Info("-----> TIMEOUT")
+			logger_.Info().Msg("-----> TIMEOUT")
 			time.Sleep(2 * time.Second)
 		} else {
-			log.Info("-----> SUCCESS")
+			logger_.Info().Msg("-----> SUCCESS")
 		}
 
 		delay := rand.Intn(1001) //nolint:gosec
@@ -60,9 +62,9 @@ func main() {
 	})
 
 	addr := fmt.Sprintf(":%s", *portPtr)
-	log.Infof("Test server listening on %s", addr)
+	logger_.Info().Msgf("Test server listening on %s", addr)
 
 	if err := app.Listen(addr); err != nil {
-		log.Fatalf("listen error: %s", err)
+		logger_.Fatal().Msgf("listen error: %s", err)
 	}
 }

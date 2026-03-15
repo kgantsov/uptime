@@ -17,7 +17,6 @@ import (
 	"github.com/kgantsov/uptime/app/model"
 	"github.com/kgantsov/uptime/app/repository"
 	"github.com/kgantsov/uptime/app/service"
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
@@ -74,14 +73,6 @@ func newTestDB() *gorm.DB {
 // Handler / Fiber helpers
 // ---------------------------------------------------------------------------
 
-// newTestLogger returns a logrus logger whose level is set to Panic so that
-// log output does not pollute test runs.
-func newTestLogger() *logrus.Logger {
-	l := logrus.New()
-	l.SetLevel(logrus.PanicLevel)
-	return l
-}
-
 // newTestHandler creates a Handler wired to the supplied DB and dispatcher by
 // building the full repository → service → handler stack.
 func newTestHandler(db *gorm.DB, dispatcher service.DispatcherInterface) *Handler {
@@ -96,7 +87,7 @@ func newTestHandler(db *gorm.DB, dispatcher service.DispatcherInterface) *Handle
 	notifSvc := service.NewNotificationService(notifRepo, dispatcher)
 	tokenSvc := service.NewTokenService(userRepo, tokenRepo, Key)
 
-	return NewHandler(newTestLogger(), heartbeatSvc, serviceSvc, notifSvc, tokenSvc)
+	return NewHandler(heartbeatSvc, serviceSvc, notifSvc, tokenSvc)
 }
 
 // newTestApp creates a bare Fiber+Huma application with routes registered but

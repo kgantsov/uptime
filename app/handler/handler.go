@@ -12,7 +12,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/requestid"
 	"github.com/kgantsov/uptime/app/auth"
 	"github.com/kgantsov/uptime/app/service"
-	"github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 )
 
 type Handler struct {
@@ -20,7 +20,6 @@ type Handler struct {
 	ServiceService      service.ServiceService
 	NotificationService service.NotificationService
 	TokenService        service.TokenService
-	Logger              *logrus.Logger
 }
 
 const (
@@ -30,14 +29,12 @@ const (
 )
 
 func NewHandler(
-	logger *logrus.Logger,
 	heartbeatService service.HeartbeatService,
 	serviceService service.ServiceService,
 	notificationService service.NotificationService,
 	tokenService service.TokenService,
 ) *Handler {
 	return &Handler{
-		Logger:              logger,
 		HeartbeatService:    heartbeatService,
 		ServiceService:      serviceService,
 		NotificationService: notificationService,
@@ -64,12 +61,20 @@ func NewFiberApp(h *Handler) (*fiber.App, huma.API) {
 	app.Use(recover.New())
 	app.Use(requestid.New())
 
+	app.Use(RequestIDMiddleware("console"))
+
 	// ── Request logger ────────────────────────────────────────────────────────
 	app.Use(func(c *fiber.Ctx) error {
+		start := time.Now()
 		err := c.Next()
-		h.Logger.WithFields(logrus.Fields{
-			"RequestID": c.Locals("requestid"),
-		}).Infof("%s %s %d", c.Method(), c.Path(), c.Response().StatusCode())
+		requestID, _ := c.Locals("requestid").(string)
+		log.Info().
+			Str("request_id", requestID).
+			Str("method", c.Method()).
+			Str("path", c.Path()).
+			Int("status", c.Response().StatusCode()).
+			Str("latency", time.Since(start).String()).
+			Send()
 		return err
 	})
 
@@ -84,7 +89,7 @@ func NewFiberApp(h *Handler) (*fiber.App, huma.API) {
 	}))
 
 	// ── Token-in-DB validation ────────────────────────────────────────────────
-	app.Use(auth.CheckTokenMiddleware(h.TokenService, h.Logger))
+	app.Use(auth.CheckTokenMiddleware(h.TokenService))
 
 	// ── Huma API (OpenAPI 3.1, auto-generated docs at /docs) ─────────────────
 	config := huma.DefaultConfig("Uptime API", "1.0.0")
