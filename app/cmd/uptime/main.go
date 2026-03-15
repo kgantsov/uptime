@@ -81,11 +81,12 @@ func main() {
 	heartbeatSvc := service.NewHeartbeatService(heartbeatRepo)
 	serviceSvc := service.NewServiceService(serviceRepo, notifRepo, dispatcher)
 	notifSvc := service.NewNotificationService(notifRepo, dispatcher)
-	tokenSvc := service.NewTokenService(userRepo, tokenRepo, handler.Key)
+	jwtSecret := handler.JWTSecret()
+	tokenSvc := service.NewTokenService(userRepo, tokenRepo, jwtSecret)
 
-	h := handler.NewHandler(heartbeatSvc, serviceSvc, notifSvc, tokenSvc)
+	h := handler.NewHandler(heartbeatSvc, serviceSvc, notifSvc, tokenSvc, jwtSecret)
 
-	app, _ := handler.NewFiberApp(h)
+	app, _ := handler.NewFiberApp(h, jwtSecret)
 
 	done := make(chan struct{})
 	sigs := make(chan os.Signal, 1)

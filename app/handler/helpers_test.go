@@ -23,6 +23,8 @@ import (
 	"gorm.io/gorm/logger"
 )
 
+const testJWTKey = "test-secret"
+
 // ---------------------------------------------------------------------------
 // MockDispatcher
 // ---------------------------------------------------------------------------
@@ -85,9 +87,9 @@ func newTestHandler(db *gorm.DB, dispatcher service.DispatcherInterface) *Handle
 	heartbeatSvc := service.NewHeartbeatService(heartbeatRepo)
 	serviceSvc := service.NewServiceService(serviceRepo, notifRepo, dispatcher)
 	notifSvc := service.NewNotificationService(notifRepo, dispatcher)
-	tokenSvc := service.NewTokenService(userRepo, tokenRepo, Key)
+	tokenSvc := service.NewTokenService(userRepo, tokenRepo, testJWTKey)
 
-	return NewHandler(heartbeatSvc, serviceSvc, notifSvc, tokenSvc)
+	return NewHandler(heartbeatSvc, serviceSvc, notifSvc, tokenSvc, testJWTKey)
 }
 
 // newTestApp creates a bare Fiber+Huma application with routes registered but
@@ -148,7 +150,7 @@ func makeJWTToken(tokenID uint) string {
 		"id":  float64(tokenID),
 		"exp": time.Now().Add(time.Hour).Unix(),
 	})
-	signed, err := t.SignedString([]byte(Key))
+	signed, err := t.SignedString([]byte(testJWTKey))
 	if err != nil {
 		panic(fmt.Sprintf("failed to sign test JWT: %v", err))
 	}

@@ -1,6 +1,9 @@
 package handler
 
 import (
+	"crypto/rand"
+	"encoding/hex"
+	"os"
 	"time"
 
 	fiberprometheus "github.com/ansrivas/fiberprometheus/v2"
@@ -20,32 +23,48 @@ type Handler struct {
 	ServiceService      service.ServiceService
 	NotificationService service.NotificationService
 	TokenService        service.TokenService
+	JWTKey              string
 }
 
-const (
-	// Key is the HMAC signing secret for JWTs.
-	// In production this should come from configuration / environment.
-	Key = "secret"
-)
+// JWTSecret returns the HMAC signing secret for JWTs.
+// It reads the JWT_SECRET environment variable when set; otherwise it
+// generates a cryptographically-random 32-byte secret and logs a warning.
+// Call this once at startup and pass the result wherever the secret is needed.
+func JWTSecret() string {
+	if secret := os.Getenv("JWT_SECRET"); secret != "" {
+		return secret
+	}
+
+	b := make([]byte, 32)
+	if _, err := rand.Read(b); err != nil {
+		log.Fatal().Msgf("failed to generate JWT secret: %s", err)
+	}
+	secret := hex.EncodeToString(b)
+	log.Warn().Msg("JWT_SECRET env variable is not set – using a randomly generated secret. " +
+		"All tokens will be invalidated on restart.")
+	return secret
+}
 
 func NewHandler(
 	heartbeatService service.HeartbeatService,
 	serviceService service.ServiceService,
 	notificationService service.NotificationService,
 	tokenService service.TokenService,
+	jwtKey string,
 ) *Handler {
 	return &Handler{
 		HeartbeatService:    heartbeatService,
 		ServiceService:      serviceService,
 		NotificationService: notificationService,
 		TokenService:        tokenService,
+		JWTKey:              jwtKey,
 	}
 }
 
 // NewFiberApp creates and returns a configured Fiber application together with
 // the Huma API instance mounted on it.  Callers are responsible for adding
 // static-file routes and calling app.Listen.
-func NewFiberApp(h *Handler) (*fiber.App, huma.API) {
+func NewFiberApp(h *Handler, jwtKey string) (*fiber.App, huma.API) {
 	app := fiber.New(fiber.Config{
 		DisableStartupMessage: true,
 		ReadTimeout:           30 * time.Second,
@@ -80,7 +99,7 @@ func NewFiberApp(h *Handler) (*fiber.App, huma.API) {
 
 	// ── JWT authentication ────────────────────────────────────────────────────
 	app.Use(jwtware.New(jwtware.Config{
-		SigningKey: jwtware.SigningKey{Key: []byte(Key)},
+		SigningKey: jwtware.SigningKey{Key: []byte(jwtKey)},
 		Filter:     auth.AuthSkipperFunc,
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 			return fiber.NewError(fiber.StatusUnauthorized, "invalid or missing token")
