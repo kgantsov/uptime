@@ -12,15 +12,33 @@
 
 .notificationsList td a {
     display: flex;
+    align-items: center;
     gap: 5px;
     font-size: 1.1rem;
 }
 
 /* Mobile Responsive Styles */
 @media screen and (max-width: 768px) {
+    .notificationsList thead {
+        display: none;
+    }
+
+    .notificationsList tbody tr {
+        display: flex;
+        flex-direction: column;
+        padding: 0.75rem 0.25rem;
+        border-bottom: 1px solid var(--border-color, rgba(0, 0, 0, 0.08));
+    }
+
     .notificationsList td {
-        padding: 0.75rem 0.5rem;
-        font-size: 0.9rem;
+        height: auto;
+        padding: 0.15rem 0;
+        width: 100% !important;
+    }
+
+    .notificationsList .name td,
+    .notificationsList td.name {
+        width: 100% !important;
     }
 
     .notificationsList td a {
@@ -28,28 +46,18 @@
         gap: 0.5rem;
     }
 
-    .notificationsList .name {
-        width: 60%;
+    /* Label the second cell so users know what the value is */
+    .notificationsList tbody tr td:nth-child(2)::before {
+        content: "Chat ID: ";
+        font-weight: 600;
+        font-size: 0.8rem;
+        color: var(--secondary-text-color, #888);
+        margin-right: 0.25rem;
     }
-}
 
-@media screen and (max-width: 480px) {
-    .notificationsList td {
-        padding: 0.5rem 0.25rem;
+    .notificationsList tbody tr td:nth-child(2) {
         font-size: 0.85rem;
-        word-break: break-word;
-    }
-
-    .notificationsList td a {
-        font-size: 0.9rem;
-        flex-wrap: wrap;
-    }
-
-    .notificationsList .name {
-        width: 100%;
-    }
-
-    .notificationsList thead td {
-        font-size: 0.85rem;
+        color: var(--secondary-text-color, #888);
+        padding-left: 2rem;
     }
 }
