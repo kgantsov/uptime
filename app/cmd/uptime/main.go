@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"embed"
 	"flag"
 	"fmt"
 	"log"
@@ -13,7 +14,6 @@ import (
 
 	"net/http"
 
-	rice "github.com/GeertJohan/go.rice"
 	"github.com/glebarez/sqlite"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/filesystem"
@@ -29,37 +29,29 @@ import (
 	"github.com/kgantsov/uptime/app/service"
 )
 
-// riceHTTPBox wraps *rice.Box so that its Open method satisfies http.FileSystem.
-// rice.Box.Open returns *rice.File which implements http.File, but the return
-// type mismatch prevents the compiler from accepting *rice.Box directly as an
-// http.FileSystem value.
-type riceHTTPBox struct {
-	*rice.Box
-}
+// Embed a single file
+//
+//go:embed build/index.html
+var indexHtmlFS embed.FS
 
-func (b *riceHTTPBox) Open(name string) (http.File, error) {
-	return b.Box.Open(name)
-}
+// Embed a directory
+//
+//go:embed build/static/*
+var frontendFS embed.FS
 
 func InitStaticServer(app *fiber.App) {
-	appStaticBox, err := rice.FindBox("../../../frontend/build/static/")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	appIndexBox, err := rice.FindBox("../../../frontend/build/")
-	if err != nil {
-		log.Fatal(err)
-	}
-
+	// Serve static files from the embedded filesystem
 	app.Use("/static", filesystem.New(filesystem.Config{
-		Root: &riceHTTPBox{appStaticBox},
+		Root:       http.FS(frontendFS),
+		PathPrefix: "build/static",
+		Browse:     false,
 	}))
 
-	app.Use("/", filesystem.New(filesystem.Config{
-		Root:         &riceHTTPBox{appIndexBox},
-		Index:        "index.html",
-		NotFoundFile: "index.html",
+	// Serve index.html from the embedded filesystem
+	app.Get("/*", filesystem.New(filesystem.Config{
+		Root:         http.FS(indexHtmlFS),
+		Index:        "build/index.html",
+		NotFoundFile: "build/index.html",
 	}))
 }
 

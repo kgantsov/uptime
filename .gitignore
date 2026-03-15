@@ -16,4 +16,6 @@
 
 .DS_Store
 
+app/cmd/uptime/build
+app/cmd/uptime/uptime
 test.db

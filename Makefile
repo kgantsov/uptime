@@ -5,15 +5,15 @@ run_web_dev:
 	cd frontend; npm run start
 
 build_go:
-	cd app/cmd/uptime/; rice embed-go; go build
+	cd app/cmd/uptime/; go build
 
 build_web:
-	cd frontend; npm run build
+	cd frontend; npm run build; cp -r ./build ../app/cmd/uptime
 
 build:
-	cd frontend; npm run build
+	cd frontend; npm run build; cp -r ./build ../app/cmd/uptime
 	go test ./... -cover
-	cd app/cmd/uptime/; rice embed-go; go build
+	cd app/cmd/uptime/; go build
 
 build_linux:
 	cd frontend; npm run build
