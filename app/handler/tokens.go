@@ -46,7 +46,7 @@ func (h *Handler) DeleteToken(
 ) (*struct{}, error) {
 	tokenID, err := auth.ParseTokenIDFromHeader(input.Authorization, Key)
 	if err != nil {
-		log.Ctx(ctx).Info().Msgf("DeleteToken: could not parse token ID: %s", err)
+		log.Ctx(ctx).Error().Msgf("DeleteToken: could not parse token ID: %s", err)
 		return nil, huma.NewError(http.StatusBadRequest, "invalid authorization token")
 	}
 

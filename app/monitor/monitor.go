@@ -21,18 +21,18 @@ type Monitor struct {
 }
 
 func NewMonitor(heartbeatRepo repository.HeartbeatRepository, service *model.Service) *Monitor {
-	log.Info().Msgf("NewMonitor %d", service.ID)
+	log.Info().Uint("service_id", service.ID).Msg("NewMonitor")
 
 	notifiers := []Notifier{}
 
 	for i := range service.Notifications {
 		notification := service.Notifications[i]
-		notifier := NewTelegramNotifier(&notification)
+		notifier := NewTelegramNotifier(service.ID, &notification)
 		notifiers = append(notifiers, notifier)
 	}
 
 	checker := NewHTTPCHecker(
-		service.Name, service.URL, service.Timeout, service.AcceptedStatusCode,
+		service.ID, service.Name, service.URL, service.Timeout, service.AcceptedStatusCode,
 	)
 
 	m := &Monitor{
@@ -47,7 +47,11 @@ func NewMonitor(heartbeatRepo repository.HeartbeatRepository, service *model.Ser
 }
 
 func (m *Monitor) Start() {
-	log.Info().Msgf("Starting '%s' %s service monitoring", m.service.Name, m.service.URL)
+	log.Info().
+		Uint("service_id", m.service.ID).
+		Str("name", m.service.Name).
+		Str("url", m.service.URL).
+		Msg("Starting service monitoring")
 
 	failing := false
 	startedFailingAt := time.Time{}
@@ -57,7 +61,11 @@ func (m *Monitor) Start() {
 	for {
 		select {
 		case <-m.done:
-			log.Info().Msgf("Stop monitoring for '%s' %s", m.service.Name, m.service.URL)
+			log.Info().
+				Uint("service_id", m.service.ID).
+				Str("name", m.service.Name).
+				Str("url", m.service.URL).
+				Msg("Stop monitoring for service")
 			return
 		case t := <-ticker.C:
 			var start time.Time
@@ -68,7 +76,10 @@ func (m *Monitor) Start() {
 
 			var status string
 
-			log.Debug().Msgf("Check attempt %d %s", m.service.ID, m.service.URL)
+			log.Debug().
+				Uint("service_id", m.service.ID).
+				Str("url", m.service.URL).
+				Msg("Check attempt")
 
 			retry.Do(
 				func() error {
@@ -87,7 +98,13 @@ func (m *Monitor) Start() {
 						return nil
 					}
 
-					log.Debug().Msgf("Failed will retry %d %s %d %s %s", m.service.ID, m.service.URL, statusCode, status, time.Now())
+					log.Debug().
+						Uint("service_id", m.service.ID).
+						Str("url", m.service.URL).
+						Int("status_code", statusCode).
+						Str("status", status).
+						Time("time", time.Now()).
+						Msg("Failed, will retry")
 
 					return fmt.Errorf("server is not up. Status code %d", statusCode)
 				},
@@ -96,9 +113,13 @@ func (m *Monitor) Start() {
 				retry.Attempts(uint(m.service.Retries+1)),
 			)
 
-			log.Debug().Msgf(
-				"Service check %d %s %d %s %t", m.service.ID, m.service.URL, statusCode, status, failing,
-			)
+			log.Debug().
+				Uint("service_id", m.service.ID).
+				Str("url", m.service.URL).
+				Int("status_code", statusCode).
+				Str("status", status).
+				Bool("failing", failing).
+				Msg("Service check")
 
 			m.heartbeatRepo.Create(
 				&model.Heartbeat{
@@ -110,14 +131,14 @@ func (m *Monitor) Start() {
 			)
 
 			if status == StatusUp {
-				log.Info().Msgf(
-					"Service %s %s is up and running: %d %s %t",
-					t,
-					m.service.URL,
-					statusCode,
-					status,
-					failing,
-				)
+				log.Info().
+					Uint("service_id", m.service.ID).
+					Str("url", m.service.URL).
+					Int("status_code", statusCode).
+					Str("status", status).
+					Bool("failing", failing).
+					Time("checked_at", t).
+					Msg("Service is up and running")
 
 				if failing {
 					for _, notifier := range m.notifiers {
@@ -135,13 +156,13 @@ func (m *Monitor) Start() {
 					startedFailingAt = time.Time{}
 				}
 			} else {
-				log.Info().Msgf(
-					"Failed to get %s url. Got status code: %d %s %t",
-					m.service.URL,
-					statusCode,
-					status,
-					failing,
-				)
+				log.Info().
+					Uint("service_id", m.service.ID).
+					Str("url", m.service.URL).
+					Int("status_code", statusCode).
+					Str("status", status).
+					Bool("failing", failing).
+					Msg("Service is down")
 
 				if !failing {
 					for _, notifier := range m.notifiers {
@@ -164,5 +185,8 @@ func (m *Monitor) Start() {
 
 func (m *Monitor) Stop() {
 	m.done <- struct{}{}
-	log.Info().Msgf("Stopping '%s'", m.service.Name)
+	log.Info().
+		Uint("service_id", m.service.ID).
+		Str("name", m.service.Name).
+		Msg("Stopping service monitoring")
 }

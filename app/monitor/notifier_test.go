@@ -29,6 +29,7 @@ func TestTelegramNotifier(t *testing.T) {
 	}))
 
 	notifier := NewTelegramNotifier(
+		1,
 		&model.Notification{
 			CallbackType:   "telegram",
 			CallbackChatID: "909091231",

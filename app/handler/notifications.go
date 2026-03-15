@@ -53,7 +53,7 @@ func (h *Handler) GetNotifications(
 ) (*GetNotificationsOutput, error) {
 	notifications, err := h.NotificationService.GetNotifications()
 	if err != nil {
-		log.Ctx(ctx).Info().Msgf("error getting notifications: %s", err)
+		log.Ctx(ctx).Error().Msgf("error getting notifications: %s", err)
 		return nil, huma.NewError(http.StatusInternalServerError, "failed to retrieve notifications", err)
 	}
 
@@ -71,7 +71,7 @@ func (h *Handler) GetNotification(
 ) (*GetNotificationOutput, error) {
 	notification, err := h.NotificationService.GetNotification(input.NotificationName)
 	if err != nil {
-		log.Ctx(ctx).Info().Msgf("error getting notification %q: %s", input.NotificationName, err)
+		log.Ctx(ctx).Error().Msgf("error getting notification %q: %s", input.NotificationName, err)
 		return nil, huma.NewError(http.StatusBadRequest, "notification not found", err)
 	}
 

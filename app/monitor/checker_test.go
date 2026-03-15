@@ -36,6 +36,7 @@ func TestHTTPCHecker(t *testing.T) {
 		}))
 
 		checker := NewHTTPCHecker(
+			1,
 			"test checker",
 			fmt.Sprintf("%s/API/v1/healthz", server.URL),
 			1,

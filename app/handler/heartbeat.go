@@ -65,8 +65,6 @@ func (h *Handler) GetHeartbeatsLastLatencies(
 ) (*GetHeartbeatsLastLatenciesOutput, error) {
 	size := input.Size
 
-	log.Ctx(ctx).Info().Msgf("GetHeartbeatsLastLatencies: retrieving last %d latency points per service", size)
-
 	heartbeats, err := h.HeartbeatService.GetLastLatencies(size)
 	if err != nil {
 		log.Ctx(ctx).Error().Msgf("error getting latest latencies: %s", err)
@@ -88,7 +86,7 @@ func (h *Handler) GetHeartbeatStats(
 ) (*GetHeartbeatStatsOutput, error) {
 	stats, err := h.HeartbeatService.GetStats(input.Days)
 	if err != nil {
-		log.Ctx(ctx).Info().Msgf("error getting latency stats: %s", err)
+		log.Ctx(ctx).Error().Msgf("error getting latency stats: %s", err)
 		return nil, huma.NewError(http.StatusNotFound, "failed to retrieve heartbeat stats", err)
 	}
 

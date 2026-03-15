@@ -18,14 +18,16 @@ type Notifier interface {
 
 type TelegramNotifier struct {
 	notification *model.Notification
+	serviceID    uint
 	client       http.Client
 }
 
-func NewTelegramNotifier(notification *model.Notification) *TelegramNotifier {
+func NewTelegramNotifier(serviceID uint, notification *model.Notification) *TelegramNotifier {
 	client := http.Client{Timeout: time.Duration(TelegramNotifierTimeout) * time.Second}
 
 	n := &TelegramNotifier{
 		client:       client,
+		serviceID:    serviceID,
 		notification: notification,
 	}
 
@@ -33,7 +35,11 @@ func NewTelegramNotifier(notification *model.Notification) *TelegramNotifier {
 }
 
 func (n *TelegramNotifier) Notify(message string) {
-	log.Info().Msgf("Sending telegram message: %s to %s", message, n.notification.CallbackChatID)
+	log.Info().
+		Uint("service_id", n.serviceID).
+		Str("chat_id", n.notification.CallbackChatID).
+		Str("message", message).
+		Msg("Sending telegram message")
 
 	bodyParams := map[string]interface{}{
 		"chat_id":              n.notification.CallbackChatID,
@@ -47,7 +53,11 @@ func (n *TelegramNotifier) Notify(message string) {
 		"POST", n.notification.Callback, bytes.NewBuffer(jsonBody),
 	)
 	if err != nil {
-		log.Info().Msgf("Failed to notify telegram %s", err)
+		log.Error().
+			Uint("service_id", n.serviceID).
+			Str("chat_id", n.notification.CallbackChatID).
+			Err(err).
+			Msg("Failed to create telegram notify request")
 		return
 	}
 
@@ -55,7 +65,11 @@ func (n *TelegramNotifier) Notify(message string) {
 
 	response, err := n.client.Do(request)
 	if err != nil {
-		log.Info().Msgf("Failed to notify telegram %s", err)
+		log.Error().
+			Uint("service_id", n.serviceID).
+			Str("chat_id", n.notification.CallbackChatID).
+			Err(err).
+			Msg("Failed to send telegram notification")
 		return
 	}
 

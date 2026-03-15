@@ -19,16 +19,18 @@ type Checker interface {
 
 type HTTPCHecker struct {
 	client             http.Client
+	ServiceID          uint
 	URL                string
 	Name               string
 	AcceptedStatusCode int
 }
 
-func NewHTTPCHecker(name, url string, timeout, acceptedStatusCode int) *HTTPCHecker {
+func NewHTTPCHecker(serviceID uint, name, url string, timeout, acceptedStatusCode int) *HTTPCHecker {
 	client := http.Client{Timeout: time.Duration(timeout) * time.Second}
 
 	c := &HTTPCHecker{
 		client:             client,
+		ServiceID:          serviceID,
 		URL:                url,
 		Name:               name,
 		AcceptedStatusCode: acceptedStatusCode,
@@ -41,7 +43,12 @@ func (c *HTTPCHecker) Check() (int, string) {
 	resp, err := c.client.Get(c.URL)
 
 	if err != nil {
-		log.Info().Msgf("Error checking '%s' %s %s\n", c.Name, c.URL, err)
+		log.Info().
+			Uint("service_id", c.ServiceID).
+			Str("name", c.Name).
+			Str("url", c.URL).
+			Err(err).
+			Msg("Error checking service")
 	}
 
 	if err, ok := err.(net.Error); ok && err.Timeout() {
