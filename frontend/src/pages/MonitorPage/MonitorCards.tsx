@@ -72,7 +72,7 @@ export function MonitorCards({ monitorId }: Props): JSX.Element {
   }
 
   const calcPercentage = (data: StatsData): number => {
-    const success = data?.UP?.counter | 0;
+    const success = data?.UP?.counter || 0;
     const total = Object.values(data).reduce(
       (a: number, v: HeartbeatStats) => a + v.counter,
       0,
