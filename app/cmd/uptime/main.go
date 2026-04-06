@@ -27,29 +27,21 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-// Embed a single file
+// Embed the entire build directory so that all assets (favicon.ico, manifest.json,
+// fonts, static chunks, etc.) are included in the binary.
 //
-//go:embed build/index.html
-var indexHtmlFS embed.FS
-
-// Embed a directory
-//
-//go:embed build/static/*
+//go:embed build
 var frontendFS embed.FS
 
 func InitStaticServer(app *fiber.App) {
-	// Serve static files from the embedded filesystem
-	app.Use("/static", filesystem.New(filesystem.Config{
-		Root:       http.FS(frontendFS),
-		PathPrefix: "build/static",
-		Browse:     false,
-	}))
-
-	// Serve index.html from the embedded filesystem
-	app.Get("/*", filesystem.New(filesystem.Config{
-		Root:         http.FS(indexHtmlFS),
-		Index:        "build/index.html",
-		NotFoundFile: "build/index.html",
+	// Serve everything from the embedded build directory.
+	// Unknown paths fall back to index.html so that client-side SPA routing works.
+	app.Use("/", filesystem.New(filesystem.Config{
+		Root:         http.FS(frontendFS),
+		PathPrefix:   "build",
+		Index:        "index.html",
+		NotFoundFile: "index.html",
+		Browse:       false,
 	}))
 }
 
